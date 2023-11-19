@@ -5,3 +5,4 @@
 -   [HU 3000 - Cadastrar Problema](HU-3000.md)
 -   [HU 5000 - Cadastrar Verificador do Problema](HU-5000.md)
 -   [HU 5001 - Cadastrar Testes do Verificador](HU-5001.md)
+-   [HU 5006 - Executar Testes do Verificador](HU-5006.md)
