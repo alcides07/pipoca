@@ -58,13 +58,21 @@ python3 -m venv venv
 .\venv\Scripts\activate
 ```
 
-### Execute o projeto com Docker Compose:
+### Execute com Docker Compose:
 
 ```
 docker-compose up --build
 ```
 
-### Execute o projeto com Uvicorn:
+### Executando com Uvicorn
+
+### Instale as dependências:
+
+```
+pip install -r requirements.txt
+```
+
+### Execute a aplicação:
 
 ```
 uvicorn main:app --reload
