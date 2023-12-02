@@ -32,16 +32,16 @@ def user(
     user: User_Create, db: Session = Depends(get_db)
 ):
 
-    response_object = return_schema(message="", status=204)
+    response = return_schema(message="", status=204)
 
     if (user.password != user.passwordConfirmation):
-        response_object.message = "Erro. As senhas fornecidas não coincidem!"
-        response_object.status = status.HTTP_400_BAD_REQUEST
+        response.message = "Erro. As senhas fornecidas não coincidem!"
+        response.status = status.HTTP_400_BAD_REQUEST
 
     else:
-        response_object.message = "Sucesso. O cadastro foi realizado!"
         user.password = pwd_context.hash(user.password)
-        response_object.status = status.HTTP_201_CREATED
-        response_object.data = jsonable_encoder(create_user(db=db, user=user))
+        response.message = "Sucesso. O cadastro foi realizado!"
+        response.status = status.HTTP_201_CREATED
+        response.data = jsonable_encoder(create_user(db=db, user=user))
 
-    return response_object
+    return response
