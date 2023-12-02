@@ -4,7 +4,7 @@ from schemas.common.pagination import pagination_schema
 from dependencies.router_parameters import pagination_router
 from dependencies.database import get_db
 from sqlalchemy.orm import Session
-from crud.user import create_user, read_users, read_user_by_key_exists
+from orm.user import create_user, read_users, read_user_by_key_exists
 from schemas.common.response import response_schema
 from fastapi import status
 from fastapi.encoders import jsonable_encoder
