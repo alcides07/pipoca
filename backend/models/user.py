@@ -8,4 +8,4 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String(length=32), index=True)
     email = Column(String(), index=True)
-    password = Column(String(32), index=True)
+    password = Column(String(length=64), index=True)

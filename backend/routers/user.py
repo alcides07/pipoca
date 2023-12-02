@@ -5,6 +5,14 @@ from dependencies.router_parameters import pagination_router
 from dependencies.database import get_db
 from sqlalchemy.orm import Session
 from crud.user import create_user, read_users
+from schemas.common.return_body import return_schema
+from fastapi import status
+from fastapi.encoders import jsonable_encoder
+from passlib.context import CryptContext
+from fastapi import Depends, status
+from passlib.context import CryptContext
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 router = APIRouter(
@@ -19,9 +27,21 @@ def users(db: Session = Depends(get_db), common: pagination_schema = Depends(pag
     return users
 
 
-@router.post("/", response_model=User_Read)
+@router.post("/", response_model=return_schema)
 def user(
     user: User_Create, db: Session = Depends(get_db)
 ):
 
-    return create_user(db=db, user=user)
+    response_object = return_schema(message="", status=204)
+
+    if (user.password != user.passwordConfirmation):
+        response_object.message = "Erro. As senhas fornecidas não coincidem!"
+        response_object.status = status.HTTP_400_BAD_REQUEST
+
+    else:
+        response_object.message = "Sucesso. O cadastro foi realizado!"
+        user.password = pwd_context.hash(user.password)
+        response_object.status = status.HTTP_201_CREATED
+        response_object.data = jsonable_encoder(create_user(db=db, user=user))
+
+    return response_object
