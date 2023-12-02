@@ -3,7 +3,7 @@ from typing import Any
 from http import HTTPStatus
 
 
-class return_schema(BaseModel):
+class response_schema(BaseModel):
     message: str
     status: HTTPStatus
     data: Any | None = None
