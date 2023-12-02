@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends
-from schemas.user import User_Read, User_Create
+from schemas.user import User_Create, User_Read
 from schemas.common.pagination import pagination_schema
 from dependencies.router_parameters import pagination_router
 from dependencies.database import get_db
@@ -21,10 +21,16 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_model=list[User_Read])
+@router.get("/", response_model=response_schema[User_Read])
 def users(db: Session = Depends(get_db), common: pagination_schema = Depends(pagination_router)):
-    users = read_users(db, common)
-    return users
+    users = jsonable_encoder(read_users(db, common))
+    for user in users:
+        user.pop("password", None)
+
+    return response_schema(
+        status=status.HTTP_200_OK,
+        data=users
+    )
 
 
 @router.post("/", response_model=response_schema)
@@ -32,26 +38,22 @@ def user(
     user: User_Create, db: Session = Depends(get_db)
 ):
 
-    response = response_schema(message="", status=204)
-
     if (user.password != user.passwordConfirmation):
-        response.message = "Erro. As senhas fornecidas não coincidem!"
-        response.status = status.HTTP_400_BAD_REQUEST
-        return response
+        return response_schema(message="Erro. As senhas fornecidas não coincidem!",
+                               status=status.HTTP_400_BAD_REQUEST)
 
     elif (read_user_by_key_exists(db, "username", user.username)):
-        response.message = "Erro. O nome de usuário fornecido está em uso!"
-        response.status = status.HTTP_400_BAD_REQUEST
-        return response
+        return response_schema(message="Erro. O nome de usuário fornecido está em uso!",
+                               status=status.HTTP_400_BAD_REQUEST)
 
     elif (read_user_by_key_exists(db, "email", user.email)):
-        response.message = "Erro. O e-mail fornecido está em uso!"
-        response.status = status.HTTP_400_BAD_REQUEST
-        return response
+        return response_schema(message="Erro. O e-mail fornecido está em uso!",
+                               status=status.HTTP_400_BAD_REQUEST)
 
     else:
         user.password = pwd_context.hash(user.password)
-        response.message = "Sucesso. O cadastro foi realizado!"
-        response.status = status.HTTP_201_CREATED
-        response.data = jsonable_encoder(create_user(db=db, user=user))
-        return response
+        data = jsonable_encoder(create_user(db=db, user=user))
+        data.pop('password', None)
+
+        return response_schema(message="Sucesso. O cadastro foi realizado!",
+                               status=status.HTTP_201_CREATED, data=data)

@@ -15,7 +15,7 @@ def read_user_by_key_exists(db: Session, key: str, value):
 
 def create_user(db: Session, user: User_Create):
     db_user = User(
-        **user.model_dump(exclude=["passwordConfirmation", "password"]))
+        **user.model_dump(exclude="passwordConfirmation"))
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
