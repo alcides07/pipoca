@@ -1,9 +1,11 @@
 from pydantic import BaseModel
-from typing import Any
+from typing import TypeVar, List, Generic
 from http import HTTPStatus
 
+T = TypeVar('T')
 
-class response_schema(BaseModel):
-    message: str
+
+class response_schema(BaseModel, Generic[T]):
+    message: str | None = None
     status: HTTPStatus
-    data: Any | None = None
+    data: T | List[T] | None = None
