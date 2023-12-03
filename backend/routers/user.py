@@ -20,7 +20,7 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_model=response_schema[User_Read])
+@router.get("/", response_model=response_schema[User_Read], summary="Lista usuários")
 def users(db: Session = Depends(get_db), common: pagination_schema = Depends()):
     users = jsonable_encoder(read_users(db, common))
 
@@ -30,7 +30,7 @@ def users(db: Session = Depends(get_db), common: pagination_schema = Depends()):
     )
 
 
-@router.post("/", response_model=response_schema[User_Base], status_code=201)
+@router.post("/", response_model=response_schema[User_Base], status_code=201, summary="Cadastra usuário")
 def user(
     user: User_Create, db: Session = Depends(get_db)
 ):
