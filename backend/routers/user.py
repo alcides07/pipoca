@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Depends
-from schemas.user import User_Create, User_Read
+from schemas.user import User_Create, User_Read, User_Base
 from schemas.common.pagination import pagination_schema
-from dependencies.router_parameters import pagination_router
 from dependencies.database import get_db
 from sqlalchemy.orm import Session
 from orm.user import create_user, read_users, read_user_by_key_exists
@@ -22,10 +21,8 @@ router = APIRouter(
 
 
 @router.get("/", response_model=response_schema[User_Read])
-def users(db: Session = Depends(get_db), common: pagination_schema = Depends(pagination_router)):
+def users(db: Session = Depends(get_db), common: pagination_schema = Depends()):
     users = jsonable_encoder(read_users(db, common))
-    for user in users:
-        user.pop("password", None)
 
     return response_schema(
         status=status.HTTP_200_OK,
@@ -33,7 +30,7 @@ def users(db: Session = Depends(get_db), common: pagination_schema = Depends(pag
     )
 
 
-@router.post("/", response_model=response_schema)
+@router.post("/", response_model=response_schema[User_Base], status_code=201)
 def user(
     user: User_Create, db: Session = Depends(get_db)
 ):
@@ -53,7 +50,6 @@ def user(
     else:
         user.password = pwd_context.hash(user.password)
         data = jsonable_encoder(create_user(db=db, user=user))
-        data.pop('password', None)
 
         return response_schema(message="Sucesso. O cadastro foi realizado!",
                                status=status.HTTP_201_CREATED, data=data)
