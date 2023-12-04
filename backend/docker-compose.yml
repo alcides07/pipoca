@@ -5,7 +5,7 @@ services:
         build:
             context: ./
             dockerfile: ./Dockerfile
-        command: bash -c "uvicorn main:app --reload"
+        command: bash -c "uvicorn main:app --host 0.0.0.0 --reload"
         ports:
             - "8000:8000"
         depends_on:
