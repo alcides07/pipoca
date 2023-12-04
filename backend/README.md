@@ -23,10 +23,10 @@
 
 > Para executar o projeto, você precisa possuir previamente em sua máquina as seguintes ferramentas:
 
--   [Git](https://git-scm.com)
--   [Docker 24.0.5](https://docs.docker.com/get-docker/)
 -   [Python 3.10](https://www.python.org/downloads/)
--   [Docker Compose 1.29.2](https://docs.docker.com/compose/)
+-   [Git](https://git-scm.com)
+-   [Docker 24.0.5](https://docs.docker.com/get-docker/) (Opcional)
+-   [Docker Compose 1.29.2](https://docs.docker.com/compose/) (Opcional)
 
 <details>
   <summary><h3>2.2. Execução com Uvicorn:</h3></summary>
