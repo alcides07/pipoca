@@ -2,6 +2,7 @@ fastapi==0.104.1
 SQLAlchemy==2.0.23
 uvicorn==0.23.2
 python-decouple==3.8
+psycopg2-binary==2.9.9
 psycopg2==2.9.9
 python-jose==3.3.0
 passlib==1.7.4
