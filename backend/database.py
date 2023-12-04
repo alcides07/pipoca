@@ -3,14 +3,15 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from decouple import config
 
-DATABASE_URL = config("DATABASE_URL")
-DATABASE_URL_DEV = config("DATABASE_URL_DEV")
-DEV = config("DEV")
+DATABASE_CONTAINER = config("DATABASE_CONTAINER")
+DATABASE_LOCAL = config("DATABASE_LOCAL")
+USE_DOCKER = config("USE_DOCKER")
 
-if (DEV == 0):
-    engine = create_engine(DATABASE_URL)
-else:
-    engine = create_engine(DATABASE_URL_DEV)
+engine = create_engine(DATABASE_LOCAL, connect_args={
+                       "check_same_thread": False})
+
+if (USE_DOCKER == "1"):
+    engine = create_engine(DATABASE_CONTAINER)
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
