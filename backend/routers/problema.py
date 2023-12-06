@@ -16,7 +16,7 @@ router = APIRouter(
 
 
 @router.get("/", response_model=response_schema[Problema_Read], summary="Lista problemas")
-def problema(db: Session = Depends(get_db), common: pagination_schema = Depends()):
+def problemas(db: Session = Depends(get_db), common: pagination_schema = Depends()):
     problemas = read_problemas(db, common)
 
     return response_schema(
