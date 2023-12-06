@@ -1,6 +1,7 @@
 from sqlalchemy import Column, Integer, String, CheckConstraint
 from sqlalchemy.orm import relationship
 from database import Base
+from .relationships.problema_tag import problema_tag_relationship
 
 
 class Problema(Base):
@@ -37,4 +38,8 @@ class Problema(Base):
         CheckConstraint('memoria_limite <= 1024'),
     )
 
-    tags = relationship("Tag")
+    tags = relationship(
+        "Tag",
+        secondary=problema_tag_relationship,
+        back_populates="problemas",
+    )
