@@ -28,8 +28,8 @@ class Problema(Base):
 
     tempo_limite = Column(
         Integer,
-        CheckConstraint('memoria_limite >= 250'),
-        CheckConstraint('memoria_limite <= 15000'),
+        CheckConstraint('tempo_limite >= 250'),
+        CheckConstraint('tempo_limite <= 15000'),
     )
 
     memoria_limite = Column(
