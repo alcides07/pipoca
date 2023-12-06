@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from routers import openapi, user
+from routers import openapi, user, problema
 from database import engine, Base
 from fastapi.openapi.utils import get_openapi
 
@@ -12,6 +12,7 @@ app = FastAPI(docs_url=None,
 
 app.include_router(openapi.router)
 app.include_router(user.router)
+app.include_router(problema.router)
 
 
 def custom_openapi():
