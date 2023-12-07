@@ -1,7 +1,14 @@
 from fastapi.openapi.docs import get_swagger_ui_html, get_redoc_html
 from fastapi import APIRouter
+from starlette.responses import RedirectResponse
 
 router = APIRouter()
+
+
+@router.get("/")
+async def redirect():
+    response = RedirectResponse(url="/docs")
+    return response
 
 
 @router.get("/docs", include_in_schema=False)
