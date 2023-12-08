@@ -5,7 +5,7 @@ from starlette.responses import RedirectResponse
 router = APIRouter()
 
 
-@router.get("/")
+@router.get("/", include_in_schema=False)
 async def redirect():
     response = RedirectResponse(url="/docs")
     return response

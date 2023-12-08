@@ -4,7 +4,7 @@ from pydantic import BaseModel, Field
 class Tag_Base(BaseModel):
     nome: str = Field(
         max_length=32,
-        description="Palavra chave utilizada como etiqueta"
+        description="Palavra-chave utilizada como etiqueta"
     )
 
 
