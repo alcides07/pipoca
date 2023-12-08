@@ -8,7 +8,7 @@ from schemas.common.response import response_schema
 from fastapi import status
 from fastapi.encoders import jsonable_encoder
 from passlib.context import CryptContext
-from fastapi import Depends, status
+from fastapi import Depends, status, Response
 from passlib.context import CryptContext
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -25,31 +25,40 @@ def users(db: Session = Depends(get_db), common: pagination_schema = Depends()):
     users = jsonable_encoder(read_users(db, common))
 
     return response_schema(
-        status=status.HTTP_200_OK,
         data=users
     )
 
 
-@router.post("/", response_model=response_schema[User_Base], status_code=201, summary="Cadastra usuário")
+@router.post("/",
+             response_model=response_schema[User_Base],
+             status_code=201,
+             summary="Cadastra usuário",
+             responses={400:
+                        {"model": response_schema,
+                         "description": "Bad Request (erros em credenciais)"
+                         },
+                        }
+             )
 def user(
-    user: User_Create, db: Session = Depends(get_db)
+    user: User_Create,
+    db: Session = Depends(get_db),
+    response: Response = Response
 ):
 
     if (user.password != user.passwordConfirmation):
-        return response_schema(message="Erro. As senhas fornecidas não coincidem!",
-                               status=status.HTTP_400_BAD_REQUEST)
+        response.status_code = status.HTTP_400_BAD_REQUEST
+        return response_schema(message="Erro. As senhas fornecidas não coincidem!")
 
     elif (read_user_by_key_exists(db, "username", user.username)):
-        return response_schema(message="Erro. O nome de usuário fornecido está em uso!",
-                               status=status.HTTP_400_BAD_REQUEST)
+        response.status_code = status.HTTP_400_BAD_REQUEST
+        return response_schema(message="Erro. O nome de usuário fornecido está em uso!")
 
     elif (read_user_by_key_exists(db, "email", user.email)):
-        return response_schema(message="Erro. O e-mail fornecido está em uso!",
-                               status=status.HTTP_400_BAD_REQUEST)
+        response.status_code = status.HTTP_400_BAD_REQUEST
+        return response_schema(message="Erro. O e-mail fornecido está em uso!")
 
     else:
         user.password = pwd_context.hash(user.password)
         data = jsonable_encoder(create_user(db=db, user=user))
 
-        return response_schema(message="Sucesso. O cadastro foi realizado!",
-                               status=status.HTTP_201_CREATED, data=data)
+        return response_schema(data=data)
