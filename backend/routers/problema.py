@@ -15,7 +15,7 @@ router = APIRouter(
 
 
 @router.get("/", response_model=response_schema[Problema_Read], summary="Lista problemas")
-def problemas(db: Session = Depends(get_db), common: pagination_schema = Depends()):
+def read(db: Session = Depends(get_db), common: pagination_schema = Depends()):
     problemas = read_problemas(db, common)
 
     return response_schema(
@@ -24,7 +24,7 @@ def problemas(db: Session = Depends(get_db), common: pagination_schema = Depends
 
 
 @router.post("/", response_model=response_schema[Problema_Read], status_code=201, summary="Cadastra problema")
-def problema(
+def create(
     problema: Problema_Create, db: Session = Depends(get_db)
 ):
     data = create_problema(db=db, problema=problema)
