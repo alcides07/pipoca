@@ -5,8 +5,7 @@ from dependencies.database import get_db
 from sqlalchemy.orm import Session
 from orm.problema import create_problema, read_problemas
 from schemas.common.response import response_schema
-from fastapi import status
-from fastapi import Depends, status
+from fastapi import Depends
 
 
 router = APIRouter(
@@ -20,7 +19,6 @@ def problemas(db: Session = Depends(get_db), common: pagination_schema = Depends
     problemas = read_problemas(db, common)
 
     return response_schema(
-        status=status.HTTP_200_OK,
         data=problemas
     )
 
@@ -31,5 +29,4 @@ def problema(
 ):
     data = create_problema(db=db, problema=problema)
 
-    return response_schema(message="Sucesso. O problema foi cadastrado!",
-                           status=status.HTTP_201_CREATED, data=data)
+    return response_schema(data=data)
