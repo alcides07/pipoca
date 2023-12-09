@@ -1,5 +1,4 @@
-from fastapi import FastAPI
-from models.common.custom_exception import Custom_Exception
+from fastapi import FastAPI, HTTPException
 from routers import openapi, user, problema
 from database import engine, Base
 from fastapi.openapi.utils import get_openapi
@@ -35,13 +34,11 @@ def custom_openapi():
     return app.openapi_schema
 
 
-@app.exception_handler(Custom_Exception)
-async def exception_handler(request: Request, exception: Custom_Exception):
+@app.exception_handler(HTTPException)
+async def exception_handler(request: Request, exception: HTTPException):
     return JSONResponse(
         status_code=exception.status_code,
-        content={
-            "error": exception.error
-        },
+        content={"error": exception.detail}
     )
 
 app.openapi = custom_openapi

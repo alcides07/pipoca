@@ -1,5 +1,4 @@
-from fastapi import status
-from fastapi import HTTPException
+from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 from schemas.common.pagination import pagination_schema
 from models.user import User
