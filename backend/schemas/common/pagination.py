@@ -1,7 +1,7 @@
 from fastapi import Query
 
 
-class pagination_schema:
+class Pagination_Schema:
     def __init__(
         self,
         q: str = Query(

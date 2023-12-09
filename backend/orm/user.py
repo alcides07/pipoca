@@ -1,11 +1,11 @@
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
-from schemas.common.pagination import pagination_schema
+from schemas.common.pagination import Pagination_Schema
 from models.user import User
 from schemas.user import User_Create
 
 
-def read_users(db: Session, common: pagination_schema):
+def read_users(db: Session, common: Pagination_Schema):
     return db.query(User).offset(common.skip).limit(common.limit).all()
 
 

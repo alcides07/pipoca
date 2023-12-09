@@ -1,11 +1,11 @@
 from sqlalchemy.orm import Session
-from schemas.common.pagination import pagination_schema
+from schemas.common.pagination import Pagination_Schema
 from models.problema import Problema
 from models.tag import Tag
 from schemas.problema import Problema_Create
 
 
-def read_problemas(db: Session, common: pagination_schema):
+def read_problemas(db: Session, common: Pagination_Schema):
     return db.query(Problema).offset(common.skip).limit(common.limit).all()
 
 
