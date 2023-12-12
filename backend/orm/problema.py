@@ -1,12 +1,18 @@
 from sqlalchemy.orm import Session
-from schemas.common.pagination import Pagination_Schema
+from schemas.common.pagination import Metadata_Schema, Pagination_Schema
 from models.problema import Problema
 from models.tag import Tag
 from schemas.problema import Problema_Create
 
 
 def read_problemas(db: Session, common: Pagination_Schema):
-    return db.query(Problema).offset(common.skip).limit(common.limit).all()
+    problemas = db.query(Problema).offset(
+        common.offset).limit(common.limit)
+    total = db.query(Problema).count()
+    metadata = Metadata_Schema(
+        count=problemas.count(), total=total, offset=common.offset, limit=common.limit)
+
+    return problemas.all(), metadata
 
 
 def create_problema(db: Session, problema: Problema_Create):

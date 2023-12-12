@@ -6,7 +6,7 @@ from schemas.common.pagination import Pagination_Schema
 from dependencies.database import get_db
 from sqlalchemy.orm import Session
 from orm.user import create_user, read_user_by_id, read_users, user_by_key_exists, delete_user
-from schemas.common.response import Response_Schema
+from schemas.common.response import Response_Schema_Pagination, Response_Schema_Unit
 from fastapi.encoders import jsonable_encoder
 from passlib.context import CryptContext
 
@@ -20,19 +20,20 @@ router = APIRouter(
 
 
 @router.get("/",
-            response_model=Response_Schema[User_Read],
+            response_model=Response_Schema_Pagination[User_Read],
             summary="Lista usuários"
             )
 def read(db: Session = Depends(get_db), common: Pagination_Schema = Depends()):
-    users = jsonable_encoder(read_users(db, common))
+    users, metadata = read_users(db, common)
 
-    return Response_Schema(
-        data=users
+    return Response_Schema_Pagination(
+        data=users,
+        metadata=metadata
     )
 
 
 @router.get("/{id}",
-            response_model=Response_Schema[User_Read],
+            response_model=Response_Schema_Unit[User_Read],
             summary="Lista um usuário",
             responses=http_response_openapi(
                 status.HTTP_404_NOT_FOUND,
@@ -43,13 +44,13 @@ def read_id(
         db: Session = Depends(get_db)):
     users = jsonable_encoder(read_user_by_id(db, id))
 
-    return Response_Schema(
+    return Response_Schema_Unit(
         data=users
     )
 
 
 @router.post("/",
-             response_model=Response_Schema[User_Read],
+             response_model=Response_Schema_Unit[User_Read],
              status_code=201,
              summary="Cadastra um usuário",
              responses=http_response_openapi(
@@ -77,11 +78,11 @@ def create(
         user.password = pwd_context.hash(user.password)
         data = jsonable_encoder(create_user(db=db, user=user))
 
-        return Response_Schema(data=data)
+        return Response_Schema_Unit(data=data)
 
 
 @router.delete("/{id}",
-               response_model=Response_Schema[User_Read],
+               response_model=Response_Schema_Unit[User_Read],
                summary="Deleta um usuário",
                responses=http_response_openapi(
                    status.HTTP_404_NOT_FOUND,
@@ -94,6 +95,6 @@ def delete(
 ):
 
     user = jsonable_encoder(delete_user(db, id))
-    return Response_Schema(
+    return Response_Schema_Unit(
         data=user
     )
