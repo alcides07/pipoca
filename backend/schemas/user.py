@@ -7,7 +7,7 @@ class User_Base(BaseModel):
         description="Apelido do usuário"
     )
 
-    email: EmailStr
+    email: EmailStr = Field(description="E-mail do usuário")
 
 
 class User_Create(User_Base):
