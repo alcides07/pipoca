@@ -16,10 +16,11 @@ router = APIRouter(
 
 @router.get("/", response_model=Response_Schema_Pagination[Problema_Read], summary="Lista problemas")
 def read(db: Session = Depends(get_db), common: Pagination_Schema = Depends()):
-    problemas = read_problemas(db, common)
+    problemas, metadata = read_problemas(db, common)
 
     return Response_Schema_Pagination(
-        data=problemas
+        data=problemas,
+        metadata=metadata
     )
 
 
