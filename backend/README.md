@@ -34,13 +34,13 @@
 #### 2.2.1. Clone o repositório:
 
 ```
-git clone https://github.com/alcides07/Juiz-Online.git
+git clone https://github.com/alcides07/juiz-online.git
 ```
 
 #### 2.2.2. Acesse o diretório gerado:
 
 ```
-cd Juiz-Online/backend/
+cd juiz-online/backend/
 ```
 
 #### 2.2.3. Crie um ambiente virtual:
@@ -83,13 +83,13 @@ uvicorn main:app --reload
 #### 2.3.1. Clone o repositório:
 
 ```
-git clone https://github.com/alcides07/Juiz-Online.git
+git clone https://github.com/alcides07/juiz-online.git
 ```
 
 #### 2.3.2. Acesse o diretório gerado:
 
 ```
-cd Juiz-Online/backend/
+cd juiz-online/backend/
 ```
 
 #### 2.3.3. Execute a aplicação:
