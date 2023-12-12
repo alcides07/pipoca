@@ -1,6 +1,6 @@
 from fastapi import Query
 from enum import Enum
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class Limit_Schema(int, Enum):
@@ -14,9 +14,12 @@ class Limit_Schema(int, Enum):
 
 
 class Metadata_Schema(BaseModel):
-    count: int
-    limit: int
-    offset: int
+    count: int = Field(
+        description="Quantidade de registros retornados na consulta")
+    limit: int = Field(description="Quantidade de registros desejados")
+    offset: int = Field(description="Intervalo inicial da paginação")
+    total: int = Field(
+        description="Quantidade de registros existentes")
 
 
 class Pagination_Schema:
@@ -25,7 +28,7 @@ class Pagination_Schema:
         q: str = Query(
             default=None, description="Palavras-chave para pesquisa"),
         limit: Limit_Schema = Query(
-            default=10, description="Número de registros da paginação"),
+            default=10, description="Quantidade de registros desejados"),
         offset: int = Query(
             default=0, description="Intervalo inicial da paginação"),
 
