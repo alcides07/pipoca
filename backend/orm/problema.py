@@ -6,7 +6,7 @@ from schemas.problema import Problema_Create
 
 
 def read_problemas(db: Session, common: Pagination_Schema):
-    return db.query(Problema).offset(common.skip).limit(common.limit).all()
+    return db.query(Problema).offset(common.offset).limit(common.limit).all()
 
 
 def create_problema(db: Session, problema: Problema_Create):
