@@ -2,13 +2,24 @@ from pydantic import BaseModel, Field, EmailStr
 
 
 class User_Base(BaseModel):
-    username: str = Field(max_length=32)
-    email: EmailStr()
+    username: str = Field(
+        max_length=32,
+        description="Apelido do usuário"
+    )
+
+    email: EmailStr = Field(description="E-mail do usuário")
 
 
 class User_Create(User_Base):
-    password: str = Field(max_length=32)
-    passwordConfirmation: str = Field(max_length=32)
+    password: str = Field(
+        max_length=32,
+        description="Senha do usuário"
+    )
+
+    passwordConfirmation: str = Field(
+        max_length=32,
+        description="Confirmação da senha do usuário"
+    )
 
 
 class User_Read(User_Base):

@@ -1,15 +1,13 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, Path, status
+from schemas.common.exception import Exception_Schema
+from openapi.http_response_openapi import http_response_openapi
 from schemas.user import User_Create, User_Read
-from schemas.common.pagination import pagination_schema
-from dependencies.router_parameters import pagination_router
+from schemas.common.pagination import Pagination_Schema
 from dependencies.database import get_db
 from sqlalchemy.orm import Session
-from orm.user import create_user, read_users, read_user_by_key_exists
-from schemas.common.response import response_schema
-from fastapi import status
+from orm.user import create_user, read_user_by_id, read_users, user_by_key_exists, delete_user
+from schemas.common.response import Response_Schema_Pagination, Response_Schema_Unit
 from fastapi.encoders import jsonable_encoder
-from passlib.context import CryptContext
-from fastapi import Depends, status
 from passlib.context import CryptContext
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -21,39 +19,82 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_model=response_schema[User_Read])
-def users(db: Session = Depends(get_db), common: pagination_schema = Depends(pagination_router)):
-    users = jsonable_encoder(read_users(db, common))
-    for user in users:
-        user.pop("password", None)
+@router.get("/",
+            response_model=Response_Schema_Pagination[User_Read],
+            summary="Lista usuários"
+            )
+def read(db: Session = Depends(get_db), common: Pagination_Schema = Depends()):
+    users, metadata = read_users(db, common)
 
-    return response_schema(
-        status=status.HTTP_200_OK,
+    return Response_Schema_Pagination(
+        data=users,
+        metadata=metadata
+    )
+
+
+@router.get("/{id}",
+            response_model=Response_Schema_Unit[User_Read],
+            summary="Lista um usuário",
+            responses=http_response_openapi(
+                status.HTTP_404_NOT_FOUND,
+                Exception_Schema
+            ))
+def read_id(
+        id: int = Path(description="identificador do usuário"),
+        db: Session = Depends(get_db)):
+    users = jsonable_encoder(read_user_by_id(db, id))
+
+    return Response_Schema_Unit(
         data=users
     )
 
 
-@router.post("/", response_model=response_schema)
-def user(
-    user: User_Create, db: Session = Depends(get_db)
+@router.post("/",
+             response_model=Response_Schema_Unit[User_Read],
+             status_code=201,
+             summary="Cadastra um usuário",
+             responses=http_response_openapi(
+                 status.HTTP_400_BAD_REQUEST,
+                 Exception_Schema,
+             ))
+def create(
+    user: User_Create,
+    db: Session = Depends(get_db),
 ):
 
     if (user.password != user.passwordConfirmation):
-        return response_schema(message="Erro. As senhas fornecidas não coincidem!",
-                               status=status.HTTP_400_BAD_REQUEST)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                            detail="Erro. As senhas fornecidas não coincidem!")
 
-    elif (read_user_by_key_exists(db, "username", user.username)):
-        return response_schema(message="Erro. O nome de usuário fornecido está em uso!",
-                               status=status.HTTP_400_BAD_REQUEST)
+    elif (user_by_key_exists(db, "username", user.username)):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                            detail="Erro. O nome de usuário fornecido está em uso!")
 
-    elif (read_user_by_key_exists(db, "email", user.email)):
-        return response_schema(message="Erro. O e-mail fornecido está em uso!",
-                               status=status.HTTP_400_BAD_REQUEST)
+    elif (user_by_key_exists(db, "email", user.email)):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                            detail="Erro. O e-mail fornecido está em uso!")
 
     else:
         user.password = pwd_context.hash(user.password)
         data = jsonable_encoder(create_user(db=db, user=user))
-        data.pop('password', None)
 
-        return response_schema(message="Sucesso. O cadastro foi realizado!",
-                               status=status.HTTP_201_CREATED, data=data)
+        return Response_Schema_Unit(data=data)
+
+
+@router.delete("/{id}",
+               response_model=Response_Schema_Unit[User_Read],
+               summary="Deleta um usuário",
+               responses=http_response_openapi(
+                   status.HTTP_404_NOT_FOUND,
+                   Exception_Schema,
+               )
+               )
+def delete(
+        id: int = Path(description="identificador do usuário"),
+        db: Session = Depends(get_db)
+):
+
+    user = jsonable_encoder(delete_user(db, id))
+    return Response_Schema_Unit(
+        data=user
+    )
