@@ -1,5 +1,5 @@
 from fastapi import FastAPI, HTTPException
-from routers import openapi, user, problema
+from routers import openapi, user, problema, auth
 from database import engine, Base
 from fastapi.openapi.utils import get_openapi
 from fastapi import FastAPI, Request
@@ -15,6 +15,7 @@ app = FastAPI(docs_url=None,
 app.include_router(openapi.router)
 app.include_router(user.router)
 app.include_router(problema.router)
+app.include_router(auth.router)
 
 
 def custom_openapi():
