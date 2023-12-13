@@ -32,7 +32,7 @@ def read(db: Session = Depends(get_db), common: Pagination_Schema = Depends()):
     )
 
 
-@router.get("/{id}",
+@router.get("/{id}/",
             response_model=Response_Schema_Unit[User_Read],
             summary="Lista um usuário",
             responses=http_response_openapi(
@@ -81,7 +81,7 @@ def create(
         return Response_Schema_Unit(data=data)
 
 
-@router.delete("/{id}",
+@router.delete("/{id}/",
                response_model=Response_Schema_Unit[User_Read],
                summary="Deleta um usuário",
                responses=http_response_openapi(
