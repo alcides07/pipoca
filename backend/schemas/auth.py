@@ -3,7 +3,7 @@ from pydantic import BaseModel, Field
 
 class User_Login(BaseModel):
     credential: str = Field(
-        description="Apelido ou e-mail do usuário"
+        description="Username (apelido) ou e-mail do usuário"
     )
 
     password: str = Field(
@@ -13,5 +13,12 @@ class User_Login(BaseModel):
 
 
 class User_Login_Out(BaseModel):
-    token: str = Field(
-        description="Token do usuário")
+    access_token: str = Field(
+        description="Token de acesso do usuário")
+
+    token_type: str = Field(
+        description="Tipo do token utilizado")
+
+
+class Token_Data(BaseModel):
+    username: str = Field(description="Apelido do usuário")
