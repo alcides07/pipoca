@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends
+from dependencies.authenticated_user import get_authenticated_user
 from schemas.problema import Problema_Create, Problema_Read
 from schemas.common.pagination import Pagination_Schema
 from dependencies.database import get_db
@@ -11,6 +12,7 @@ from fastapi import Depends
 router = APIRouter(
     prefix="/problemas",
     tags=["problema"],
+    dependencies=[Depends(get_authenticated_user)],
 )
 
 
