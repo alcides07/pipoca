@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from models.user import User
+from orm.common.index import get_by_key_value
 from schemas.auth import User_Login_Out
 from dependencies.database import get_db
 from sqlalchemy.orm import Session
-from orm.user import read_user_by_key
 from passlib.context import CryptContext
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import jwt
@@ -27,7 +28,7 @@ def create_token(data: dict, expires_delta: timedelta):
 
 def authenticate_user(db, credential: str, password: str):
     def authenticate_with_key(key: str):
-        user_db = read_user_by_key(db, key, credential)
+        user_db = get_by_key_value(db, User, key, credential)
         if user_db and verify_password(password, user_db.password):
             return user_db
         return False
