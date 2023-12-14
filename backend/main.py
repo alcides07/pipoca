@@ -1,8 +1,10 @@
 from fastapi import FastAPI, HTTPException
-from routers import openapi, user, problema
+from schemas.common.exception import Exception_Schema
+from openapi.http_response_openapi import http_response_openapi
+from routers import openapi, user, problema, auth
 from database import engine, Base
 from fastapi.openapi.utils import get_openapi
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
 
 
@@ -10,11 +12,17 @@ Base.metadata.create_all(bind=engine)
 
 app = FastAPI(docs_url=None,
               redoc_url=None,
-              swagger_ui_parameters={"syntaxHighlight.theme": "nord"})
+              swagger_ui_parameters={"syntaxHighlight.theme": "nord"},
+              responses=http_response_openapi(
+                  status.HTTP_401_UNAUTHORIZED,
+                  Exception_Schema
+              )
+              )
 
 app.include_router(openapi.router)
 app.include_router(user.router)
 app.include_router(problema.router)
+app.include_router(auth.router)
 
 
 def custom_openapi():
