@@ -1,10 +1,12 @@
 from fastapi import APIRouter, Depends
+from models.problema import Problema
+from orm.common.index import get_all
 from dependencies.authenticated_user import get_authenticated_user
 from schemas.problema import Problema_Create, Problema_Read
 from schemas.common.pagination import Pagination_Schema
 from dependencies.database import get_db
 from sqlalchemy.orm import Session
-from orm.problema import create_problema, read_problemas
+from orm.problema import create_problema
 from schemas.common.response import Response_Schema_Pagination, Response_Schema_Unit
 from fastapi import Depends
 
@@ -18,7 +20,7 @@ router = APIRouter(
 
 @router.get("/", response_model=Response_Schema_Pagination[Problema_Read], summary="Lista problemas")
 def read(db: Session = Depends(get_db), common: Pagination_Schema = Depends()):
-    problemas, metadata = read_problemas(db, common)
+    problemas, metadata = get_all(db, Problema, common)
 
     return Response_Schema_Pagination(
         data=problemas,

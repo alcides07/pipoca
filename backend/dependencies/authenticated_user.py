@@ -1,8 +1,9 @@
 from fastapi import Depends, HTTPException, status
+from models.user import User
+from orm.common.index import get_by_key_value
 from schemas.auth import Token_Data
 from dependencies.database import get_db
 from sqlalchemy.orm import Session
-from orm.user import read_user_by_key
 from jose import JWTError, jwt
 from decouple import config
 from routers.auth import oauth2_scheme
@@ -25,7 +26,7 @@ async def get_authenticated_user(token: str = Depends(oauth2_scheme), db: Sessio
         token_data = Token_Data(username=username)
     except JWTError:
         raise credentials_exception
-    user = read_user_by_key(db, "username", token_data.username)
+    user = get_by_key_value(db, User, "username", token_data.username)
     if user is None:
         raise credentials_exception
     return user
