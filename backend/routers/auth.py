@@ -13,7 +13,7 @@ from decouple import config
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth")
 ALGORITHM = str(config("ALGORITHM"))
-TOKEN_EXPIRE_MINUTES = config("TOKEN_EXPIRE_MINUTES")
+TOKEN_EXPIRE_MINUTES = float(config("TOKEN_EXPIRE_MINUTES"))
 
 
 def create_token(data: dict, expires_delta: timedelta):
