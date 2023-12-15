@@ -1,4 +1,6 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import JSONResponse
+from utils.translate import translate
 from utils.errors import errors
 from openapi.validation_exception import validation_exception_handler
 from routers.index import routes
@@ -18,7 +20,7 @@ app = FastAPI(docs_url=None,
               },
               exception_handlers={
                   RequestValidationError: validation_exception_handler
-              }
+              }  # type: ignore
               )
 
 for router in routes:
@@ -50,5 +52,12 @@ def custom_openapi():
     app.openapi_schema = openapi_schema
     return app.openapi_schema
 
+
+@app.exception_handler(HTTPException)
+async def exception_handler(request: Request, exception: HTTPException):
+    return JSONResponse(
+        status_code=exception.status_code,
+        content={"error": translate(exception.detail).capitalize()}
+    )
 
 app.openapi = custom_openapi
