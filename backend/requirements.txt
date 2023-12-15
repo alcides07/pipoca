@@ -10,3 +10,4 @@ bcrypt==4.1.1
 email-validator==2.1.0.post1
 gunicorn==21.2.0
 python-multipart==0.0.6
+deep-translator==1.11.4
