@@ -1,15 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException, Path, status
+from utils.errors import errors
 from models.user import User
 from orm.common.index import delete_object, get_by_key_value_exists, get_by_id, get_all
 from dependencies.authenticated_user import get_authenticated_user
-from schemas.common.exception import Exception_Schema
-from openapi.http_response_openapi import http_response_openapi
 from schemas.user import User_Create, User_Read
 from schemas.common.pagination import Pagination_Schema
 from dependencies.database import get_db
 from sqlalchemy.orm import Session
 from orm.user import create_user
-from schemas.common.response import Response_Schema_Pagination, Response_Schema_Unit
+from schemas.common.response import Response_Pagination_Schema, Response_Unit_Schema
 from fastapi.encoders import jsonable_encoder
 from passlib.context import CryptContext
 
@@ -23,10 +22,9 @@ router = APIRouter(
 
 
 @router.get("/",
-            response_model=Response_Schema_Pagination[User_Read],
+            response_model=Response_Pagination_Schema[User_Read],
             summary="Lista usuários",
             dependencies=[Depends(get_authenticated_user)],
-
             )
 def read(
         db: Session = Depends(get_db),
@@ -34,20 +32,19 @@ def read(
 ):
     users, metadata = get_all(db, User, common)
 
-    return Response_Schema_Pagination(
+    return Response_Pagination_Schema(
         data=users,
         metadata=metadata
     )
 
 
 @router.get("/{id}/",
-            response_model=Response_Schema_Unit[User_Read],
+            response_model=Response_Unit_Schema[User_Read],
             summary="Lista um usuário",
-            responses=http_response_openapi(
-                status.HTTP_404_NOT_FOUND,
-                Exception_Schema
-            ),
             dependencies=[Depends(get_authenticated_user)],
+            responses={
+                404: errors[404]
+            }
             )
 def read_id(
         id: int = Path(description="identificador do usuário"),
@@ -55,19 +52,21 @@ def read_id(
 ):
     users = jsonable_encoder(get_by_id(db, User, id))
 
-    return Response_Schema_Unit(
+    return Response_Unit_Schema(
         data=users
     )
 
 
 @router.post("/",
-             response_model=Response_Schema_Unit[User_Read],
+             response_model=Response_Unit_Schema[User_Read],
              status_code=201,
              summary="Cadastra um usuário",
-             responses=http_response_openapi(
-                 status.HTTP_400_BAD_REQUEST,
-                 Exception_Schema,
-             ))
+             responses={
+                 400: errors[400],
+                 422: errors[422],
+
+             }
+             )
 def create(
     user: User_Create,
     db: Session = Depends(get_db),
@@ -89,16 +88,15 @@ def create(
         user.password = pwd_context.hash(user.password)
         data = jsonable_encoder(create_user(db=db, user=user))
 
-        return Response_Schema_Unit(data=data)
+        return Response_Unit_Schema(data=data)
 
 
 @router.delete("/{id}/",
-               response_model=Response_Schema_Unit[User_Read],
+               response_model=Response_Unit_Schema[User_Read],
                summary="Deleta um usuário",
-               responses=http_response_openapi(
-                   status.HTTP_404_NOT_FOUND,
-                   Exception_Schema,
-               ),
+               responses={
+                   404: errors[404]
+               },
                dependencies=[Depends(get_authenticated_user)],
                )
 def delete(
@@ -107,6 +105,6 @@ def delete(
 ):
 
     user = jsonable_encoder(delete_object(db, User, id))
-    return Response_Schema_Unit(
+    return Response_Unit_Schema(
         data=user
     )
