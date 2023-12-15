@@ -11,8 +11,8 @@ def validation_exception_handler(request: Request, exception: RequestValidationE
         errors=[
             Response_Validation_Schema(
                 field=error["loc"][1],
-                type=error["type"],
-                message=translate(text=error["msg"])
+                type=translate(error["type"]),
+                message=translate(text=error["msg"]),
             )
             for error in exception.errors()
         ]
