@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from utils.errors import errors
 from models.user import User
 from orm.common.index import get_by_key_value
 from schemas.auth import User_Login_Out
@@ -48,7 +49,10 @@ router = APIRouter(
 
 @router.post("/",
              summary="Autentica um usuário",
-             response_model=User_Login_Out
+             response_model=User_Login_Out,
+             responses={
+                 422: errors[422]
+             }
              )
 async def login(
     form_data: OAuth2PasswordRequestForm = Depends(),

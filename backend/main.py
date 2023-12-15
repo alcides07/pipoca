@@ -1,11 +1,13 @@
-from fastapi import FastAPI, HTTPException
-from schemas.common.exception import Exception_Schema
-from openapi.http_response_openapi import http_response_openapi
-from routers import openapi, user, problema, auth
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import JSONResponse
+from utils.translate import translate
+from utils.errors import errors
+from openapi.validation_exception import validation_exception_handler
+from routers.index import routes
 from database import engine, Base
 from fastapi.openapi.utils import get_openapi
-from fastapi import FastAPI, Request, status
-from fastapi.responses import JSONResponse
+from fastapi import FastAPI
+from fastapi.exceptions import RequestValidationError
 
 
 Base.metadata.create_all(bind=engine)
@@ -13,16 +15,16 @@ Base.metadata.create_all(bind=engine)
 app = FastAPI(docs_url=None,
               redoc_url=None,
               swagger_ui_parameters={"syntaxHighlight.theme": "nord"},
-              responses=http_response_openapi(
-                  status.HTTP_401_UNAUTHORIZED,
-                  Exception_Schema
-              )
+              responses={
+                  401: errors[401]
+              },
+              exception_handlers={
+                  RequestValidationError: validation_exception_handler
+              }  # type: ignore
               )
 
-app.include_router(openapi.router)
-app.include_router(user.router)
-app.include_router(problema.router)
-app.include_router(auth.router)
+for router in routes:
+    app.include_router(router)
 
 
 def custom_openapi():
@@ -38,6 +40,15 @@ def custom_openapi():
     openapi_schema["info"]["x-logo"] = {
         "url": "https://fastapi.tiangolo.com/img/logo-margin/logo-teal.png"
     }
+
+    # Remove retorno HTTP 422 por padrão em GET e DELETE
+    for method in openapi_schema["paths"]:
+        try:
+            del openapi_schema["paths"][method]["get"]["responses"]["422"]
+            del openapi_schema["paths"][method]["delete"]["responses"]["422"]
+        except KeyError:
+            pass
+
     app.openapi_schema = openapi_schema
     return app.openapi_schema
 
@@ -46,7 +57,7 @@ def custom_openapi():
 async def exception_handler(request: Request, exception: HTTPException):
     return JSONResponse(
         status_code=exception.status_code,
-        content={"error": exception.detail}
+        content={"error": translate(exception.detail).capitalize()}
     )
 
 app.openapi = custom_openapi

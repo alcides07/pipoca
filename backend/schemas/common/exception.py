@@ -1,5 +1,5 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class Exception_Schema(BaseModel):
-    error: str
+    error: str = Field(description="Mensagem de erro")
