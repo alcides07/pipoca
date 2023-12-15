@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from utils.errors import errors
 from openapi.validation_exception import validation_exception_handler
 from routers.index import routes
 from database import engine, Base
@@ -12,6 +13,9 @@ Base.metadata.create_all(bind=engine)
 app = FastAPI(docs_url=None,
               redoc_url=None,
               swagger_ui_parameters={"syntaxHighlight.theme": "nord"},
+              responses={
+                  401: errors[401]
+              },
               exception_handlers={
                   RequestValidationError: validation_exception_handler
               }
