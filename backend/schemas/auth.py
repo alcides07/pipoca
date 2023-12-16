@@ -12,7 +12,7 @@ class User_Login(BaseModel):
     )
 
 
-class User_Login_Out(BaseModel):
+class UserLoginOut(BaseModel):
     access_token: str = Field(
         description="Token de acesso do usuário")
 
