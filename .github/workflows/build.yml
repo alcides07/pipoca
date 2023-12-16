@@ -5,6 +5,9 @@ on:
       - main
       - dev-backend
   pull_request:
+    branches:
+      - main
+      - dev-backend
     types: [opened, synchronize, reopened]
 jobs:
   sonarcloud:
