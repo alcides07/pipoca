@@ -22,7 +22,7 @@ class UserCreate(UserBase):
     )
 
 
-class User_Read(UserBase):
+class UserRead(UserBase):
     id: int
 
     class Config:

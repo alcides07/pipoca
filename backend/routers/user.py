@@ -3,7 +3,7 @@ from utils.errors import errors
 from models.user import User
 from orm.common.index import delete_object, get_by_key_value_exists, get_by_id, get_all
 from dependencies.authenticated_user import get_authenticated_user
-from schemas.user import UserCreate, User_Read
+from schemas.user import UserCreate, UserRead
 from schemas.common.pagination import Pagination_Schema
 from dependencies.database import get_db
 from sqlalchemy.orm import Session
@@ -22,7 +22,7 @@ router = APIRouter(
 
 
 @router.get("/",
-            response_model=ResponsePaginationSchema[User_Read],
+            response_model=ResponsePaginationSchema[UserRead],
             summary="Lista usuários",
             dependencies=[Depends(get_authenticated_user)],
             )
@@ -39,7 +39,7 @@ def read(
 
 
 @router.get("/{id}/",
-            response_model=ResponseUnitSchema[User_Read],
+            response_model=ResponseUnitSchema[UserRead],
             summary="Lista um usuário",
             dependencies=[Depends(get_authenticated_user)],
             responses={
@@ -58,7 +58,7 @@ def read_id(
 
 
 @router.post("/",
-             response_model=ResponseUnitSchema[User_Read],
+             response_model=ResponseUnitSchema[UserRead],
              status_code=201,
              summary="Cadastra um usuário",
              responses={
@@ -92,7 +92,7 @@ def create(
 
 
 @router.delete("/{id}/",
-               response_model=ResponseUnitSchema[User_Read],
+               response_model=ResponseUnitSchema[UserRead],
                summary="Deleta um usuário",
                responses={
                    404: errors[404]
