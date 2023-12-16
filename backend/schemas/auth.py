@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
 
 
-class User_Login(BaseModel):
+class UserLogin(BaseModel):
     credential: str = Field(
         description="Username (apelido) ou e-mail do usuário"
     )
