@@ -12,5 +12,5 @@ class TagRead(TagBase):
     id: int
 
 
-class Tag_Create(TagBase):
+class TagCreate(TagBase):
     pass
