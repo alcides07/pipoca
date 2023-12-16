@@ -14,7 +14,7 @@ class ResponseUnitSchema(BaseModel, Generic[T]):
     data: T | List[T] | None = None
 
 
-class Response_Message_Schema(BaseModel, Generic[T]):
+class ResponseMessageSchema(BaseModel, Generic[T]):
     data: T | List[T] | None = None
     message: str | None = None
 
