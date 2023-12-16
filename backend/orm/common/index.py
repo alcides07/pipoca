@@ -6,29 +6,29 @@ from fastapi import status
 
 
 def get_by_key_value_exists(db: Session, model: Any, key: str, value):
-    object = db.query(model).filter(getattr(model, key) == value).first()
-    return True if object != None else False
+    db_object = db.query(model).filter(getattr(model, key) == value).first()
+    return True if db_object != None else False
 
 
 def get_by_key_value(db: Session, model: Any, key: str, value):
-    object = db.query(model).filter(getattr(model, key) == value).first()
-    return object
+    db_object = db.query(model).filter(getattr(model, key) == value).first()
+    return db_object
 
 
 def get_by_id(db: Session, model: Any, id: int):
-    object = db.query(model).filter(model.id == id).first()
-    if (object):
-        return object
+    db_object = db.query(model).filter(model.id == id).first()
+    if (db_object):
+        return db_object
     raise HTTPException(status.HTTP_404_NOT_FOUND)
 
 
 def get_all(db: Session, model: Any, common: PaginationSchema):
-    objects = db.query(model).offset(common.offset).limit(common.limit)
+    db_objects = db.query(model).offset(common.offset).limit(common.limit)
     total = db.query(model).count()
     metadata = MetadataSchema(
-        count=objects.count(), total=total, offset=common.offset, limit=common.limit)
+        count=db_objects.count(), total=total, offset=common.offset, limit=common.limit)
 
-    return objects.all(), metadata
+    return db_objects.all(), metadata
 
 
 def create_object(db: Session, model: Any, schema: Any):
@@ -40,9 +40,9 @@ def create_object(db: Session, model: Any, schema: Any):
 
 
 def delete_object(db: Session, model: Any, id: int):
-    object = db.query(model).filter(model.id == id).first()
-    if (object):
-        db.delete(object)
+    db_object = db.query(model).filter(model.id == id).first()
+    if (db_object):
+        db.delete(db_object)
         db.commit()
-        return object
+        return db_object
     raise HTTPException(status.HTTP_404_NOT_FOUND)
