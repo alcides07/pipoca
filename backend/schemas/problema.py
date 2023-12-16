@@ -1,8 +1,8 @@
 from pydantic import BaseModel, Field
-from schemas.tag import Tag_Read
+from schemas.tag import TagRead
 
 
-class Problema_Base(BaseModel):
+class ProblemaBase(BaseModel):
     nome: str = Field(
         max_length=64,
         description="Nome do problema"
@@ -31,15 +31,15 @@ class Problema_Base(BaseModel):
     )
 
 
-class Problema_Create(Problema_Base):
+class ProblemaCreate(ProblemaBase):
     tags: list[str] = Field(
         description="Palavras-chave utilizadas como etiquetas"
     )
 
 
-class Problema_Read(Problema_Base):
+class ProblemaRead(ProblemaBase):
     id: int
-    tags: list[Tag_Read]
+    tags: list[TagRead]
 
     class Config:
         from_attributes = True

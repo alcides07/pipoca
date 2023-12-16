@@ -1,7 +1,7 @@
 from fastapi import Depends, HTTPException, status
 from models.user import User
 from orm.common.index import get_by_key_value
-from schemas.auth import Token_Data
+from schemas.auth import TokenData
 from dependencies.database import get_db
 from sqlalchemy.orm import Session
 from jose import JWTError, jwt
@@ -23,10 +23,10 @@ async def get_authenticated_user(token: str = Depends(oauth2_scheme), db: Sessio
         username = str(payload.get("sub"))
         if username is None:
             raise credentials_exception
-        token_data = Token_Data(username=username)
+        TokenData = TokenData(username=username)
     except JWTError:
         raise credentials_exception
-    user = get_by_key_value(db, User, "username", token_data.username)
+    user = get_by_key_value(db, User, "username", TokenData.username)
     if user is None:
         raise credentials_exception
     return user

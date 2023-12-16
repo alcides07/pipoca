@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field, EmailStr
 
 
-class User_Base(BaseModel):
+class UserBase(BaseModel):
     username: str = Field(
         max_length=32,
         description="Apelido do usuário"
@@ -10,7 +10,7 @@ class User_Base(BaseModel):
     email: EmailStr = Field(description="E-mail do usuário")
 
 
-class User_Create(User_Base):
+class UserCreate(UserBase):
     password: str = Field(
         max_length=32,
         description="Senha do usuário"
@@ -22,7 +22,7 @@ class User_Create(User_Base):
     )
 
 
-class User_Read(User_Base):
+class UserRead(UserBase):
     id: int
 
     class Config:

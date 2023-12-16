@@ -3,13 +3,13 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from fastapi import status, Request
 from utils.translate import translate
-from schemas.common.response import Response_Validation_List_Schema, Response_Validation_Schema
+from schemas.common.response import ResponseValidationListSchema, ResponseValidationSchema
 
 
 def validation_exception_handler(request: Request, exception: RequestValidationError):
-    response = Response_Validation_List_Schema(
+    response = ResponseValidationListSchema(
         errors=[
-            Response_Validation_Schema(
+            ResponseValidationSchema(
                 field=error["loc"][1],
                 type=translate(error["type"]),
                 message=translate(text=error["msg"]),

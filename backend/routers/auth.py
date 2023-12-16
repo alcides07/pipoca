@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from utils.errors import errors
 from models.user import User
 from orm.common.index import get_by_key_value
-from schemas.auth import User_Login_Out
+from schemas.auth import UserLoginOut
 from dependencies.database import get_db
 from sqlalchemy.orm import Session
 from passlib.context import CryptContext
@@ -49,7 +49,7 @@ router = APIRouter(
 
 @router.post("/",
              summary="Autentica um usuário",
-             response_model=User_Login_Out,
+             response_model=UserLoginOut,
              responses={
                  422: errors[422]
              }
@@ -70,5 +70,5 @@ async def login(
     access_token = create_token(
         data={"sub": user.username}, expires_delta=access_token_expires
     )
-    data = User_Login_Out(access_token=access_token, token_type="bearer")
+    data = UserLoginOut(access_token=access_token, token_type="bearer")
     return data

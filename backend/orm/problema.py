@@ -1,10 +1,10 @@
 from sqlalchemy.orm import Session
 from models.problema import Problema
 from models.tag import Tag
-from schemas.problema import Problema_Create
+from schemas.problema import ProblemaCreate
 
 
-def create_problema(db: Session, problema: Problema_Create):
+def create_problema(db: Session, problema: ProblemaCreate):
     db_problema = Problema(**problema.model_dump(exclude=set(["tags"])))
     db.add(db_problema)
 
