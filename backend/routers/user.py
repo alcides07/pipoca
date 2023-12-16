@@ -3,7 +3,7 @@ from utils.errors import errors
 from models.user import User
 from orm.common.index import delete_object, get_by_key_value_exists, get_by_id, get_all
 from dependencies.authenticated_user import get_authenticated_user
-from schemas.user import User_Create, User_Read
+from schemas.user import UserCreate, User_Read
 from schemas.common.pagination import Pagination_Schema
 from dependencies.database import get_db
 from sqlalchemy.orm import Session
@@ -68,7 +68,7 @@ def read_id(
              }
              )
 def create(
-    user: User_Create,
+    user: UserCreate,
     db: Session = Depends(get_db),
 ):
 

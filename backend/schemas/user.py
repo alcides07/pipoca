@@ -10,7 +10,7 @@ class UserBase(BaseModel):
     email: EmailStr = Field(description="E-mail do usuário")
 
 
-class User_Create(UserBase):
+class UserCreate(UserBase):
     password: str = Field(
         max_length=32,
         description="Senha do usuário"
