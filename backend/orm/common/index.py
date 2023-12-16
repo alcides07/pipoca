@@ -1,7 +1,7 @@
 from typing import Any
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
-from schemas.common.pagination import Metadata_Schema, Pagination_Schema
+from schemas.common.pagination import MetadataSchema, Pagination_Schema
 from fastapi import status
 
 
@@ -25,7 +25,7 @@ def get_by_id(db: Session, model: Any, id: int):
 def get_all(db: Session, model: Any, common: Pagination_Schema):
     objects = db.query(model).offset(common.offset).limit(common.limit)
     total = db.query(model).count()
-    metadata = Metadata_Schema(
+    metadata = MetadataSchema(
         count=objects.count(), total=total, offset=common.offset, limit=common.limit)
 
     return objects.all(), metadata

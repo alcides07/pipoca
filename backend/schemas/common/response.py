@@ -1,12 +1,12 @@
 from pydantic import BaseModel, Field
 from typing import TypeVar, List, Generic
-from schemas.common.pagination import Metadata_Schema
+from schemas.common.pagination import MetadataSchema
 
 T = TypeVar('T')
 
 
 class Response_Pagination_Schema(BaseModel, Generic[T]):
-    metadata: Metadata_Schema | None = None
+    metadata: MetadataSchema | None = None
     data: T | List[T] | None = None
 
 

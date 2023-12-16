@@ -13,7 +13,7 @@ class Limit_Schema(int, Enum):
     cem = 100
 
 
-class Metadata_Schema(BaseModel):
+class MetadataSchema(BaseModel):
     count: int = Field(
         description="Quantidade de registros retornados na consulta")
     limit: int = Field(description="Quantidade de registros desejados")
