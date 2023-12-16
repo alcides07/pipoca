@@ -3,7 +3,7 @@ from utils.errors import errors
 from models.problema import Problema
 from orm.common.index import get_all
 from dependencies.authenticated_user import get_authenticated_user
-from schemas.problema import Problema_Create, Problema_Read
+from schemas.problema import ProblemaCreate, Problema_Read
 from schemas.common.pagination import Pagination_Schema
 from dependencies.database import get_db
 from sqlalchemy.orm import Session
@@ -38,7 +38,7 @@ def read(db: Session = Depends(get_db), common: Pagination_Schema = Depends()):
              }
              )
 def create(
-    problema: Problema_Create, db: Session = Depends(get_db)
+    problema: ProblemaCreate, db: Session = Depends(get_db)
 ):
     data = create_problema(db=db, problema=problema)
 

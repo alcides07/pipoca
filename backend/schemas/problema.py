@@ -31,7 +31,7 @@ class ProblemaBase(BaseModel):
     )
 
 
-class Problema_Create(ProblemaBase):
+class ProblemaCreate(ProblemaBase):
     tags: list[str] = Field(
         description="Palavras-chave utilizadas como etiquetas"
     )
