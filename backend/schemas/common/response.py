@@ -19,12 +19,12 @@ class ResponseMessageSchema(BaseModel, Generic[T]):
     message: str | None = None
 
 
-class Response_Validation_Schema(BaseModel):
+class ResponseValidationSchema(BaseModel):
     field: str = Field(description="Campo que possui erro")
     type: str = Field(description="Tipo do erro")
     message: str = Field(description="Mensagem de detalhamento do erro")
 
 
-class Response_Validation_List_Schema(BaseModel):
-    errors: List[Response_Validation_Schema] = Field(
+class ResponseValidationListSchema(BaseModel):
+    errors: List[ResponseValidationSchema] = Field(
         description="Lista de erros")
