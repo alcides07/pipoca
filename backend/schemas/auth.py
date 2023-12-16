@@ -20,5 +20,5 @@ class UserLoginOut(BaseModel):
         description="Tipo do token utilizado")
 
 
-class Token_Data(BaseModel):
+class TokenData(BaseModel):
     username: str = Field(description="Apelido do usuário")
