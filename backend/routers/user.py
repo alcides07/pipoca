@@ -8,7 +8,7 @@ from schemas.common.pagination import Pagination_Schema
 from dependencies.database import get_db
 from sqlalchemy.orm import Session
 from orm.user import create_user
-from schemas.common.response import ResponsePaginationSchema, Response_Unit_Schema
+from schemas.common.response import ResponsePaginationSchema, ResponseUnitSchema
 from fastapi.encoders import jsonable_encoder
 from passlib.context import CryptContext
 
@@ -39,7 +39,7 @@ def read(
 
 
 @router.get("/{id}/",
-            response_model=Response_Unit_Schema[User_Read],
+            response_model=ResponseUnitSchema[User_Read],
             summary="Lista um usuário",
             dependencies=[Depends(get_authenticated_user)],
             responses={
@@ -52,13 +52,13 @@ def read_id(
 ):
     users = jsonable_encoder(get_by_id(db, User, id))
 
-    return Response_Unit_Schema(
+    return ResponseUnitSchema(
         data=users
     )
 
 
 @router.post("/",
-             response_model=Response_Unit_Schema[User_Read],
+             response_model=ResponseUnitSchema[User_Read],
              status_code=201,
              summary="Cadastra um usuário",
              responses={
@@ -88,11 +88,11 @@ def create(
         user.password = pwd_context.hash(user.password)
         data = jsonable_encoder(create_user(db=db, user=user))
 
-        return Response_Unit_Schema(data=data)
+        return ResponseUnitSchema(data=data)
 
 
 @router.delete("/{id}/",
-               response_model=Response_Unit_Schema[User_Read],
+               response_model=ResponseUnitSchema[User_Read],
                summary="Deleta um usuário",
                responses={
                    404: errors[404]
@@ -105,6 +105,6 @@ def delete(
 ):
 
     user = jsonable_encoder(delete_object(db, User, id))
-    return Response_Unit_Schema(
+    return ResponseUnitSchema(
         data=user
     )

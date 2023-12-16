@@ -10,7 +10,7 @@ class ResponsePaginationSchema(BaseModel, Generic[T]):
     data: T | List[T] | None = None
 
 
-class Response_Unit_Schema(BaseModel, Generic[T]):
+class ResponseUnitSchema(BaseModel, Generic[T]):
     data: T | List[T] | None = None
 
 
