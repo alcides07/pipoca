@@ -3,7 +3,7 @@ from utils.errors import errors
 from models.problema import Problema
 from orm.common.index import get_all
 from dependencies.authenticated_user import get_authenticated_user
-from schemas.problema import ProblemaCreate, Problema_Read
+from schemas.problema import ProblemaCreate, ProblemaRead
 from schemas.common.pagination import Pagination_Schema
 from dependencies.database import get_db
 from sqlalchemy.orm import Session
@@ -19,7 +19,7 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_model=ResponsePaginationSchema[Problema_Read], summary="Lista problemas")
+@router.get("/", response_model=ResponsePaginationSchema[ProblemaRead], summary="Lista problemas")
 def read(db: Session = Depends(get_db), common: Pagination_Schema = Depends()):
     problemas, metadata = get_all(db, Problema, common)
 
@@ -30,7 +30,7 @@ def read(db: Session = Depends(get_db), common: Pagination_Schema = Depends()):
 
 
 @router.post("/",
-             response_model=ResponseUnitSchema[Problema_Read],
+             response_model=ResponseUnitSchema[ProblemaRead],
              status_code=201,
              summary="Cadastra problema",
              responses={

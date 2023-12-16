@@ -37,7 +37,7 @@ class ProblemaCreate(ProblemaBase):
     )
 
 
-class Problema_Read(ProblemaBase):
+class ProblemaRead(ProblemaBase):
     id: int
     tags: list[Tag_Read]
 
