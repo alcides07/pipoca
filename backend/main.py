@@ -33,7 +33,6 @@ def custom_openapi():
     openapi_schema = get_openapi(
         title="API Juiz Online",
         version="0.0.1",
-        summary="",
         description="API em desenvolvimento",
         routes=app.routes,
     )
