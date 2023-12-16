@@ -1,7 +1,7 @@
 from typing import Any
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
-from schemas.common.pagination import MetadataSchema, Pagination_Schema
+from schemas.common.pagination import MetadataSchema, PaginationSchema
 from fastapi import status
 
 
@@ -22,7 +22,7 @@ def get_by_id(db: Session, model: Any, id: int):
     raise HTTPException(status.HTTP_404_NOT_FOUND)
 
 
-def get_all(db: Session, model: Any, common: Pagination_Schema):
+def get_all(db: Session, model: Any, common: PaginationSchema):
     objects = db.query(model).offset(common.offset).limit(common.limit)
     total = db.query(model).count()
     metadata = MetadataSchema(

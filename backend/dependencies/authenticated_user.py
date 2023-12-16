@@ -23,10 +23,10 @@ async def get_authenticated_user(token: str = Depends(oauth2_scheme), db: Sessio
         username = str(payload.get("sub"))
         if username is None:
             raise credentials_exception
-        TokenData = TokenData(username=username)
+        token_data = TokenData(username=username)
     except JWTError:
         raise credentials_exception
-    user = get_by_key_value(db, User, "username", TokenData.username)
+    user = get_by_key_value(db, User, "username", token_data.username)
     if user is None:
         raise credentials_exception
     return user

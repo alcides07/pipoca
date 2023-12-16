@@ -22,7 +22,7 @@ class MetadataSchema(BaseModel):
         description="Quantidade de registros existentes")
 
 
-class Pagination_Schema:
+class PaginationSchema:
     def __init__(
         self,
         q: str = Query(

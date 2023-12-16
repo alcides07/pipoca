@@ -4,7 +4,7 @@ from models.user import User
 from orm.common.index import delete_object, get_by_key_value_exists, get_by_id, get_all
 from dependencies.authenticated_user import get_authenticated_user
 from schemas.user import UserCreate, UserRead
-from schemas.common.pagination import Pagination_Schema
+from schemas.common.pagination import PaginationSchema
 from dependencies.database import get_db
 from sqlalchemy.orm import Session
 from orm.user import create_user
@@ -28,7 +28,7 @@ router = APIRouter(
             )
 def read(
         db: Session = Depends(get_db),
-        common: Pagination_Schema = Depends(),
+        common: PaginationSchema = Depends(),
 ):
     users, metadata = get_all(db, User, common)
 
