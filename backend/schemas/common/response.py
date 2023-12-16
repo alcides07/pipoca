@@ -5,7 +5,7 @@ from schemas.common.pagination import MetadataSchema
 T = TypeVar('T')
 
 
-class Response_Pagination_Schema(BaseModel, Generic[T]):
+class ResponsePaginationSchema(BaseModel, Generic[T]):
     metadata: MetadataSchema | None = None
     data: T | List[T] | None = None
 

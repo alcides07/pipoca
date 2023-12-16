@@ -8,7 +8,7 @@ from schemas.common.pagination import Pagination_Schema
 from dependencies.database import get_db
 from sqlalchemy.orm import Session
 from orm.user import create_user
-from schemas.common.response import Response_Pagination_Schema, Response_Unit_Schema
+from schemas.common.response import ResponsePaginationSchema, Response_Unit_Schema
 from fastapi.encoders import jsonable_encoder
 from passlib.context import CryptContext
 
@@ -22,7 +22,7 @@ router = APIRouter(
 
 
 @router.get("/",
-            response_model=Response_Pagination_Schema[User_Read],
+            response_model=ResponsePaginationSchema[User_Read],
             summary="Lista usuários",
             dependencies=[Depends(get_authenticated_user)],
             )
@@ -32,7 +32,7 @@ def read(
 ):
     users, metadata = get_all(db, User, common)
 
-    return Response_Pagination_Schema(
+    return ResponsePaginationSchema(
         data=users,
         metadata=metadata
     )

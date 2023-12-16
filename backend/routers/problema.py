@@ -8,7 +8,7 @@ from schemas.common.pagination import Pagination_Schema
 from dependencies.database import get_db
 from sqlalchemy.orm import Session
 from orm.problema import create_problema
-from schemas.common.response import Response_Pagination_Schema, Response_Unit_Schema
+from schemas.common.response import ResponsePaginationSchema, Response_Unit_Schema
 from fastapi import Depends
 
 
@@ -19,11 +19,11 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_model=Response_Pagination_Schema[Problema_Read], summary="Lista problemas")
+@router.get("/", response_model=ResponsePaginationSchema[Problema_Read], summary="Lista problemas")
 def read(db: Session = Depends(get_db), common: Pagination_Schema = Depends()):
     problemas, metadata = get_all(db, Problema, common)
 
-    return Response_Pagination_Schema(
+    return ResponsePaginationSchema(
         data=problemas,
         metadata=metadata
     )
