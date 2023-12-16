@@ -8,7 +8,7 @@ class TagBase(BaseModel):
     )
 
 
-class Tag_Read(TagBase):
+class TagRead(TagBase):
     id: int
 
 

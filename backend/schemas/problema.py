@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from schemas.tag import Tag_Read
+from schemas.tag import TagRead
 
 
 class ProblemaBase(BaseModel):
@@ -39,7 +39,7 @@ class ProblemaCreate(ProblemaBase):
 
 class ProblemaRead(ProblemaBase):
     id: int
-    tags: list[Tag_Read]
+    tags: list[TagRead]
 
     class Config:
         from_attributes = True
