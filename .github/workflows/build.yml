@@ -3,11 +3,11 @@ on:
   push:
     branches:
       - main
-      - dev-backend
+      - "dev-backend"
   pull_request:
     branches:
       - main
-      - dev-backend
+      - "dev-backend"
     types: [opened, synchronize, reopened]
 jobs:
   sonarcloud:
