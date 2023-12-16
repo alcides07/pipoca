@@ -1,12 +1,12 @@
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from fastapi import status, Request
+from fastapi import status
 from utils.translate import translate
 from schemas.common.response import ResponseValidationListSchema, ResponseValidationSchema
 
 
-def validation_exception_handler(request: Request, exception: RequestValidationError):
+def validation_exception_handler(exception: RequestValidationError):
     response = ResponseValidationListSchema(
         errors=[
             ResponseValidationSchema(
