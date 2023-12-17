@@ -6,7 +6,7 @@ from utils.translate import translate
 from schemas.common.response import ResponseValidationListSchema, ResponseValidationSchema
 
 
-def validation_exception_handler(exception: RequestValidationError):
+def validation_exception_handler(_, exception: RequestValidationError):
     response = ResponseValidationListSchema(
         errors=[
             ResponseValidationSchema(
