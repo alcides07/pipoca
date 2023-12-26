@@ -1,7 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException, Path, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Path, status
 from utils.errors import errors
 from models.user import User
-from orm.common.index import delete_object, get_by_key_value_exists, get_by_id, get_all
+from orm.common.index import delete_object, get_by_key_value_exists, get_by_id, get_all, update_total
 from dependencies.authenticated_user import get_authenticated_user
 from schemas.user import UserCreate, UserRead
 from schemas.common.pagination import PaginationSchema
@@ -89,6 +89,26 @@ def create(
         data = jsonable_encoder(create_user(db=db, user=user))
 
         return ResponseUnitSchema(data=data)
+
+
+@router.put("/{id}/",
+            response_model=ResponseUnitSchema[UserCreate],
+            summary="Atualiza um usuário por completo",
+            responses={
+                404: errors[404]
+            },
+            dependencies=[Depends(get_authenticated_user)],
+            )
+def total_update(
+        id: int = Path(description="identificador do usuário"),
+        db: Session = Depends(get_db),
+        data: UserCreate = Body(),
+):
+
+    response = jsonable_encoder(update_total(db, User, id, data))
+    return ResponseUnitSchema(
+        data=response
+    )
 
 
 @router.delete("/{id}/",
