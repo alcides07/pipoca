@@ -13,6 +13,8 @@ from fastapi.encoders import jsonable_encoder
 from passlib.context import CryptContext
 
 
+USER_ID_DESCRIPTION = "identificador do usuário"
+
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 router = APIRouter(
@@ -47,7 +49,7 @@ def read(
             }
             )
 def read_id(
-        id: int = Path(description="identificador do usuário"),
+        id: int = Path(description=USER_ID_DESCRIPTION),
         db: Session = Depends(get_db)
 ):
     users = jsonable_encoder(get_by_id(db, User, id))
@@ -100,7 +102,7 @@ def create(
             dependencies=[Depends(get_authenticated_user)],
             )
 def total_update(
-        id: int = Path(description="identificador do usuário"),
+        id: int = Path(description=USER_ID_DESCRIPTION),
         db: Session = Depends(get_db),
         data: UserCreate = Body(),
 ):
@@ -120,7 +122,7 @@ def total_update(
                dependencies=[Depends(get_authenticated_user)],
                )
 def delete(
-        id: int = Path(description="identificador do usuário"),
+        id: int = Path(description=USER_ID_DESCRIPTION),
         db: Session = Depends(get_db)
 ):
 
