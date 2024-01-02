@@ -92,7 +92,7 @@ def create(
 
 
 @router.put("/{id}/",
-            response_model=ResponseUnitSchema[UserCreate],
+            response_model=ResponseUnitSchema[UserRead],
             summary="Atualiza um usuário por completo",
             responses={
                 404: errors[404]
