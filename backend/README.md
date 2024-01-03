@@ -2,8 +2,8 @@
     <img style="border-radius: 50%;" src="https://avatars.githubusercontent.com/alcides07" width="200px;" alt="Desenvolvedor Alcides Dantas"/>
   <h4>API em desenvolvimento</h4>
   <div>
-    <a href="#tecnologias-utilizadas">Tecnologias</a> •
-    <a href="#execução-do-projeto">Execução</a> 
+    <a href="#1-tecnologias-utilizadas">Tecnologias</a> •
+    <a href="#2-execução-do-projeto">Execução</a> 
   </div>
 </section>
 
