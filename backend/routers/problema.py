@@ -1,5 +1,7 @@
+import json
 from typing import Annotated
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
+from utils.bytesToMegabytes import bytesToMegabytes
 from utils.errors import errors
 from models.problema import Problema
 from orm.common.index import get_all
@@ -12,6 +14,8 @@ from orm.problema import create_problema
 from schemas.common.response import ResponsePaginationSchema, ResponseUnitSchema
 import zipfile
 import tempfile
+import xml.etree.ElementTree as ET
+
 
 router = APIRouter(
     prefix="/problemas",
@@ -75,19 +79,43 @@ def upload(
         tags=[]
     )
 
-    try:
-        with zipfile.ZipFile(temp_file, 'r') as zip:
-            for filename in zip.namelist():
 
-                # Cria as tags
-                if (filename.lower() == "tags"):
-                    with zip.open(filename) as tags:
-                        for tag in tags.readlines():
-                            problema.tags.append(tag.decode().strip())
+# try:
+    with zipfile.ZipFile(temp_file, 'r') as zip:
+        for filename in zip.namelist():
 
-        data = create_problema(db=db, problema=problema)
-        return ResponseUnitSchema(data=data)
+            # Lê o xml global do problema
+            if filename.lower() == "problem.xml":
+                with zip.open(filename) as xml:
+                    content = xml.read().decode()
+                    data = ET.fromstring(content)
 
-    except:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                            detail="Erro. Ocorreu um problema no processamento do pacote!")
+                    # Atribui o tempo limite
+                    tempo_limite = data.find('.//time-limit')
+                    if tempo_limite is not None and tempo_limite.text is not None:
+                        problema.tempo_limite = int(tempo_limite.text)
+
+                    # Atribui a memória limite
+                    memoria_limite = data.find('.//memory-limit')
+                    if memoria_limite is not None and memoria_limite.text is not None:
+                        problema.memoria_limite = bytesToMegabytes(int(
+                            (memoria_limite.text)))
+
+            # Lê os dados do statement de cada idioma
+            if filename.startswith("statements/") and filename.endswith("problem-properties.json"):
+                with zip.open(filename) as statement:
+                    content = statement.read().decode()
+                    data = json.loads(content)
+
+            # Adiciona as tags
+            if (filename.lower() == "tags"):
+                with zip.open(filename) as tags:
+                    for tag in tags.readlines():
+                        problema.tags.append(tag.decode().strip())
+
+    data = create_problema(db=db, problema=problema)
+    return ResponseUnitSchema(data=data)
+
+    # except:
+    #     raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+    #                         detail="Erro. Ocorreu uma falha no processamento do pacote!")
