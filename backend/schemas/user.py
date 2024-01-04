@@ -10,6 +10,13 @@ class UserBase(BaseModel):
     email: EmailStr = Field(description="E-mail do usuário")
 
 
+class UserRead(UserBase):
+    id: int
+
+    class Config:
+        from_attributes = True
+
+
 class UserCreate(UserBase):
     password: str = Field(
         max_length=32,
@@ -20,10 +27,3 @@ class UserCreate(UserBase):
         max_length=32,
         description="Confirmação da senha do usuário"
     )
-
-
-class UserRead(UserBase):
-    id: int
-
-    class Config:
-        from_attributes = True
