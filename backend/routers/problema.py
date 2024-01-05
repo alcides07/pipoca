@@ -1,7 +1,7 @@
 import json
 from typing import Annotated
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
-from utils.bytesToMegabytes import bytesToMegabytes
+from utils.bytes_to_megabytes import bytes_to_megabytes
 from utils.errors import errors
 from models.problema import Problema
 from orm.common.index import get_all
@@ -99,7 +99,7 @@ def upload(
                     # Atribui a memória limite
                     memoria_limite = data.find('.//memory-limit')
                     if memoria_limite is not None and memoria_limite.text is not None:
-                        problema.memoria_limite = bytesToMegabytes(int(
+                        problema.memoria_limite = bytes_to_megabytes(int(
                             (memoria_limite.text)))
 
             # Lê os dados do statement de cada idioma
