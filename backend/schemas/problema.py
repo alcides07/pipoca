@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field
 from schemas.tag import TagRead
+from schemas.declaracao import DeclaracaoCreate, DeclaracaoRead
 
 
 class ProblemaBase(BaseModel):
@@ -31,15 +32,19 @@ class ProblemaBase(BaseModel):
     )
 
 
-class ProblemaCreate(ProblemaBase):
-    tags: list[str] = Field(
-        description="Palavras-chave utilizadas como etiquetas"
-    )
-
-
 class ProblemaRead(ProblemaBase):
-    id: int
-    tags: list[TagRead]
+    id: int = Field(description="Identificador do problema")
+    tags: list[TagRead] = Field(description="Lista de palavras-chave")
+    declaracoes: list[DeclaracaoRead] = Field(
+        description="Declarações associadas ao problema")
 
     class Config:
         from_attributes = True
+
+
+class ProblemaCreate(ProblemaBase):
+    tags: list[str] = Field(default=None,
+                            description="Palavras-chave utilizadas como etiquetas"
+                            )
+    declaracoes: list[DeclaracaoCreate] = Field(
+        description="Declarações associadas ao problema")

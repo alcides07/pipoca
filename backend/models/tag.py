@@ -15,7 +15,8 @@ class Tag(Base):
 
     nome = Column(
         String(length=32),
-        index=True
+        index=True,
+        nullable=False,
     )
 
     problemas = relationship(

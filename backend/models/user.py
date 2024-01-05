@@ -14,15 +14,18 @@ class User(Base):
     username = Column(
         String(length=32),
         unique=True,
-        index=True
+        index=True,
+        nullable=False,
     )
 
     email = Column(
         String(),
         unique=True,
-        index=True
+        index=True,
+        nullable=False,
     )
 
     password = Column(
-        String(length=64)
+        String(length=64),
+        nullable=False,
     )
