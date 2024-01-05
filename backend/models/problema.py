@@ -1,6 +1,7 @@
 from sqlalchemy import Column, Integer, String, CheckConstraint
 from sqlalchemy.orm import relationship
 from database import Base
+from models.declaracao import Declaracao
 from .relationships.problema_tag import problema_tag_relationship
 
 
@@ -15,31 +16,41 @@ class Problema(Base):
 
     nome = Column(
         String(length=64),
-        index=True
+        index=True,
+        nullable=False,
     )
 
     nome_arquivo_entrada = Column(
-        String(length=64)
+        String(length=64),
+        nullable=False,
     )
 
     nome_arquivo_saida = Column(
-        String(length=64)
+        String(length=64),
+        nullable=False,
     )
 
     tempo_limite = Column(
         Integer,
         CheckConstraint('tempo_limite >= 250'),
         CheckConstraint('tempo_limite <= 15000'),
+        nullable=False,
     )
 
     memoria_limite = Column(
         Integer,
         CheckConstraint('memoria_limite >= 4'),
         CheckConstraint('memoria_limite <= 1024'),
+        nullable=False,
     )
 
     tags = relationship(
         "Tag",
         secondary=problema_tag_relationship,
         back_populates="problemas",
+    )
+
+    declaracoes = relationship(
+        Declaracao,
+        back_populates="problema",
     )
