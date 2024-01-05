@@ -76,7 +76,8 @@ def upload(
         nome_arquivo_saida="",
         tempo_limite=1000,
         memoria_limite=256,
-        tags=[]
+        tags=[],
+        declaracoes=[]
     )
 
 
