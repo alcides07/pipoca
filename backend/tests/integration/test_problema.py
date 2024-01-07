@@ -29,6 +29,13 @@ def test_create_problema():
                     "tutorial": "string",
                     "idioma": "Africâner"
                 }
+            ],
+            "arquivos": [
+                {
+                    "nome": "string",
+                    "corpo": "string",
+                    "secao": "recursos"
+                }
             ]
         }
     )

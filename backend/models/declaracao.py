@@ -48,4 +48,7 @@ class Declaracao(Base):
         back_populates="declaracoes",
     )
 
-    idioma = Column(Enum(IdiomaSchema))
+    idioma = Column(
+        Enum(IdiomaSchema),
+        nullable=False
+    )

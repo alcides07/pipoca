@@ -4,13 +4,13 @@ from pydantic import BaseModel, Field
 
 
 class LimitSchema(int, Enum):
-    cinco = 5
-    dez = 10
-    quinze = 15
-    vinte = 20
-    vinte_cinco = 25
-    cinquenta = 50
-    cem = 100
+    CINCO = 5
+    DEZ = 10
+    QUINZE = 15
+    VINTE = 20
+    VINTE_CINCO = 25
+    CINQUENTA = 50
+    CEM = 100
 
 
 class MetadataSchema(BaseModel):

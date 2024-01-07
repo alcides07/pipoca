@@ -1,6 +1,7 @@
 from sqlalchemy import Column, Integer, String, CheckConstraint
 from sqlalchemy.orm import relationship
 from database import Base
+from models.arquivo import Arquivo
 from models.declaracao import Declaracao
 from .relationships.problema_tag import problema_tag_relationship
 
@@ -53,4 +54,9 @@ class Problema(Base):
     declaracoes = relationship(
         Declaracao,
         back_populates="problema",
+    )
+
+    arquivos = relationship(
+        Arquivo,
+        back_populates="problema"
     )
