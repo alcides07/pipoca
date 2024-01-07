@@ -13,7 +13,7 @@ class UserBase(BaseModel):
 class UserRead(UserBase):
     id: int
 
-    class Config:
+    class ConfigDict:
         from_attributes = True
 
 

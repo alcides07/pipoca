@@ -38,7 +38,7 @@ class ProblemaRead(ProblemaBase):
     declaracoes: list[DeclaracaoRead] = Field(
         description="Declarações associadas ao problema")
 
-    class Config:
+    class ConfigDict:
         from_attributes = True
 
 

@@ -1,10 +1,9 @@
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, declarative_base
 from decouple import config
 
-DATABASE_CONTAINER = config("DATABASE_CONTAINER")
-DATABASE_LOCAL = config("DATABASE_LOCAL")
+DATABASE_CONTAINER = str(config("DATABASE_CONTAINER"))
+DATABASE_LOCAL = str(config("DATABASE_LOCAL"))
 USE_DOCKER = config("USE_DOCKER")
 
 engine = create_engine(DATABASE_LOCAL, connect_args={
