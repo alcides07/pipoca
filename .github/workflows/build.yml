@@ -38,3 +38,5 @@ jobs:
         run: pip install -r requirements.txt
       - name: Run tests
         run: python3 -m pytest
+        env:
+          DATABASE_LOCAL: ${{ secrets.DATABASE_LOCAL }}  
