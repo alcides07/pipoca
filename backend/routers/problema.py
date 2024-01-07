@@ -80,7 +80,8 @@ def upload(
         tempo_limite=1000,
         memoria_limite=256,
         tags=[],
-        declaracoes=[]
+        declaracoes=[],
+        arquivos=[]
     )
 
     def process_xml(zip, filename):
