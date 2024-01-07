@@ -41,3 +41,4 @@ jobs:
         env:
           DATABASE_LOCAL: ${{ secrets.DATABASE_LOCAL }}  
           DATABASE_CONTAINER: ${{ secrets.DATABASE_CONTAINER }}  
+          USE_DOCKER: ${{ secrets.USE_DOCKER }}  
