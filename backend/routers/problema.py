@@ -1,7 +1,10 @@
 import json
 from typing import Annotated
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
+from schemas.declaracao import DeclaracaoCreate
+from schemas.idioma import IdiomaSchema
 from utils.bytes_to_megabytes import bytes_to_megabytes
+from utils.language_parser import languages_parser
 from utils.errors import errors
 from models.problema import Problema
 from orm.common.index import get_all
@@ -101,21 +104,37 @@ def upload(
             for tag in tags.readlines():
                 problema.tags.append(tag.decode().strip())
 
+    def process_statements(zip, filename):
+        with zip.open(filename) as statement:
+            content = statement.read().decode()
+            data = json.loads(content)
+
+            declaracao = DeclaracaoCreate(
+                titulo=data["name"],
+                contextualizacao=data["legend"],
+                formatacao_entrada=data["input"],
+                formatacao_saida=data["output"],
+                tutorial=data["tutorial"],
+                observacao=data["notes"],
+                idioma=IdiomaSchema[languages_parser.get(
+                    data["language"].capitalize(), "OT")]
+            )
+
+            problema.declaracoes.append(declaracao)
+
 # try:
     with zipfile.ZipFile(temp_file, 'r') as zip:
         for filename in zip.namelist():
 
-            # Lê o xml global do problema
+            # Processa o xml global do problema
             if filename.lower() == "problem.xml":
                 process_xml(zip, filename)
 
-            # Lê os dados do statement de cada idioma
-            # if filename.startswith("statements/") and filename.endswith("problem-properties.json"):
-            #     with zip.open(filename) as statement:
-            #         content = statement.read().decode()
-            #         data = json.loads(content)
+            # Processa o statement de cada idioma
+            if filename.startswith("statements/") and filename.endswith("problem-properties.json"):
+                process_statements(zip, filename)
 
-            # Adiciona as tags
+            # Processa as tags
             if (filename.lower() == "tags"):
                 process_tags(zip, filename)
 
