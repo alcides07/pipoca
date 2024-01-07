@@ -1,4 +1,5 @@
 from pydantic import BaseModel, Field
+from schemas.idioma import IdiomaSchema
 
 
 class DeclaracaoBase(BaseModel):
@@ -34,6 +35,9 @@ class DeclaracaoBase(BaseModel):
         max_length=80240,
         description="Tutorial de resolução do problema"
     )
+
+    idioma: IdiomaSchema = Field(
+        description="Idioma em que o problema está escrito")
 
 
 class DeclaracaoRead(DeclaracaoBase):
