@@ -3,16 +3,16 @@ on:
   push:
     branches:
       - main
-      - "dev-backend"
+      - dev-backend
   pull_request:
     branches:
       - main
-      - "dev-backend"
+      - dev-backend
     types: [opened, synchronize, reopened]
 jobs:
   sonarcloud:
     name: SonarCloud
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3
         with:
@@ -24,7 +24,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     defaults:
       run:
         working-directory: backend
@@ -33,7 +33,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v3
         with:
-          python-version: 3.10
+          python-version: 3.10.12
       - name: Install dependencies
         run: pip install -r requirements.txt
       - name: Run tests
