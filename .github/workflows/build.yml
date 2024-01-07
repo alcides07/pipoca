@@ -33,6 +33,13 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          DATABASE_LOCAL: ${{ secrets.DATABASE_LOCAL }}  
+          DATABASE_LOCAL_TEST: ${{ secrets.DATABASE_LOCAL_TEST }}  
+          DATABASE_CONTAINER: ${{ secrets.DATABASE_CONTAINER }}  
+          USE_DOCKER: ${{ secrets.USE_DOCKER }}  
+          ALGORITHM: ${{ secrets.ALGORITHM }}  
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}  
+          TOKEN_EXPIRE_MINUTES: ${{ secrets.TOKEN_EXPIRE_MINUTES }}  
 
   test:
     runs-on: ubuntu-20.04
