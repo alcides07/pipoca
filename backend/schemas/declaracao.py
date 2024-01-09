@@ -46,5 +46,9 @@ class DeclaracaoRead(DeclaracaoBase):
         description="Identificador do problema associado à declaração")
 
 
+class DeclaracaoId(BaseModel):
+    id: int = Field(description="Identificador da declaração")
+
+
 class DeclaracaoCreate(DeclaracaoBase):
     pass

@@ -31,6 +31,10 @@ class ArquivoRead(ArquivoBase):
         description="Identificador do problema associado ao arquivo")
 
 
+class ArquivoId(BaseModel):
+    id: int = Field(description="Identificador do arquivo")
+
+
 class ArquivoCreate(ArquivoBase):
     pass
 
