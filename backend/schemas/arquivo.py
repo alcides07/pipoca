@@ -1,6 +1,8 @@
 from pydantic import BaseModel, Field
 from enum import Enum
 
+ARQUIVO_ID_DESCRIPTION = "identificador do arquivo"
+
 
 class SecaoSchema(Enum):
     RECURSO = "recursos"
@@ -26,7 +28,7 @@ class ArquivoBase(BaseModel):
 
 
 class ArquivoRead(ArquivoBase):
-    id: int = Field(description="Identificador do arquivo")
+    id: int = Field(description=ARQUIVO_ID_DESCRIPTION)
     problema_id: int = Field(
         description="Identificador do problema associado ao arquivo")
 
@@ -36,7 +38,7 @@ class ArquivoReadSimple(BaseModel):
         max_length=64,
         description="Nome do arquivo do problema"
     )
-    id: int = Field(description="Identificador do arquivo")
+    id: int = Field(description=ARQUIVO_ID_DESCRIPTION)
     problema_id: int = Field(
         description="Identificador do problema associado ao arquivo")
 
