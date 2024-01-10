@@ -1,6 +1,7 @@
 import json
 from typing import Annotated
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
+from schemas.arquivo import ArquivoCreate, SecaoSchema
 from schemas.declaracao import DeclaracaoCreate
 from schemas.idioma import IdiomaSchema
 from utils.bytes_to_megabytes import bytes_to_megabytes
@@ -84,21 +85,52 @@ def upload(
         arquivos=[]
     )
 
+    def process_files(path: str | None, secao: SecaoSchema):
+        if (path != None):
+            with zip.open(path) as file:
+                nome = file.name.split("/")[-1]
+                corpo = file.read().decode()
+
+                arquivo = ArquivoCreate(
+                    nome=nome, corpo=corpo, secao=secao)
+
+                problema.arquivos.append(arquivo)
+
+    def process_tempo_limite(data: ET.Element):
+        tempo_limite = data.find('.//time-limit')
+        if tempo_limite is not None and tempo_limite.text is not None:
+            problema.tempo_limite = int(tempo_limite.text)
+
+    def process_memoria_limite(data: ET.Element):
+        memoria_limite = data.find('.//memory-limit')
+        if memoria_limite is not None and memoria_limite.text is not None:
+            memoria_converted = bytes_to_megabytes(int(
+                (memoria_limite.text)))
+
+            problema.memoria_limite = memoria_converted
+
     def process_xml(zip, filename):
         with zip.open(filename) as xml:
             content = xml.read().decode()
             data = ET.fromstring(content)
 
             # Atribui o tempo limite
-            tempo_limite = data.find('.//time-limit')
-            if tempo_limite is not None and tempo_limite.text is not None:
-                problema.tempo_limite = int(tempo_limite.text)
+            process_tempo_limite(data)
 
             # Atribui a memória limite
-            memoria_limite = data.find('.//memory-limit')
-            if memoria_limite is not None and memoria_limite.text is not None:
-                problema.memoria_limite = bytes_to_megabytes(int(
-                    (memoria_limite.text)))
+            process_memoria_limite(data)
+
+            # Atribui todos os arquivos de recursos
+            for file in data.findall('.//resources/file'):
+                process_files(file.get("path"), SecaoSchema.RECURSO)
+
+            # Atribui o verificador
+            for file in data.findall('.//checker/source'):
+                process_files(file.get("path"), SecaoSchema.FONTE)
+
+            # Atribui o validador
+            for file in data.findall('.//validator/source'):
+                process_files(file.get("path"), SecaoSchema.FONTE)
 
     def process_tags(zip, filename):
         with zip.open(filename) as tags:
