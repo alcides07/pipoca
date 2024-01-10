@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, Path
 from models.arquivo import Arquivo
-from schemas.arquivo import ArquivoRead
+from schemas.arquivo import ArquivoRead, ArquivoReadSimple
 from utils.errors import errors
 from orm.common.index import get_by_id, get_all
 from dependencies.authenticated_user import get_authenticated_user
@@ -8,7 +8,6 @@ from schemas.common.pagination import PaginationSchema
 from dependencies.database import get_db
 from sqlalchemy.orm import Session
 from schemas.common.response import ResponsePaginationSchema, ResponseUnitSchema
-from fastapi.encoders import jsonable_encoder
 
 
 router = APIRouter(
@@ -18,7 +17,7 @@ router = APIRouter(
 
 
 @router.get("/",
-            response_model=ResponsePaginationSchema[ArquivoRead],
+            response_model=ResponsePaginationSchema[ArquivoReadSimple],
             summary="Lista arquivos",
             dependencies=[Depends(get_authenticated_user)],
             )
@@ -46,7 +45,7 @@ def read_id(
         id: int = Path(description="identificador do arquivo"),
         db: Session = Depends(get_db)
 ):
-    arquivo = jsonable_encoder(get_by_id(db, Arquivo, id))
+    arquivo = get_by_id(db, Arquivo, id)
 
     return ResponseUnitSchema(
         data=arquivo

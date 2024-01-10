@@ -1,4 +1,5 @@
-from typing import Any
+from sqlalchemy.orm import joinedload
+from typing import Any, List
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from schemas.common.pagination import MetadataSchema, PaginationSchema
@@ -15,9 +16,12 @@ def get_by_key_value(db: Session, model: Any, key: str, value):
     return db_object
 
 
-def get_by_id(db: Session, model: Any, id: int):
-    db_object = db.query(model).filter(model.id == id).first()
-    if (db_object):
+def get_by_id(db: Session, model: Any, id: int, relations: List[str] = []):
+    query = db.query(model)
+    for relation in relations:
+        query = query.options(joinedload(getattr(model, relation)))
+    db_object = query.filter(model.id == id).first()
+    if db_object:
         return db_object
     raise HTTPException(status.HTTP_404_NOT_FOUND)
 

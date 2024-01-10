@@ -1,6 +1,6 @@
 import json
 from typing import Annotated
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, File, HTTPException, Path, UploadFile, status
 from schemas.arquivo import ArquivoCreate, SecaoSchema
 from schemas.declaracao import DeclaracaoCreate
 from schemas.idioma import IdiomaSchema
@@ -8,7 +8,7 @@ from utils.bytes_to_megabytes import bytes_to_megabytes
 from utils.language_parser import languages_parser
 from utils.errors import errors
 from models.problema import Problema
-from orm.common.index import get_all
+from orm.common.index import get_all, get_by_id
 from dependencies.authenticated_user import get_authenticated_user
 from schemas.problema import ProblemaCreate, ProblemaRead
 from schemas.common.pagination import PaginationSchema
@@ -35,6 +35,25 @@ def read(db: Session = Depends(get_db), common: PaginationSchema = Depends()):
     return ResponsePaginationSchema(
         data=problemas,
         metadata=metadata
+    )
+
+
+@router.get("/{id}/",
+            response_model=ResponseUnitSchema[ProblemaRead],
+            summary="Lista um problema",
+            dependencies=[Depends(get_authenticated_user)],
+            responses={
+                404: errors[404]
+            }
+            )
+def read_id(
+        id: int = Path(description="identificador do problema"),
+        db: Session = Depends(get_db)
+):
+    problema = get_by_id(
+        db, Problema, id, ["tags", "declaracoes", "arquivos"])
+    return ResponseUnitSchema(
+        data=problema
     )
 
 
