@@ -9,7 +9,6 @@ from dependencies.database import get_db
 from sqlalchemy.orm import Session
 from orm.user import create_user
 from schemas.common.response import ResponsePaginationSchema, ResponseUnitSchema
-from fastapi.encoders import jsonable_encoder
 from passlib.context import CryptContext
 
 
@@ -52,7 +51,7 @@ def read_id(
         id: int = Path(description=USER_ID_DESCRIPTION),
         db: Session = Depends(get_db)
 ):
-    users = jsonable_encoder(get_by_id(db, User, id))
+    users = get_by_id(db, User, id)
 
     return ResponseUnitSchema(
         data=users
@@ -88,7 +87,7 @@ def create(
 
     else:
         user.password = pwd_context.hash(user.password)
-        data = jsonable_encoder(create_user(db=db, user=user))
+        data = create_user(db=db, user=user)
 
         return ResponseUnitSchema(data=data)
 
@@ -107,7 +106,7 @@ def total_update(
         data: UserCreate = Body(),
 ):
 
-    response = jsonable_encoder(update_total(db, User, id, data))
+    response = update_total(db, User, id, data)
     return ResponseUnitSchema(
         data=response
     )
@@ -126,7 +125,7 @@ def delete(
         db: Session = Depends(get_db)
 ):
 
-    user = jsonable_encoder(delete_object(db, User, id))
+    user = delete_object(db, User, id)
     return ResponseUnitSchema(
         data=user
     )
