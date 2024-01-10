@@ -46,8 +46,14 @@ class DeclaracaoRead(DeclaracaoBase):
         description="Identificador do problema associado à declaração")
 
 
-class DeclaracaoId(BaseModel):
+class DeclaracaoReadSimple(BaseModel):
+    titulo: str = Field(
+        max_length=64,
+        description="Título do problema"
+    )
     id: int = Field(description="Identificador da declaração")
+    problema_id: int = Field(
+        description="Identificador do problema associado à declaração")
 
 
 class DeclaracaoCreate(DeclaracaoBase):

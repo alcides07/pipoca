@@ -31,8 +31,14 @@ class ArquivoRead(ArquivoBase):
         description="Identificador do problema associado ao arquivo")
 
 
-class ArquivoId(BaseModel):
+class ArquivoReadSimple(BaseModel):
+    nome: str = Field(
+        max_length=64,
+        description="Nome do arquivo do problema"
+    )
     id: int = Field(description="Identificador do arquivo")
+    problema_id: int = Field(
+        description="Identificador do problema associado ao arquivo")
 
 
 class ArquivoCreate(ArquivoBase):

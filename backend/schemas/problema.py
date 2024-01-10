@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
-from schemas.arquivo import ArquivoCreate, ArquivoId, ArquivoRead
+from schemas.arquivo import ArquivoCreate, ArquivoReadSimple
 from schemas.tag import TagRead
-from schemas.declaracao import DeclaracaoCreate, DeclaracaoId, DeclaracaoRead
+from schemas.declaracao import DeclaracaoCreate, DeclaracaoReadSimple
 
 
 class ProblemaBase(BaseModel):
@@ -38,10 +38,10 @@ class ProblemaRead(ProblemaBase):
 
     tags: list[TagRead] = Field(description="Lista de palavras-chave")
 
-    declaracoes: list[DeclaracaoId] = Field(
+    declaracoes: list[DeclaracaoReadSimple] = Field(
         description="Declarações associadas ao problema")
 
-    arquivos: list[ArquivoId] = Field(
+    arquivos: list[ArquivoReadSimple] = Field(
         description="Arquivos associados ao problema")
 
     class ConfigDict:
