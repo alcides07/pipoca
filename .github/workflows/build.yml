@@ -3,22 +3,64 @@ on:
   push:
     branches:
       - main
-      - "dev-backend"
+      - dev-backend
   pull_request:
     branches:
       - main
-      - "dev-backend"
+      - dev-backend
     types: [opened, synchronize, reopened]
 jobs:
   sonarcloud:
     name: SonarCloud
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
+    defaults:
+      run:
+        working-directory: backend
+    env:  
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      DATABASE_LOCAL: ${{ secrets.DATABASE_LOCAL }}  
+      DATABASE_LOCAL_TEST: ${{ secrets.DATABASE_LOCAL_TEST }}  
+      DATABASE_CONTAINER: ${{ secrets.DATABASE_CONTAINER }}  
+      USE_DOCKER: ${{ secrets.USE_DOCKER }}  
+      ALGORITHM: ${{ secrets.ALGORITHM }}  
+      SECRET_KEY: ${{ secrets.SECRET_KEY }}  
+      TOKEN_EXPIRE_MINUTES: ${{ secrets.TOKEN_EXPIRE_MINUTES }}  
     steps:
       - uses: actions/checkout@v3
         with:
-          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+          fetch-depth: 0 
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.10.12
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Run tox
+        run: tox -e py
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
+
+  test:
+    runs-on: ubuntu-20.04
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: 3.10.12
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Run tests
+        run: python3 -m pytest
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          DATABASE_LOCAL: ${{ secrets.DATABASE_LOCAL }}  
+          DATABASE_LOCAL_TEST: ${{ secrets.DATABASE_LOCAL_TEST }}  
+          DATABASE_CONTAINER: ${{ secrets.DATABASE_CONTAINER }}  
+          USE_DOCKER: ${{ secrets.USE_DOCKER }}  
+          ALGORITHM: ${{ secrets.ALGORITHM }}  
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}  
+          TOKEN_EXPIRE_MINUTES: ${{ secrets.TOKEN_EXPIRE_MINUTES }}  

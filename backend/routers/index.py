@@ -1,4 +1,4 @@
-from routers import openapi, user, problema, auth
+from routers import arquivo, openapi, user, problema, auth
 
 
 routes = [
@@ -6,4 +6,5 @@ routes = [
     user.router,
     problema.router,
     auth.router,
+    arquivo.router,
 ]
