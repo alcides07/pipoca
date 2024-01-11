@@ -2,6 +2,7 @@ from pydantic import BaseModel, Field
 from schemas.arquivo import ArquivoCreate, ArquivoReadSimple
 from schemas.tag import TagRead
 from schemas.declaracao import DeclaracaoCreate, DeclaracaoReadSimple
+from schemas.verificador import VerificadorCreate, VerificadorReadSimple
 
 
 class ProblemaBase(BaseModel):
@@ -44,6 +45,10 @@ class ProblemaRead(ProblemaBase):
     arquivos: list[ArquivoReadSimple] = Field(
         description="Arquivos associados ao problema")
 
+    verificador: VerificadorReadSimple = Field(
+        description="Arquivo verificador do problema"
+    )
+
     class ConfigDict:
         from_attributes = True
 
@@ -58,3 +63,7 @@ class ProblemaCreate(ProblemaBase):
 
     arquivos: list[ArquivoCreate] = Field(
         description="Arquivos associados ao problema")
+
+    verificador: VerificadorCreate = Field(
+        description="Arquivo verificador do problema"
+    )
