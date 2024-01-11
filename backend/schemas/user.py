@@ -19,11 +19,11 @@ class UserRead(UserBase):
 
 class UserCreate(UserBase):
     password: str = Field(
-        max_length=32,
+        max_length=64,
         description="Senha do usuário"
     )
 
     passwordConfirmation: str = Field(
-        max_length=32,
+        max_length=64,
         description="Confirmação da senha do usuário"
     )
