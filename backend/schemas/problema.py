@@ -2,6 +2,7 @@ from pydantic import BaseModel, Field
 from schemas.arquivo import ArquivoCreate, ArquivoReadSimple
 from schemas.tag import TagRead
 from schemas.declaracao import DeclaracaoCreate, DeclaracaoReadSimple
+from schemas.validador import ValidadorCreate, ValidadorReadSimple
 from schemas.verificador import VerificadorCreate, VerificadorReadSimple
 
 
@@ -49,6 +50,10 @@ class ProblemaRead(ProblemaBase):
         description="Arquivo verificador do problema"
     )
 
+    validador: ValidadorReadSimple = Field(
+        description="Arquivo validador do problema"
+    )
+
     class ConfigDict:
         from_attributes = True
 
@@ -66,4 +71,8 @@ class ProblemaCreate(ProblemaBase):
 
     verificador: VerificadorCreate = Field(
         description="Arquivo verificador do problema"
+    )
+
+    validador: ValidadorCreate = Field(
+        description="Arquivo validador do problema"
     )

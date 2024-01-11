@@ -36,6 +36,11 @@ JSON_PROBLEMA = {
                 "nome": "string",
                 "linguagem": "string",
                 "corpo": "string"
+            },
+    "validador": {
+                "nome": "string",
+                "linguagem": "string",
+                "corpo": "string"
             }
 }
 
