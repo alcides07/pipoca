@@ -5,6 +5,7 @@ import random
 import string
 
 client = TestClient(app)
+URL_USER = "/users"
 
 
 def test_read_user_unit():
@@ -13,7 +14,7 @@ def test_read_user_unit():
     value = ''.join(random.choice(string.ascii_letters) for _ in range(15))
 
     response = client.post(
-        "/users",
+        URL_USER,
         json={
             "username": value,
             "email": f"{value}@email.com",
@@ -24,7 +25,7 @@ def test_read_user_unit():
     )
 
     user_id = response.json().get("data", {}).get("id", None)
-    response = client.get(f"/users/{user_id}/")
+    response = client.get(f"{URL_USER}/{user_id}/")
     assert response.status_code == 200
 
     resume_dependencies()
@@ -34,7 +35,7 @@ def test_read_users():
     remove_dependencies()
 
     response = client.get(
-        "/users",
+        URL_USER,
     )
     assert response.status_code == 200
 
@@ -45,7 +46,7 @@ def test_create_user():
     value = ''.join(random.choice(string.ascii_letters) for _ in range(15))
 
     response = client.post(
-        "/users",
+        URL_USER,
         json={
             "username": value,
             "email": f"{value}@email.com",
