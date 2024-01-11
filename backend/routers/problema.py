@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, File, HTTPException, Path, UploadFile, s
 from schemas.arquivo import ArquivoCreate, SecaoSchema
 from schemas.declaracao import DeclaracaoCreate
 from schemas.idioma import IdiomaSchema
+from schemas.validador import ValidadorCreate
 from schemas.verificador import VerificadorCreate
 from utils.bytes_to_megabytes import bytes_to_megabytes
 from utils.language_parser import languages_parser
@@ -104,6 +105,7 @@ def upload(
         declaracoes=[],
         arquivos=[],
         verificador=VerificadorCreate(nome="", linguagem="", corpo=""),
+        validador=ValidadorCreate(nome="", linguagem="", corpo=""),
     )
 
     def process_files(path: str | None, secao: SecaoSchema, status: str | None = None):
@@ -126,13 +128,14 @@ def upload(
                 if tipo == "verificador":
                     verificador = VerificadorCreate(
                         nome=nome, corpo=corpo, linguagem=linguagem or "")
+
                     problema.verificador = verificador
 
                 elif tipo == "validador":
-                    pass
-                    # validador = ValidadorCreate(
-                    #     nome=nome, corpo=corpo, linguagem=linguagem or "")
-                    # problema.validador = validador
+                    validador = ValidadorCreate(
+                        nome=nome, corpo=corpo, linguagem=linguagem or "")
+
+                    problema.validador = validador
 
     def process_tempo_limite(data: ET.Element):
         tempo_limite = data.find('.//time-limit')
@@ -190,7 +193,10 @@ def upload(
             # Atribui o validador
             validator = data.find(".//validator/source")
             if (validator != None):
-                process_files(validator.get("path"), SecaoSchema.FONTE)
+                path = validator.get("path")
+                linguagem = validator.get("type")
+
+                process_verificador_and_validador(path, linguagem, "validador")
 
     def process_tags(zip, filename):
         with zip.open(filename) as tags:

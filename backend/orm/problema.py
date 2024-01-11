@@ -1,3 +1,4 @@
+from models.validador import Validador
 from models.verificador import Verificador
 from sqlalchemy.orm import Session
 from models.arquivo import Arquivo
@@ -9,7 +10,7 @@ from schemas.problema import ProblemaCreate
 
 def create_problema(db: Session, problema: ProblemaCreate):
     db_problema = Problema(
-        **problema.model_dump(exclude=set(["tags", "declaracoes", "arquivos", "verificador"])))
+        **problema.model_dump(exclude=set(["tags", "declaracoes", "arquivos", "verificador", "validador"])))
     db.add(db_problema)
 
     for declaracao in problema.declaracoes:
@@ -35,6 +36,11 @@ def create_problema(db: Session, problema: ProblemaCreate):
     db.add(db_verificador)
     db_problema.verificador = db_verificador
     db_verificador.problema = db_problema
+
+    db_validador = Validador(**problema.validador.model_dump())
+    db.add(db_validador)
+    db_problema.validador = db_validador
+    db_validador.problema = db_problema
 
     db.commit()
     db.refresh(db_problema)

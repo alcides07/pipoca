@@ -1,3 +1,4 @@
+from models.validador import Validador
 from models.verificador import Verificador
 from sqlalchemy import Column, ForeignKey, Integer, String, CheckConstraint, UniqueConstraint
 from sqlalchemy.orm import relationship
@@ -63,13 +64,20 @@ class Problema(Base):
     )
 
     verificador_id = Column(Integer, ForeignKey('verificadores.id'))
-
     verificador = relationship(
         Verificador,
         uselist=False,
         foreign_keys=[verificador_id],
     )
 
+    validador_id = Column(Integer, ForeignKey('validadores.id'))
+    validador = relationship(
+        Validador,
+        uselist=False,
+        foreign_keys=[validador_id],
+    )
+
     __table_args__ = (
         UniqueConstraint('verificador_id'),
+        UniqueConstraint('validador_id'),
     )
