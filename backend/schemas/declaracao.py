@@ -40,7 +40,7 @@ class DeclaracaoBase(BaseModel):
         description="Idioma em que o problema está escrito")
 
 
-class DeclaracaoRead(DeclaracaoBase):
+class DeclaracaoReadFull(DeclaracaoBase):
     id: int = Field(description="Identificador da declaração")
     problema_id: int = Field(
         description="Identificador do problema associado à declaração")

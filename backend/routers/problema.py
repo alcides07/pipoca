@@ -104,14 +104,14 @@ def upload(
         arquivos=[]
     )
 
-    def process_files(path: str | None, secao: SecaoSchema):
+    def process_files(path: str | None, secao: SecaoSchema, status: str | None = None):
         if (path != None):
             with zip.open(path) as file:
                 nome = file.name.split("/")[-1]
                 corpo = file.read().decode()
 
                 arquivo = ArquivoCreate(
-                    nome=nome, corpo=corpo, secao=secao)
+                    nome=nome, corpo=corpo, secao=secao, status=status)
 
                 problema.arquivos.append(arquivo)
 
@@ -128,6 +128,10 @@ def upload(
 
             problema.memoria_limite = memoria_converted
 
+    def process_name(data: ET.Element):
+        if (data != None):
+            problema.nome = str(data.get("short-name"))
+
     def process_xml(zip, filename):
         with zip.open(filename) as xml:
             content = xml.read().decode()
@@ -139,17 +143,30 @@ def upload(
             # Atribui a memória limite
             process_memoria_limite(data)
 
+            # Atribui o nome do problema
+            process_name(data)
+
             # Atribui todos os arquivos de recursos
             for file in data.findall('.//resources/file'):
                 process_files(file.get("path"), SecaoSchema.RECURSO)
 
+            # Atribui todos os arquivos de solução
+            for solution in data.findall('.//solutions/solution'):
+                status = str(solution.get("tag"))
+                source = solution.find('source')
+                if source is not None:
+                    path = source.get("path")
+                    process_files(path, SecaoSchema.SOLUCAO, status)
+
             # Atribui o verificador
-            for file in data.findall('.//checker/source'):
-                process_files(file.get("path"), SecaoSchema.FONTE)
+            checker = data.find('.//checker/source')
+            if (checker != None):
+                process_files(checker.get("path"), SecaoSchema.FONTE)
 
             # Atribui o validador
-            for file in data.findall('.//validator/source'):
-                process_files(file.get("path"), SecaoSchema.FONTE)
+            validator = data.find(".//validator/source")
+            if (validator != None):
+                process_files(validator.get("path"), SecaoSchema.FONTE)
 
     def process_tags(zip, filename):
         with zip.open(filename) as tags:

@@ -29,6 +29,11 @@ class Arquivo(Base):
         index=True
     )
 
+    status = Column(
+        String,
+        index=True
+    )
+
     problema_id = Column(Integer, ForeignKey('problemas.id'))
     problema = relationship(
         "Problema",
