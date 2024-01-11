@@ -3,13 +3,14 @@ from fastapi.testclient import TestClient
 from tests.config_test import remove_dependencies, resume_dependencies
 
 client = TestClient(app)
+URL_PROBLEMA = "/problemas"
 
 
 def test_read_problema_unit():
     remove_dependencies()
 
     response = client.post(
-        "/problemas",
+        URL_PROBLEMA,
         json={
             "nome": "string",
             "nome_arquivo_entrada": "string",
@@ -41,7 +42,7 @@ def test_read_problema_unit():
     )
 
     problema_id = response.json().get("data", {}).get("id", None)
-    response = client.get(f"/problemas/{problema_id}/")
+    response = client.get(f"{URL_PROBLEMA}/{problema_id}/")
     assert response.status_code == 200
 
     resume_dependencies()
@@ -51,7 +52,7 @@ def test_read_problemas():
     remove_dependencies()
 
     response = client.get(
-        "/problemas",
+        URL_PROBLEMA,
     )
     assert response.status_code == 200
 
@@ -62,7 +63,7 @@ def test_create_problema():
     remove_dependencies()
 
     response = client.post(
-        "/problemas",
+        URL_PROBLEMA,
         json={
             "nome": "string",
             "nome_arquivo_entrada": "string",
