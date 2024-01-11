@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, Path
 from models.arquivo import Arquivo
-from schemas.arquivo import ArquivoRead, ArquivoReadSimple
+from schemas.arquivo import ArquivoReadFull, ArquivoReadSimple
 from utils.errors import errors
 from orm.common.index import get_by_id, get_all
 from dependencies.authenticated_user import get_authenticated_user
@@ -34,7 +34,7 @@ def read(
 
 
 @router.get("/{id}/",
-            response_model=ResponseUnitSchema[ArquivoRead],
+            response_model=ResponseUnitSchema[ArquivoReadFull],
             summary="Lista um arquivo",
             dependencies=[Depends(get_authenticated_user)],
             responses={
