@@ -3,8 +3,11 @@ from fastapi.testclient import TestClient
 from tests.config_test import remove_dependencies, resume_dependencies
 import random
 import string
+from passlib.context import CryptContext
+
 
 client = TestClient(app)
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 URL_USER = "/users"
 
 
@@ -12,14 +15,15 @@ def test_read_user_unit():
     remove_dependencies()
 
     value = ''.join(random.choice(string.ascii_letters) for _ in range(15))
+    password = pwd_context.hash(value)
 
     response = client.post(
         URL_USER,
         json={
             "username": value,
             "email": f"{value}@email.com",
-            "password": "string",
-            "passwordConfirmation": "string"
+            "password": password,
+            "passwordConfirmation": password
 
         }
     )
@@ -44,14 +48,15 @@ def test_read_users():
 
 def test_create_user():
     value = ''.join(random.choice(string.ascii_letters) for _ in range(15))
+    password = pwd_context.hash(value)
 
     response = client.post(
         URL_USER,
         json={
             "username": value,
             "email": f"{value}@email.com",
-            "password": "string",
-            "passwordConfirmation": "string"
+            "password": password,
+            "passwordConfirmation": password
 
         }
     )
