@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, File, HTTPException, Path, UploadFile, s
 from schemas.arquivo import ArquivoCreate, SecaoSchema
 from schemas.declaracao import DeclaracaoCreate
 from schemas.idioma import IdiomaSchema
+from schemas.verificador import VerificadorCreate
 from utils.bytes_to_megabytes import bytes_to_megabytes
 from utils.language_parser import languages_parser
 from utils.errors import errors
@@ -101,7 +102,8 @@ def upload(
         memoria_limite=256,
         tags=[],
         declaracoes=[],
-        arquivos=[]
+        arquivos=[],
+        verificador=VerificadorCreate(nome="", linguagem="", corpo=""),
     )
 
     def process_files(path: str | None, secao: SecaoSchema, status: str | None = None):
@@ -114,6 +116,23 @@ def upload(
                     nome=nome, corpo=corpo, secao=secao, status=status)
 
                 problema.arquivos.append(arquivo)
+
+    def process_verificador_and_validador(path: str | None, linguagem: str | None, tipo: str):
+        if path is not None:
+            with zip.open(path) as file:
+                nome = file.name.split("/")[-1]
+                corpo = file.read().decode()
+
+                if tipo == "verificador":
+                    verificador = VerificadorCreate(
+                        nome=nome, corpo=corpo, linguagem=linguagem or "")
+                    problema.verificador = verificador
+
+                elif tipo == "validador":
+                    pass
+                    # validador = ValidadorCreate(
+                    #     nome=nome, corpo=corpo, linguagem=linguagem or "")
+                    # problema.validador = validador
 
     def process_tempo_limite(data: ET.Element):
         tempo_limite = data.find('.//time-limit')
@@ -161,7 +180,12 @@ def upload(
             # Atribui o verificador
             checker = data.find('.//checker/source')
             if (checker != None):
-                process_files(checker.get("path"), SecaoSchema.FONTE)
+                path = checker.get(
+                    "path")
+                linguagem = checker.get("type")
+
+                process_verificador_and_validador(
+                    path, linguagem, "verificador")
 
             # Atribui o validador
             validator = data.find(".//validator/source")
