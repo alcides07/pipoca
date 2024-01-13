@@ -1,6 +1,6 @@
 import json
 from typing import Annotated
-from fastapi import APIRouter, Depends, File, HTTPException, Path, UploadFile, status
+from fastapi import APIRouter, Body, Depends, File, HTTPException, Path, UploadFile, status
 from schemas.arquivo import ArquivoCreate, SecaoSchema
 from schemas.declaracao import DeclaracaoCreate
 from schemas.idioma import IdiomaSchema
@@ -12,11 +12,11 @@ from utils.errors import errors
 from models.problema import Problema
 from orm.common.index import get_all, get_by_id
 from dependencies.authenticated_user import get_authenticated_user
-from schemas.problema import ProblemaCreate, ProblemaRead
+from schemas.problema import ProblemaCreate, ProblemaReadFull, ProblemaReadSimple, ProblemaUpdatePartial
 from schemas.common.pagination import PaginationSchema
 from dependencies.database import get_db
 from sqlalchemy.orm import Session
-from orm.problema import create_problema
+from orm.problema import create_problema, update_problema
 from schemas.common.response import ResponsePaginationSchema, ResponseUnitSchema
 import zipfile
 import tempfile
@@ -30,7 +30,7 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_model=ResponsePaginationSchema[ProblemaRead], summary="Lista problemas")
+@router.get("/", response_model=ResponsePaginationSchema[ProblemaReadSimple], summary="Lista problemas")
 def read(db: Session = Depends(get_db), common: PaginationSchema = Depends()):
     problemas, metadata = get_all(db, Problema, common)
 
@@ -41,7 +41,7 @@ def read(db: Session = Depends(get_db), common: PaginationSchema = Depends()):
 
 
 @router.get("/{id}/",
-            response_model=ResponseUnitSchema[ProblemaRead],
+            response_model=ResponseUnitSchema[ProblemaReadFull],
             summary="Lista um problema",
             dependencies=[Depends(get_authenticated_user)],
             responses={
@@ -60,7 +60,7 @@ def read_id(
 
 
 @router.post("/",
-             response_model=ResponseUnitSchema[ProblemaRead],
+             response_model=ResponseUnitSchema[ProblemaReadFull],
              status_code=201,
              summary="Cadastra problema",
              responses={
@@ -68,7 +68,8 @@ def read_id(
              }
              )
 def create(
-    problema: ProblemaCreate, db: Session = Depends(get_db)
+    problema: ProblemaCreate = Body(description="Problema a ser criado"),
+    db: Session = Depends(get_db)
 ):
     data = create_problema(db=db, problema=problema)
 
@@ -76,7 +77,7 @@ def create(
 
 
 @router.post("/upload/",
-             response_model=ResponseUnitSchema[ProblemaRead],
+             response_model=ResponseUnitSchema[ProblemaReadFull],
              status_code=201,
              summary="Importa problema do Polygon via pacote",
              responses={
@@ -243,3 +244,43 @@ def upload(
     # except:
     #     raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
     #                         detail="Erro. Ocorreu uma falha no processamento do pacote!")
+
+
+@router.put("/{id}/",
+            response_model=ResponseUnitSchema[ProblemaReadFull],
+            summary="Atualiza um problema por completo",
+            responses={
+                404: errors[404]
+            },
+            dependencies=[Depends(get_authenticated_user)],
+            )
+def total_update(
+        id: int = Path(description="identificador do problema"),
+        db: Session = Depends(get_db),
+        data: ProblemaCreate = Body(
+            description="Problema a ser atualizado por completo"),
+):
+    response = update_problema(db, id, data)
+    return ResponseUnitSchema(
+        data=response
+    )
+
+
+@router.patch("/{id}/",
+              response_model=ResponseUnitSchema[ProblemaReadFull],
+              summary="Atualiza um problema parcialmente",
+              responses={
+                  404: errors[404]
+              },
+              dependencies=[Depends(get_authenticated_user)],
+              )
+def parcial_update(
+        id: int = Path(description="identificador do problema"),
+        db: Session = Depends(get_db),
+        data: ProblemaUpdatePartial = Body(
+            description="Problema a ser atualizado parcialmente"),
+):
+    response = update_problema(db, id, data)
+    return ResponseUnitSchema(
+        data=response
+    )
