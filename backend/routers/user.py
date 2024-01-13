@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Body, Depends, HTTPException, Path, status
 from utils.errors import errors
 from models.user import User
-from orm.common.index import delete_object, get_by_key_value_exists, get_by_id, get_all, update_total
+from orm.common.index import delete_object, get_by_key_value_exists, get_by_id, get_all, update_object
 from dependencies.authenticated_user import get_authenticated_user
 from schemas.user import UserCreate, UserRead
 from schemas.common.pagination import PaginationSchema
@@ -106,7 +106,7 @@ def total_update(
         data: UserCreate = Body(),
 ):
 
-    response = update_total(db, User, id, data)
+    response = update_object(db, User, id, data)
     return ResponseUnitSchema(
         data=response
     )
