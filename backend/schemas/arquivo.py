@@ -1,3 +1,4 @@
+from typing import Optional
 from pydantic import BaseModel, Field
 from enum import Enum
 
@@ -23,9 +24,9 @@ class ArquivoBase(BaseModel):
         description="Grupo o qual o arquivo faz parte"
     )
 
-    status: str | None = Field(default=None,
-                               description="Tipos de status de veredíto para arquivos de solução"
-                               )
+    status: Optional[str] = Field(default=None,
+                                  description="Tipos de status de veredíto para arquivos de solução"
+                                  )
 
 
 class ArquivoWithBody(ArquivoBase):

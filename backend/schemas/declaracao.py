@@ -1,3 +1,4 @@
+from typing import Optional
 from pydantic import BaseModel, Field
 from schemas.idioma import IdiomaSchema
 
@@ -24,13 +25,13 @@ class DeclaracaoBase(BaseModel):
         description="Formatação da saída do problema"
     )
 
-    observacao: str = Field(
+    observacao: Optional[str] = Field(
         default=None,
         max_length=10240,
         description="Observações auxiliares acerca do problema"
     )
 
-    tutorial: str = Field(
+    tutorial: Optional[str] = Field(
         default=None,
         max_length=80240,
         description="Tutorial de resolução do problema"
