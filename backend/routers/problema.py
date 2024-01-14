@@ -22,6 +22,8 @@ import zipfile
 import tempfile
 import xml.etree.ElementTree as ET
 
+PROBLEMA_ID_DESCRIPTION = "Identificador do problema"
+
 
 router = APIRouter(
     prefix="/problemas",
@@ -49,7 +51,7 @@ def read(db: Session = Depends(get_db), common: PaginationSchema = Depends()):
             }
             )
 def read_id(
-        id: int = Path(description="identificador do problema"),
+        id: int = Path(description=PROBLEMA_ID_DESCRIPTION),
         db: Session = Depends(get_db)
 ):
     problema = get_by_id(
@@ -255,7 +257,7 @@ def upload(
             dependencies=[Depends(get_authenticated_user)],
             )
 def total_update(
-        id: int = Path(description="identificador do problema"),
+        id: int = Path(description=PROBLEMA_ID_DESCRIPTION),
         db: Session = Depends(get_db),
         data: ProblemaCreate = Body(
             description="Problema a ser atualizado por completo"),
@@ -275,7 +277,7 @@ def total_update(
               dependencies=[Depends(get_authenticated_user)],
               )
 def parcial_update(
-        id: int = Path(description="identificador do problema"),
+        id: int = Path(description=PROBLEMA_ID_DESCRIPTION),
         db: Session = Depends(get_db),
         data: ProblemaUpdatePartial = Body(
             description="Problema a ser atualizado parcialmente"),

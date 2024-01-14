@@ -6,6 +6,11 @@ from schemas.declaracao import DeclaracaoCreate, DeclaracaoReadFull, DeclaracaoR
 from schemas.validador import ValidadorCreate, ValidadorReadFull, ValidadorReadSimple
 from schemas.verificador import VerificadorCreate, VerificadorReadFull, VerificadorReadSimple
 
+DECLARACAO_DESCRIPTION = "Declarações associadas ao problema"
+VERIFICADOR_DESCRIPTION = "Arquivo verificador do problema"
+VALIDADOR_DESCRIPTION = "Arquivo validador do problema"
+ARQUIVOS_DESCRIPTION = "Arquivos associados ao problema"
+
 
 class ProblemaBase(BaseModel):
     nome: str = Field(
@@ -37,22 +42,28 @@ class ProblemaBase(BaseModel):
 
 
 class ProblemaReadSimple(ProblemaBase):
-    id: int = Field(description="Identificador do problema")
+    id: int = Field(
+        description="Identificador do problema"
+    )
 
-    tags: list[TagRead] = Field(description="Lista de palavras-chave")
+    tags: list[TagRead] = Field(
+        description="Lista de palavras-chave"
+    )
 
     declaracoes: list[DeclaracaoReadSimple] = Field(
-        description="Declarações associadas ao problema")
+        description=DECLARACAO_DESCRIPTION
+    )
 
     arquivos: list[ArquivoReadSimple] = Field(
-        description="Arquivos associados ao problema")
+        description=ARQUIVOS_DESCRIPTION
+    )
 
     verificador: VerificadorReadSimple = Field(
-        description="Arquivo verificador do problema"
+        description=VERIFICADOR_DESCRIPTION
     )
 
     validador: ValidadorReadSimple = Field(
-        description="Arquivo validador do problema"
+        description=VALIDADOR_DESCRIPTION
     )
 
     class ConfigDict:
@@ -60,22 +71,28 @@ class ProblemaReadSimple(ProblemaBase):
 
 
 class ProblemaReadFull(ProblemaBase):
-    id: int = Field(description="Identificador do problema")
+    id: int = Field(
+        description="Identificador do problema"
+    )
 
-    tags: list[TagRead] = Field(description="Lista de palavras-chave")
+    tags: list[TagRead] = Field(
+        description="Lista de palavras-chave"
+    )
 
     declaracoes: list[DeclaracaoReadFull] = Field(
-        description="Declarações associadas ao problema")
+        description=DECLARACAO_DESCRIPTION
+    )
 
     arquivos: list[ArquivoReadFull] = Field(
-        description="Arquivos associados ao problema")
+        description=ARQUIVOS_DESCRIPTION
+    )
 
     verificador: VerificadorReadFull = Field(
-        description="Arquivo verificador do problema"
+        description=VERIFICADOR_DESCRIPTION
     )
 
     validador: ValidadorReadFull = Field(
-        description="Arquivo validador do problema"
+        description=VALIDADOR_DESCRIPTION
     )
 
     class ConfigDict:
@@ -89,17 +106,19 @@ class ProblemaCreate(ProblemaBase):
     )
 
     declaracoes: list[DeclaracaoCreate] = Field(
-        description="Declarações associadas ao problema")
+        description=DECLARACAO_DESCRIPTION
+    )
 
     arquivos: list[ArquivoCreate] = Field(
-        description="Arquivos associados ao problema")
+        description=ARQUIVOS_DESCRIPTION
+    )
 
     verificador: VerificadorCreate = Field(
-        description="Arquivo verificador do problema"
+        description=VERIFICADOR_DESCRIPTION
     )
 
     validador: ValidadorCreate = Field(
-        description="Arquivo validador do problema"
+        description=VALIDADOR_DESCRIPTION
     )
 
 
@@ -143,18 +162,20 @@ class ProblemaUpdatePartial(BaseModel):
 
     declaracoes: Optional[list[DeclaracaoCreate]] = Field(
         default=None,
-        description="Declarações associadas ao problema")
+        description=DECLARACAO_DESCRIPTION
+    )
 
     arquivos: Optional[list[ArquivoCreate]] = Field(
         default=None,
-        description="Arquivos associados ao problema")
+        description=ARQUIVOS_DESCRIPTION
+    )
 
     verificador: Optional[VerificadorCreate] = Field(
         default=None,
-        description="Arquivo verificador do problema"
+        description=VERIFICADOR_DESCRIPTION
     )
 
     validador: Optional[ValidadorCreate] = Field(
         default=None,
-        description="Arquivo validador do problema"
+        description=VALIDADOR_DESCRIPTION
     )
