@@ -1,10 +1,9 @@
 from backend.main import app
 from fastapi.testclient import TestClient
 from tests.config_test import remove_dependencies, resume_dependencies
-import random
-import string
 from passlib.context import CryptContext
-
+import os
+import base64
 
 client = TestClient(app)
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -14,7 +13,8 @@ URL_USER = "/users"
 def test_read_user_unit():
     remove_dependencies()
 
-    value = ''.join(random.choice(string.ascii_letters) for _ in range(15))
+    key = os.urandom(16)
+    value = base64.b64encode(key).decode()
     password = pwd_context.hash(value)
 
     response = client.post(
@@ -47,7 +47,8 @@ def test_read_users():
 
 
 def test_create_user():
-    value = ''.join(random.choice(string.ascii_letters) for _ in range(15))
+    key = os.urandom(16)
+    value = base64.b64encode(key).decode()
     password = pwd_context.hash(value)
 
     response = client.post(
