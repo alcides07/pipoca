@@ -3,7 +3,7 @@ from fastapi.responses import JSONResponse
 from utils.translate import translate
 from utils.errors import errors
 from openapi.validation_exception import validation_exception_handler
-from routers.index import routes
+from routers.common.index import routes
 from database import engine, Base
 from fastapi.openapi.utils import get_openapi
 from fastapi import FastAPI
