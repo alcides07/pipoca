@@ -41,7 +41,7 @@ def read(
             }
             )
 def read_id(
-        id: int = Path(description="identificador do verificador"),
+        id: int = Path(description="Identificador do verificador"),
         db: Session = Depends(get_db)
 ):
     verificador = get_by_id(db, Verificador, id)

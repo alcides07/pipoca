@@ -1,3 +1,4 @@
+from typing import Optional
 from fastapi import Query
 from enum import Enum
 from pydantic import BaseModel, Field
@@ -25,8 +26,8 @@ class MetadataSchema(BaseModel):
 class PaginationSchema:
     def __init__(
         self,
-        q: str = Query(
-            default=None, description="Palavras-chave para pesquisa"),
+        q: Optional[str] = Query(default=None,
+                                 description="Palavras-chave para pesquisa"),
         limit: LimitSchema = Query(
             default=10, description="Quantidade de registros desejados"),
         offset: int = Query(

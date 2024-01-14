@@ -42,7 +42,7 @@ def read(
             }
             )
 def read_id(
-        id: int = Path(description="identificador do arquivo"),
+        id: int = Path(description="Identificador do arquivo"),
         db: Session = Depends(get_db)
 ):
     arquivo = get_by_id(db, Arquivo, id)
