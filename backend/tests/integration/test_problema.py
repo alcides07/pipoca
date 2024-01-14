@@ -183,3 +183,17 @@ def test_update_full_problema_fail():
     )
 
     assert response_put.status_code == 422
+
+
+def test_upload_problema():
+    remove_dependencies()
+
+    with open("./tests/integration/upload_problem.zip", 'rb') as file:
+        response = client.post(
+            f"{URL_PROBLEMA}/upload/",
+            files={"pacote": file},
+        )
+
+    assert response.status_code == 201
+
+    resume_dependencies()
