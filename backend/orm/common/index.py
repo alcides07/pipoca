@@ -1,4 +1,6 @@
-from typing import Any
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import joinedload
+from typing import Any, List
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from schemas.common.pagination import MetadataSchema, PaginationSchema
@@ -15,9 +17,12 @@ def get_by_key_value(db: Session, model: Any, key: str, value):
     return db_object
 
 
-def get_by_id(db: Session, model: Any, id: int):
-    db_object = db.query(model).filter(model.id == id).first()
-    if (db_object):
+def get_by_id(db: Session, model: Any, id: int, relations: List[str] = []):
+    query = db.query(model)
+    for relation in relations:
+        query = query.options(joinedload(getattr(model, relation)))
+    db_object = query.filter(model.id == id).first()
+    if db_object:
         return db_object
     raise HTTPException(status.HTTP_404_NOT_FOUND)
 
@@ -33,28 +38,44 @@ def get_all(db: Session, model: Any, common: PaginationSchema):
 
 def create_object(db: Session, model: Any, schema: Any):
     db_object = model(**schema.model_dump())
-    db.add(db_object)
-    db.commit()
-    db.refresh(db_object)
+    try:
+        db.add(db_object)
+        db.commit()
+        db.refresh(db_object)
+    except SQLAlchemyError:
+        db.rollback()
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR)
     return db_object
 
 
 def delete_object(db: Session, model: Any, id: int):
     db_object = db.query(model).filter(model.id == id).first()
-    if (db_object):
+    if not db_object:
+        raise HTTPException(status.HTTP_404_NOT_FOUND)
+
+    try:
         db.delete(db_object)
         db.commit()
         return db_object
-    raise HTTPException(status.HTTP_404_NOT_FOUND)
+    except SQLAlchemyError:
+        db.rollback()
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-def update_total(db: Session, model: Any, id: int, data: Any):
+def update_object(db: Session, model: Any, id: int, data: Any):
     db_object = db.query(model).filter(model.id == id).first()
-    if (db_object):
-        for key, value in data.dict().items():
-            if hasattr(db_object, key):
-                setattr(db_object, key, value)
-        db.commit()
-        db.refresh(db_object)
-        return db_object
-    raise HTTPException(status.HTTP_404_NOT_FOUND)
+    if not db_object:
+        raise HTTPException(status.HTTP_404_NOT_FOUND)
+
+    try:
+        with db.begin_nested():
+            for key, value in data.dict().items():
+                if hasattr(db_object, key):
+                    setattr(db_object, key, value)
+            db.commit()
+            db.refresh(db_object)
+    except SQLAlchemyError:
+        db.rollback()
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    return db_object

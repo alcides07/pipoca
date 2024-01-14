@@ -1,11 +1,16 @@
+from typing import Optional
 from pydantic import BaseModel, Field
 from enum import Enum
+
+ARQUIVO_ID_DESCRIPTION = "Identificador do arquivo"
+PROBLEMA_ID_DESCRIPTION = "Identificador do problema associado ao arquivo"
 
 
 class SecaoSchema(Enum):
     RECURSO = "recursos"
-    FONTE = "arquivos fonte"
+    FONTE = "arquivos_fonte"
     ANEXO = "anexo"
+    SOLUCAO = "solucao"
 
 
 class ArquivoBase(BaseModel):
@@ -15,30 +20,38 @@ class ArquivoBase(BaseModel):
         description="Nome do arquivo do problema"
     )
 
+    secao: SecaoSchema = Field(
+        description="Grupo o qual o arquivo faz parte"
+    )
+
+    status: Optional[str] = Field(default=None,
+                                  description="Tipos de status de veredíto para arquivos de solução"
+                                  )
+
+
+class ArquivoWithBody(ArquivoBase):
     corpo: str = Field(
         max_length=250000,
         description="Conteúdo do arquivo"
     )
 
-    secao: SecaoSchema = Field(
-        description="Grupo o qual o arquivo faz parte"
-    )
 
-
-class ArquivoRead(ArquivoBase):
-    id: int = Field(description="Identificador do arquivo")
+class ArquivoReadFull(ArquivoWithBody):
+    id: int = Field(description=ARQUIVO_ID_DESCRIPTION)
     problema_id: int = Field(
-        description="Identificador do problema associado ao arquivo")
+        description=PROBLEMA_ID_DESCRIPTION)
 
 
-class ArquivoId(BaseModel):
-    id: int = Field(description="Identificador do arquivo")
+class ArquivoReadSimple(ArquivoBase):
+    id: int = Field(description=ARQUIVO_ID_DESCRIPTION)
+    problema_id: int = Field(
+        description=PROBLEMA_ID_DESCRIPTION)
 
 
-class ArquivoCreate(ArquivoBase):
+class ArquivoCreate(ArquivoWithBody):
     pass
 
 
-class ArquivoCreateSingle(ArquivoBase):
+class ArquivoCreateSingle(ArquivoWithBody):
     problema_id: int = Field(
-        description="Identificador do problema associado ao arquivo")
+        description=PROBLEMA_ID_DESCRIPTION)

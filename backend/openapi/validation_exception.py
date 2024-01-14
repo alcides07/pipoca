@@ -10,7 +10,7 @@ def validation_exception_handler(_, exception: RequestValidationError):
     response = ResponseValidationListSchema(
         errors=[
             ResponseValidationSchema(
-                field=error["loc"][1],
+                field=str(error["loc"][1]),
                 type=translate(error["type"]),
                 message=translate(text=error["msg"]),
             )

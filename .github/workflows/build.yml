@@ -40,6 +40,8 @@ jobs:
         run: tox -e py
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
+        with:
+          projectBaseDir: backend
 
   test:
     runs-on: ubuntu-20.04

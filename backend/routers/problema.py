@@ -1,24 +1,28 @@
 import json
 from typing import Annotated
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
+from fastapi import APIRouter, Body, Depends, File, HTTPException, Path, UploadFile, status
 from schemas.arquivo import ArquivoCreate, SecaoSchema
 from schemas.declaracao import DeclaracaoCreate
 from schemas.idioma import IdiomaSchema
+from schemas.validador import ValidadorCreate
+from schemas.verificador import VerificadorCreate
 from utils.bytes_to_megabytes import bytes_to_megabytes
 from utils.language_parser import languages_parser
 from utils.errors import errors
 from models.problema import Problema
-from orm.common.index import get_all
+from orm.common.index import get_all, get_by_id
 from dependencies.authenticated_user import get_authenticated_user
-from schemas.problema import ProblemaCreate, ProblemaRead
+from schemas.problema import ProblemaCreate, ProblemaReadFull, ProblemaReadSimple, ProblemaUpdatePartial
 from schemas.common.pagination import PaginationSchema
 from dependencies.database import get_db
 from sqlalchemy.orm import Session
-from orm.problema import create_problema
+from orm.problema import create_problema, update_problema
 from schemas.common.response import ResponsePaginationSchema, ResponseUnitSchema
 import zipfile
 import tempfile
 import xml.etree.ElementTree as ET
+
+PROBLEMA_ID_DESCRIPTION = "Identificador do problema"
 
 
 router = APIRouter(
@@ -28,7 +32,7 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_model=ResponsePaginationSchema[ProblemaRead], summary="Lista problemas")
+@router.get("/", response_model=ResponsePaginationSchema[ProblemaReadSimple], summary="Lista problemas")
 def read(db: Session = Depends(get_db), common: PaginationSchema = Depends()):
     problemas, metadata = get_all(db, Problema, common)
 
@@ -38,8 +42,27 @@ def read(db: Session = Depends(get_db), common: PaginationSchema = Depends()):
     )
 
 
+@router.get("/{id}/",
+            response_model=ResponseUnitSchema[ProblemaReadFull],
+            summary="Lista um problema",
+            dependencies=[Depends(get_authenticated_user)],
+            responses={
+                404: errors[404]
+            }
+            )
+def read_id(
+        id: int = Path(description=PROBLEMA_ID_DESCRIPTION),
+        db: Session = Depends(get_db)
+):
+    problema = get_by_id(
+        db, Problema, id, ["tags", "declaracoes", "arquivos"])
+    return ResponseUnitSchema(
+        data=problema
+    )
+
+
 @router.post("/",
-             response_model=ResponseUnitSchema[ProblemaRead],
+             response_model=ResponseUnitSchema[ProblemaReadFull],
              status_code=201,
              summary="Cadastra problema",
              responses={
@@ -47,7 +70,8 @@ def read(db: Session = Depends(get_db), common: PaginationSchema = Depends()):
              }
              )
 def create(
-    problema: ProblemaCreate, db: Session = Depends(get_db)
+    problema: ProblemaCreate = Body(description="Problema a ser criado"),
+    db: Session = Depends(get_db)
 ):
     data = create_problema(db=db, problema=problema)
 
@@ -55,7 +79,7 @@ def create(
 
 
 @router.post("/upload/",
-             response_model=ResponseUnitSchema[ProblemaRead],
+             response_model=ResponseUnitSchema[ProblemaReadFull],
              status_code=201,
              summary="Importa problema do Polygon via pacote",
              responses={
@@ -82,19 +106,39 @@ def upload(
         memoria_limite=256,
         tags=[],
         declaracoes=[],
-        arquivos=[]
+        arquivos=[],
+        verificador=VerificadorCreate(nome="", linguagem="", corpo=""),
+        validador=ValidadorCreate(nome="", linguagem="", corpo=""),
     )
 
-    def process_files(path: str | None, secao: SecaoSchema):
+    def process_files(path: str | None, secao: SecaoSchema, status: str | None = None):
         if (path != None):
             with zip.open(path) as file:
                 nome = file.name.split("/")[-1]
                 corpo = file.read().decode()
 
                 arquivo = ArquivoCreate(
-                    nome=nome, corpo=corpo, secao=secao)
+                    nome=nome, corpo=corpo, secao=secao, status=status)
 
                 problema.arquivos.append(arquivo)
+
+    def process_verificador_and_validador(path: str | None, linguagem: str | None, tipo: str):
+        if path is not None:
+            with zip.open(path) as file:
+                nome = file.name.split("/")[-1]
+                corpo = file.read().decode()
+
+                if tipo == "verificador":
+                    verificador = VerificadorCreate(
+                        nome=nome, corpo=corpo, linguagem=linguagem or "")
+
+                    problema.verificador = verificador
+
+                elif tipo == "validador":
+                    validador = ValidadorCreate(
+                        nome=nome, corpo=corpo, linguagem=linguagem or "")
+
+                    problema.validador = validador
 
     def process_tempo_limite(data: ET.Element):
         tempo_limite = data.find('.//time-limit')
@@ -109,6 +153,10 @@ def upload(
 
             problema.memoria_limite = memoria_converted
 
+    def process_name(data: ET.Element):
+        if (data != None):
+            problema.nome = str(data.get("short-name"))
+
     def process_xml(zip, filename):
         with zip.open(filename) as xml:
             content = xml.read().decode()
@@ -120,17 +168,38 @@ def upload(
             # Atribui a memória limite
             process_memoria_limite(data)
 
+            # Atribui o nome do problema
+            process_name(data)
+
             # Atribui todos os arquivos de recursos
             for file in data.findall('.//resources/file'):
                 process_files(file.get("path"), SecaoSchema.RECURSO)
 
+            # Atribui todos os arquivos de solução
+            for solution in data.findall('.//solutions/solution'):
+                status = str(solution.get("tag"))
+                source = solution.find('source')
+                if source is not None:
+                    path = source.get("path")
+                    process_files(path, SecaoSchema.SOLUCAO, status)
+
             # Atribui o verificador
-            for file in data.findall('.//checker/source'):
-                process_files(file.get("path"), SecaoSchema.FONTE)
+            checker = data.find('.//checker/source')
+            if (checker != None):
+                path = checker.get(
+                    "path")
+                linguagem = checker.get("type")
+
+                process_verificador_and_validador(
+                    path, linguagem, "verificador")
 
             # Atribui o validador
-            for file in data.findall('.//validator/source'):
-                process_files(file.get("path"), SecaoSchema.FONTE)
+            validator = data.find(".//validator/source")
+            if (validator != None):
+                path = validator.get("path")
+                linguagem = validator.get("type")
+
+                process_verificador_and_validador(path, linguagem, "validador")
 
     def process_tags(zip, filename):
         with zip.open(filename) as tags:
@@ -177,3 +246,43 @@ def upload(
     # except:
     #     raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
     #                         detail="Erro. Ocorreu uma falha no processamento do pacote!")
+
+
+@router.put("/{id}/",
+            response_model=ResponseUnitSchema[ProblemaReadFull],
+            summary="Atualiza um problema por completo",
+            responses={
+                404: errors[404]
+            },
+            dependencies=[Depends(get_authenticated_user)],
+            )
+def total_update(
+        id: int = Path(description=PROBLEMA_ID_DESCRIPTION),
+        db: Session = Depends(get_db),
+        data: ProblemaCreate = Body(
+            description="Problema a ser atualizado por completo"),
+):
+    response = update_problema(db, id, data)
+    return ResponseUnitSchema(
+        data=response
+    )
+
+
+@router.patch("/{id}/",
+              response_model=ResponseUnitSchema[ProblemaReadFull],
+              summary="Atualiza um problema parcialmente",
+              responses={
+                  404: errors[404]
+              },
+              dependencies=[Depends(get_authenticated_user)],
+              )
+def parcial_update(
+        id: int = Path(description=PROBLEMA_ID_DESCRIPTION),
+        db: Session = Depends(get_db),
+        data: ProblemaUpdatePartial = Body(
+            description="Problema a ser atualizado parcialmente"),
+):
+    response = update_problema(db, id, data)
+    return ResponseUnitSchema(
+        data=response
+    )

@@ -1,11 +1,10 @@
-from sqlalchemy import Column, Enum, ForeignKey, Integer, String
+from sqlalchemy import Column, ForeignKey, Integer, String, UniqueConstraint
 from sqlalchemy.orm import relationship
 from database import Base
-from schemas.arquivo import SecaoSchema
 
 
-class Arquivo(Base):
-    __tablename__ = "arquivos"
+class Validador(Base):
+    __tablename__ = "validadores"
 
     id = Column(
         Integer,
@@ -24,18 +23,20 @@ class Arquivo(Base):
         nullable=False,
     )
 
-    secao = Column(
-        Enum(SecaoSchema),
-        index=True
-    )
-
-    status = Column(
+    # Talvez Enum em breve
+    linguagem = Column(
         String,
-        index=True
+        nullable=False,
     )
 
     problema_id = Column(Integer, ForeignKey('problemas.id'))
     problema = relationship(
         "Problema",
-        back_populates="arquivos",
+        uselist=False,
+        foreign_keys=[problema_id],
+        post_update=True,
+    )
+
+    __table_args__ = (
+        UniqueConstraint('problema_id'),
     )
