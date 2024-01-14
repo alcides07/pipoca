@@ -63,14 +63,16 @@ class Problema(Base):
         back_populates="problema"
     )
 
-    verificador_id = Column(Integer, ForeignKey('verificadores.id'))
+    verificador_id = Column(Integer, ForeignKey(
+        'verificadores.id', use_alter=True))
     verificador = relationship(
         Verificador,
         uselist=False,
         foreign_keys=[verificador_id],
     )
 
-    validador_id = Column(Integer, ForeignKey('validadores.id'))
+    validador_id = Column(Integer, ForeignKey(
+        'validadores.id', use_alter=True))
     validador = relationship(
         Validador,
         uselist=False,
