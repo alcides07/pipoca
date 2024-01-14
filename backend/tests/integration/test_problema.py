@@ -8,12 +8,9 @@ URL_PROBLEMA = "/problemas"
 JSON_PROBLEMA = {
     "nome": "string",
     "nome_arquivo_entrada": "string",
-            "nome_arquivo_saida": "string",
-            "tempo_limite": 250,
-            "memoria_limite": 600,
-            "tags": [
-                "string"
-            ],
+    "nome_arquivo_saida": "string",
+    "tempo_limite": 250,
+    "memoria_limite": 600,
     "declaracoes": [
                 {
                     "titulo": "string",
@@ -24,24 +21,24 @@ JSON_PROBLEMA = {
                     "tutorial": "string",
                     "idioma": "Africâner"
                 }
-            ],
+    ],
     "arquivos": [
-                {
-                    "nome": "string",
+        {
+            "nome": "string",
                     "corpo": "string",
                     "secao": "recursos"
-                }
-            ],
+        }
+    ],
     "verificador": {
-                "nome": "string",
+        "nome": "string",
                 "linguagem": "string",
                 "corpo": "string"
-            },
+    },
     "validador": {
-                "nome": "string",
+        "nome": "string",
                 "linguagem": "string",
                 "corpo": "string"
-            },
+    },
     "tags": ["1", "2"]
 }
 
