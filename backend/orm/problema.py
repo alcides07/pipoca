@@ -113,7 +113,7 @@ def update_problema(db: Session, id: int, problema: ProblemaUpdatePartial | Prob
                         db_problema.tags.append(db_tag)
 
                 else:
-                    if (db_problema, key):
+                    if getattr(db_problema, key):
                         setattr(db_problema, key, value)
 
         db.commit()
