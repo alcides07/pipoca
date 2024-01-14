@@ -2,7 +2,7 @@ from typing import Optional
 from pydantic import BaseModel, Field
 from enum import Enum
 
-ARQUIVO_ID_DESCRIPTION = "identificador do arquivo"
+ARQUIVO_ID_DESCRIPTION = "Identificador do arquivo"
 PROBLEMA_ID_DESCRIPTION = "Identificador do problema associado ao arquivo"
 
 
