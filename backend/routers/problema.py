@@ -201,10 +201,13 @@ def upload(
 
                 process_verificador_and_validador(path, linguagem, "validador")
 
-    def process_tags(zip, filename):
-        with zip.open(filename) as tags:
-            for tag in tags.readlines():
-                problema.tags.append(tag.decode().strip())
+            # Atribui todas as tags
+            for tag in data.findall('.//tags/tag'):
+                name = str(tag.get("value"))
+                problema.tags.append(name)
+
+            # for validador_test in data.findall(".//validators/validator/testset/tests/test"):
+            #     print(validador_test.get("verdict"))
 
     def process_statements(zip, filename):
         with zip.open(filename) as statement:
@@ -235,10 +238,6 @@ def upload(
             # Processa o statement de cada idioma
             if filename.startswith("statements/") and filename.endswith("problem-properties.json"):
                 process_statements(zip, filename)
-
-            # Processa as tags
-            if (filename.lower() == "tags"):
-                process_tags(zip, filename)
 
     data = create_problema(db=db, problema=problema)
     return ResponseUnitSchema(data=data)
