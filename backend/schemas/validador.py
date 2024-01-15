@@ -1,4 +1,5 @@
 from pydantic import BaseModel, Field
+from schemas.validadorTeste import ValidadorTesteCreate, ValidadorTesteReadFull, ValidadorTesteReadSimple
 
 VALIDADOR_ID_DESCRIPTION = "Identificador do validador"
 PROBLEMA_ID_DESCRIPTION = "Identificador do problema associado ao validador"
@@ -27,16 +28,21 @@ class ValidadorReadFull(ValidadorWithBody):
     id: int = Field(description=VALIDADOR_ID_DESCRIPTION)
     problema_id: int = Field(
         description=PROBLEMA_ID_DESCRIPTION)
+    testes: list[ValidadorTesteReadFull] = Field(
+        description="Lista de testes do validador")
 
 
 class ValidadorReadSimple(ValidadorBase):
     id: int = Field(description=VALIDADOR_ID_DESCRIPTION)
     problema_id: int = Field(
         description=PROBLEMA_ID_DESCRIPTION)
+    testes: list[ValidadorTesteReadSimple] = Field(
+        description="Lista de testes do validador")
 
     class ConfigDict:
         from_attributes = True
 
 
 class ValidadorCreate(ValidadorWithBody):
-    pass
+    testes: list[ValidadorTesteCreate] = Field(
+        description="Lista de testes do validador")
