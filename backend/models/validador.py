@@ -1,3 +1,4 @@
+from models.validadorTeste import ValidadorTeste
 from sqlalchemy import Column, ForeignKey, Integer, String, UniqueConstraint
 from sqlalchemy.orm import relationship
 from database import Base
@@ -35,6 +36,11 @@ class Validador(Base):
         uselist=False,
         foreign_keys=[problema_id],
         post_update=True,
+    )
+
+    testes = relationship(
+        ValidadorTeste,
+        back_populates="validador"
     )
 
     __table_args__ = (
