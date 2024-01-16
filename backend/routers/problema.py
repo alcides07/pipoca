@@ -55,7 +55,7 @@ def read_id(
         db: Session = Depends(get_db)
 ):
     problema = get_by_id(
-        db, Problema, id, ["tags", "declaracoes", "arquivos"])
+        db, Problema, id)
     return ResponseUnitSchema(
         data=problema
     )
@@ -108,7 +108,8 @@ def upload(
         declaracoes=[],
         arquivos=[],
         verificador=VerificadorCreate(nome="", linguagem="", corpo=""),
-        validador=ValidadorCreate(nome="", linguagem="", corpo=""),
+        validador=ValidadorCreate(
+            nome="", linguagem="", corpo="", testes=[]),
     )
 
     def process_files(path: str | None, secao: SecaoSchema, status: str | None = None):
@@ -136,7 +137,7 @@ def upload(
 
                 elif tipo == "validador":
                     validador = ValidadorCreate(
-                        nome=nome, corpo=corpo, linguagem=linguagem or "")
+                        nome=nome, corpo=corpo, linguagem=linguagem or "", testes=[])
 
                     problema.validador = validador
 
@@ -189,7 +190,6 @@ def upload(
                 path = checker.get(
                     "path")
                 linguagem = checker.get("type")
-
                 process_verificador_and_validador(
                     path, linguagem, "verificador")
 
@@ -198,16 +198,12 @@ def upload(
             if (validator != None):
                 path = validator.get("path")
                 linguagem = validator.get("type")
-
                 process_verificador_and_validador(path, linguagem, "validador")
 
             # Atribui todas as tags
             for tag in data.findall('.//tags/tag'):
                 name = str(tag.get("value"))
                 problema.tags.append(name)
-
-            # for validador_test in data.findall(".//validators/validator/testset/tests/test"):
-            #     print(validador_test.get("verdict"))
 
     def process_statements(zip, filename):
         with zip.open(filename) as statement:
