@@ -1,4 +1,3 @@
-from models.tag import Tag
 from fastapi import HTTPException, status
 from models.validador import Validador
 from models.validadorTeste import ValidadorTeste
@@ -11,8 +10,59 @@ from sqlalchemy.exc import SQLAlchemyError
 from models.arquivo import Arquivo
 from models.declaracao import Declaracao
 from models.problema import Problema
-from models.tag import Tag
 from schemas.problema import ProblemaCreate, ProblemaUpdatePartial
+
+
+def create_verificador(db, problema, db_problema):
+    db_verificador = Verificador(
+        **problema.verificador.model_dump(exclude=set(["testes"])))
+    db.add(db_verificador)
+    db_problema.verificador = db_verificador
+    db_verificador.problema = db_problema
+
+
+def create_verificador_testes(db, problema, db_problema):
+    for verificador_teste in problema.verificador.testes:
+        db_verificador_teste = VerificadorTeste(
+            **verificador_teste.model_dump())
+        db.add(db_verificador_teste)
+        db_problema.verificador.testes.append(
+            db_verificador_teste)
+
+
+def create_validador(db, problema, db_problema):
+    db_validador = Validador(
+        **problema.validador.model_dump(exclude=set(["testes"])))
+    db.add(db_validador)
+    db_problema.validador = db_validador
+    db_validador.problema = db_problema
+
+
+def create_validador_testes(db, problema, db_problema):
+    for validador_teste in problema.validador.testes:
+        db_validador_teste = ValidadorTeste(
+            **validador_teste.model_dump())
+        db.add(db_validador_teste)
+        db_problema.validador.testes.append(db_validador_teste)
+
+
+def create_arquivos(db, arquivo, db_problema):
+    db_arquivo = Arquivo(
+        **arquivo.model_dump())
+    db.add(db_arquivo)
+    db_problema.arquivos.append(db_arquivo)
+
+
+def create_declaracoes(db, declaracao, db_problema):
+    db_declaracao = Declaracao(
+        **declaracao.model_dump())
+    db.add(db_declaracao)
+    db_problema.declaracoes.append(db_declaracao)
+
+
+def create_tags(db, tag, db_problema):
+    db_tag = create_tag(db, tag)
+    db_problema.tags.append(db_tag)
 
 
 def create_problema(db: Session, problema: ProblemaCreate):
@@ -22,47 +72,19 @@ def create_problema(db: Session, problema: ProblemaCreate):
         db.add(db_problema)
 
         for declaracao in problema.declaracoes:
-            db_declaracao = Declaracao(
-                **declaracao.model_dump())
-            db.add(db_declaracao)
-            db_problema.declaracoes.append(db_declaracao)
+            create_declaracoes(db, declaracao, db_problema)
 
         for arquivo in problema.arquivos:
-            db_arquivo = Arquivo(
-                **arquivo.model_dump())
-            db.add(db_arquivo)
-            db_problema.arquivos.append(db_arquivo)
+            create_arquivos(db, arquivo, db_problema)
 
         for tag in problema.tags:
-            db_tag = db.query(Tag).filter(Tag.nome == tag).first()
-            if db_tag is None:
-                db_tag = Tag(nome=tag)
-                db.add(db_tag)
-            db_problema.tags.append(db_tag)
+            create_tags(db, tag, db_problema)
 
-        db_verificador = Verificador(
-            **problema.verificador.model_dump(exclude=set(["testes"])))
-        db.add(db_verificador)
-        db_problema.verificador = db_verificador
-        db_verificador.problema = db_problema
+        create_verificador(db, problema, db_problema)
+        create_verificador_testes(db, problema, db_problema)
 
-        for verificador_teste in problema.verificador.testes:
-            db_verificador_teste = VerificadorTeste(
-                **verificador_teste.model_dump())
-            db.add(db_verificador_teste)
-            db_problema.verificador.testes.append(db_verificador_teste)
-
-        db_validador = Validador(
-            **problema.validador.model_dump(exclude=set(["testes"])))
-        db.add(db_validador)
-        db_problema.validador = db_validador
-        db_validador.problema = db_problema
-
-        for validador_teste in problema.validador.testes:
-            db_validador_teste = ValidadorTeste(
-                **validador_teste.model_dump())
-            db.add(db_validador_teste)
-            db_problema.validador.testes.append(db_validador_teste)
+        create_validador(db, problema, db_problema)
+        create_validador_testes(db, problema, db_problema)
 
         db.commit()
         db.refresh(db_problema)
@@ -90,10 +112,7 @@ def update_problema(db: Session, id: int, problema: ProblemaUpdatePartial | Prob
                         delete_object(db, Declaracao, declaracao_id)
 
                     for declaracao in value:
-                        db_declaracao = Declaracao(
-                            **declaracao.model_dump())
-                        db.add(db_declaracao)
-                        db_problema.declaracoes.append(db_declaracao)
+                        create_declaracoes(db, declaracao, db_problema)
 
                 elif (key == "arquivos"):
                     arquivos_ids = db.query(Arquivo.id).filter(
@@ -103,50 +122,27 @@ def update_problema(db: Session, id: int, problema: ProblemaUpdatePartial | Prob
                         delete_object(db, Arquivo, arquivo_id)
 
                     for arquivo in value:
-                        db_arquivo = Arquivo(
-                            **arquivo.model_dump())
-                        db.add(db_arquivo)
-                        db_problema.arquivos.append(db_arquivo)
+                        create_arquivos(db, arquivo, db_problema)
 
                 elif (key == "verificador"):
                     delete_object(db, Verificador,
                                   db_problema.verificador_id)  # type: ignore
 
-                    db_verificador = Verificador(
-                        **value.model_dump(exclude=set(["testes"])))
-                    db.add(db_verificador)
-                    db_problema.verificador = db_verificador
-                    db_verificador.problema = db_problema
-
-                    for verificador_teste in db_problema.verificador.testes:
-                        db_verificador_teste = VerificadorTeste(
-                            **verificador_teste.model_dump())
-                        db.add(db_verificador_teste)
-                        db_problema.verificador.testes.append(
-                            db_verificador_teste)
+                    create_verificador(db, problema, db_problema)
+                    create_verificador_testes(db, problema, db_problema)
 
                 elif (key == "validador"):
                     delete_object(db, Validador,
                                   db_problema.validador_id)  # type: ignore
 
-                    db_validador = Validador(
-                        **value.model_dump(exclude=set(["testes"])))
-                    db.add(db_validador)
-                    db_problema.validador = db_validador
-                    db_validador.problema = db_problema
-
-                    for validador_teste in db_problema.validador.testes:
-                        db_validador_teste = ValidadorTeste(
-                            **validador_teste.model_dump())
-                        db.add(db_validador_teste)
-                        db_problema.validador.testes.append(db_validador_teste)
+                    create_validador(db, problema, db_problema)
+                    create_validador_testes(db, problema, db_problema)
 
                 elif (key == "tags"):
                     db_problema.tags = []
 
                     for tag in value:
-                        db_tag = create_tag(db, tag)
-                        db_problema.tags.append(db_tag)
+                        create_tags(db, tag, db_problema)
 
                 else:
                     if getattr(db_problema, key):
