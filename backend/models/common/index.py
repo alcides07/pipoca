@@ -1,1 +1,1 @@
-from models import arquivo, declaracao, problema, tag, user, validador, verificador
+from models import arquivo, declaracao, problema, tag, user, validador, verificador, validadorTeste
