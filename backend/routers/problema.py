@@ -1,6 +1,7 @@
 import json
 from typing import Annotated
 from fastapi import APIRouter, Body, Depends, File, HTTPException, Path, UploadFile, status
+from fastapi.encoders import jsonable_encoder
 from schemas.arquivo import ArquivoCreate, SecaoSchema
 from schemas.declaracao import DeclaracaoCreate
 from schemas.idioma import IdiomaSchema
@@ -74,6 +75,7 @@ def create(
     db: Session = Depends(get_db)
 ):
     data = create_problema(db=db, problema=problema)
+    print("response: ", jsonable_encoder(data))
 
     return ResponseUnitSchema(data=data)
 
@@ -107,7 +109,8 @@ def upload(
         tags=[],
         declaracoes=[],
         arquivos=[],
-        verificador=VerificadorCreate(nome="", linguagem="", corpo=""),
+        verificador=VerificadorCreate(
+            nome="", linguagem="", corpo="", testes=[]),
         validador=ValidadorCreate(
             nome="", linguagem="", corpo="", testes=[]),
     )
@@ -131,7 +134,7 @@ def upload(
 
                 if tipo == "verificador":
                     verificador = VerificadorCreate(
-                        nome=nome, corpo=corpo, linguagem=linguagem or "")
+                        nome=nome, corpo=corpo, linguagem=linguagem or "", testes=[])
 
                     problema.verificador = verificador
 
