@@ -1,12 +1,11 @@
 from models.tag import Tag
-from schemas.tag import TagCreate
 from sqlalchemy.exc import SQLAlchemyError
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from fastapi import status
 
 
-def create_tag(db: Session, tag: TagCreate):
+def create_tag(db: Session, tag: str):
     try:
         db_tag = db.query(Tag).filter(Tag.nome == tag).first()
         if db_tag is None:
