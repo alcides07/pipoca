@@ -3,6 +3,7 @@ from fastapi import HTTPException, status
 from models.validador import Validador
 from models.validadorTeste import ValidadorTeste
 from models.verificador import Verificador
+from models.verificadorTeste import VerificadorTeste
 from orm.common.index import delete_object
 from orm.tag import create_tag
 from sqlalchemy.orm import Session
@@ -39,10 +40,17 @@ def create_problema(db: Session, problema: ProblemaCreate):
                 db.add(db_tag)
             db_problema.tags.append(db_tag)
 
-        db_verificador = Verificador(**problema.verificador.model_dump())
+        db_verificador = Verificador(
+            **problema.verificador.model_dump(exclude=set(["testes"])))
         db.add(db_verificador)
         db_problema.verificador = db_verificador
         db_verificador.problema = db_problema
+
+        for verificador_teste in problema.verificador.testes:
+            db_verificador_teste = VerificadorTeste(
+                **verificador_teste.model_dump())
+            db.add(db_verificador_teste)
+            db_problema.verificador.testes.append(db_verificador_teste)
 
         db_validador = Validador(
             **problema.validador.model_dump(exclude=set(["testes"])))
@@ -104,10 +112,18 @@ def update_problema(db: Session, id: int, problema: ProblemaUpdatePartial | Prob
                     delete_object(db, Verificador,
                                   db_problema.verificador_id)  # type: ignore
 
-                    db_verificador = Verificador(**value.model_dump())
+                    db_verificador = Verificador(
+                        **value.model_dump(exclude=set(["testes"])))
                     db.add(db_verificador)
                     db_problema.verificador = db_verificador
                     db_verificador.problema = db_problema
+
+                    for verificador_teste in db_problema.verificador.testes:
+                        db_verificador_teste = VerificadorTeste(
+                            **verificador_teste.model_dump())
+                        db.add(db_verificador_teste)
+                        db_problema.verificador.testes.append(
+                            db_verificador_teste)
 
                 elif (key == "validador"):
                     delete_object(db, Validador,
