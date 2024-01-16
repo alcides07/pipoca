@@ -107,7 +107,8 @@ def upload(
         tags=[],
         declaracoes=[],
         arquivos=[],
-        verificador=VerificadorCreate(nome="", linguagem="", corpo=""),
+        verificador=VerificadorCreate(
+            nome="", linguagem="", corpo="", testes=[]),
         validador=ValidadorCreate(
             nome="", linguagem="", corpo="", testes=[]),
     )
@@ -131,7 +132,7 @@ def upload(
 
                 if tipo == "verificador":
                     verificador = VerificadorCreate(
-                        nome=nome, corpo=corpo, linguagem=linguagem or "")
+                        nome=nome, corpo=corpo, linguagem=linguagem or "", testes=[])
 
                     problema.verificador = verificador
 

@@ -1,13 +1,13 @@
 from pydantic import BaseModel, Field
 
-VALIDADOR_TESTE_ID_DESCRIPTION = "Identificador do validador"
+VALIDADOR_TESTE_ID_DESCRIPTION = "Identificador do teste do validador"
 VALIDADOR_ID_DESCRIPTION = "Identificador do validador associado ao teste"
 
 
 class ValidadorTesteBase(BaseModel):
-    codigo: str = Field(
+    numero: str = Field(
         max_length=64,
-        description="Código do teste"
+        description="Código de numeração do teste"
     )
 
 

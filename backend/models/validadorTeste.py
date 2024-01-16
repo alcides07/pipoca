@@ -12,7 +12,7 @@ class ValidadorTeste(Base):
         index=True
     )
 
-    codigo = Column(
+    numero = Column(
         String(length=64),
         nullable=False,
     )
@@ -28,8 +28,4 @@ class ValidadorTeste(Base):
         uselist=False,
         foreign_keys=[validador_id],
         post_update=True,
-    )
-
-    __table_args__ = (
-        UniqueConstraint('validador_id'),
     )
