@@ -32,7 +32,14 @@ JSON_PROBLEMA = {
     "verificador": {
         "nome": "string",
                 "linguagem": "string",
-                "corpo": "string"
+                "corpo": "string",
+        "testes": [
+            {
+                "numero": "string",
+                "entrada": "string",
+                "veredito": "ok"
+            }
+        ]
     },
     "validador": {
         "nome": "string",
@@ -40,9 +47,13 @@ JSON_PROBLEMA = {
                 "corpo": "string",
         "testes": [
             {
-                "codigo": "string",
-                "entrada": "string"
-            }
+                "numero": "string",
+                "entrada": "string",
+            },
+            {
+                "numero": "string",
+                "entrada": "string",
+            },
         ]
     },
     "tags": ["1", "2"]
