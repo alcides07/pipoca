@@ -92,7 +92,7 @@ async def upload(
     pacote: Annotated[UploadFile, File(description="Pacote .zip gerado pelo Polygon")],
     db: Session = Depends(get_db),
 ):
-    if (pacote.content_type not in ["application/zip"]):
+    if (pacote.content_type not in ["application/zip", "application/x-zip-compressed"]):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                             detail="Erro. Formato de pacote inválido!")
 
