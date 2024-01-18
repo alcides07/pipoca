@@ -6,6 +6,7 @@ from schemas.arquivo import ArquivoCreate, SecaoSchema
 from schemas.declaracao import DeclaracaoCreate
 from schemas.idioma import IdiomaSchema
 from schemas.validador import ValidadorCreate
+from schemas.validadorTeste import ValidadorTesteCreate, VereditoValidadorTesteEnum
 from schemas.verificador import VerificadorCreate
 from schemas.verificadorTeste import VereditoVerificadorTesteEnum, VerificadorTesteCreate
 from utils.bytes_to_megabytes import bytes_to_megabytes
@@ -160,9 +161,22 @@ async def upload(
     def process_verdict_verificador_teste(verdict: VereditoVerificadorTesteEnum | None):
         if (verdict != None):
             verificador_teste = VerificadorTesteCreate(
-                veredito=verdict, numero="", entrada="")
+                numero="",
+                veredito=verdict,
+                entrada=""
+            )
 
             problema.verificador.testes.append(verificador_teste)
+
+    def process_verdict_validador_teste(verdict: VereditoValidadorTesteEnum | None):
+        if (verdict != None):
+            validador_teste = ValidadorTesteCreate(
+                numero="",
+                veredito=verdict,
+                entrada=""
+            )
+
+            problema.validador.testes.append(validador_teste)
 
     def process_name(data: ET.Element):
         if (data != None):
@@ -217,6 +231,12 @@ async def upload(
                 linguagem = validador.get("type")
                 process_verificador_and_validador(path, linguagem, "validador")
 
+            # Atribui os testes do validador
+            for validador_teste in data.findall(".//validator/testset/tests/test"):
+                verdict = validador_teste.get("verdict")
+                verdict_enum = VereditoValidadorTesteEnum(verdict)
+                process_verdict_validador_teste(verdict=verdict_enum)
+
             # Atribui todas as tags
             for tag in data.findall('.//tags/tag'):
                 name = str(tag.get("value"))
@@ -252,25 +272,41 @@ async def upload(
                     verificador_teste.numero = os.path.basename(filename)
                     i += 1
 
-# try:
-    with zipfile.ZipFile(temp_file, 'r') as zip:
+    def process_validador_teste(zip: zipfile.ZipFile, directory: str):
+        i = 0
+
         for filename in zip.namelist():
+            if filename != directory and filename.startswith(directory):
+                with zip.open(filename) as file:
+                    content = file.read().decode()
 
-            # Processa o xml global do problema
-            if filename.lower() == "problem.xml":
-                await process_xml(zip, filename)
-                process_verificador_teste(zip, "files/tests/checker-tests/")
+                    validador_teste = problema.validador.testes[i]
+                    validador_teste.entrada = content
+                    validador_teste.numero = os.path.basename(filename)
+                    i += 1
 
-            # Processa o statement de cada idioma
-            if filename.startswith("statements/") and filename.endswith("problem-properties.json"):
-                process_declaracoes(zip, filename)
+    try:
+        with zipfile.ZipFile(temp_file, 'r') as zip:
+            for filename in zip.namelist():
 
-    data = create_problema(db=db, problema=problema)
-    return ResponseUnitSchema(data=data)
+                # Processa o xml global do problema
+                if filename.lower() == "problem.xml":
+                    await process_xml(zip, filename)
+                    process_verificador_teste(
+                        zip, "files/tests/checker-tests/")
+                    process_validador_teste(
+                        zip, "files/tests/validator-tests/")
 
-    # except:
-    #     raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-    #                         detail="Erro. Ocorreu uma falha no processamento do pacote!")
+                # Processa o statement de cada idioma
+                if filename.startswith("statements/") and filename.endswith("problem-properties.json"):
+                    process_declaracoes(zip, filename)
+
+        data = create_problema(db=db, problema=problema)
+        return ResponseUnitSchema(data=data)
+
+    except HTTPException:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                            detail="Erro. Ocorreu uma falha no processamento do pacote!")
 
 
 @router.put("/{id}/",

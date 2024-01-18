@@ -49,10 +49,13 @@ JSON_PROBLEMA = {
             {
                 "numero": "string",
                 "entrada": "string",
+                "veredito": "valid"
+
             },
             {
                 "numero": "string",
                 "entrada": "string",
+                "veredito": "invalid"
             },
         ]
     },

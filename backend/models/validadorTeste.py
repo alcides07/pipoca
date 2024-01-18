@@ -1,4 +1,5 @@
-from sqlalchemy import Column, ForeignKey, Integer, String, UniqueConstraint
+from schemas.validadorTeste import VereditoValidadorTesteEnum
+from sqlalchemy import Column, ForeignKey, Integer, String, Enum
 from sqlalchemy.orm import relationship
 from database import Base
 
@@ -20,6 +21,11 @@ class ValidadorTeste(Base):
     entrada = Column(
         String(length=250000),
         nullable=False,
+    )
+
+    veredito = Column(
+        Enum(VereditoValidadorTesteEnum),
+        nullable=False
     )
 
     validador_id = Column(Integer, ForeignKey('validadores.id'))

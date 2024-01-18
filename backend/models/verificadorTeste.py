@@ -1,5 +1,5 @@
 from schemas.verificadorTeste import VereditoVerificadorTesteEnum
-from sqlalchemy import Column, ForeignKey, Integer, String, UniqueConstraint, Enum
+from sqlalchemy import Column, ForeignKey, Integer, String, Enum
 from sqlalchemy.orm import relationship
 from database import Base
 
