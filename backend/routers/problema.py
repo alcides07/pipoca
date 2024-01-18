@@ -304,7 +304,7 @@ async def upload(
         data = create_problema(db=db, problema=problema)
         return ResponseUnitSchema(data=data)
 
-    except:
+    except HTTPException:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                             detail="Erro. Ocorreu uma falha no processamento do pacote!")
 
