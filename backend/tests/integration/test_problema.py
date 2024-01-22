@@ -7,6 +7,7 @@ client = TestClient(app)
 URL_PROBLEMA = "/problemas"
 JSON_PROBLEMA = {
     "nome": "string",
+    "privado": True,
     "nome_arquivo_entrada": "string",
     "nome_arquivo_saida": "string",
     "tempo_limite": 250,
@@ -212,6 +213,7 @@ def test_upload_problema():
         response = client.post(
             f"{URL_PROBLEMA}/upload/",
             files={"pacote": file},
+            data={"privado": "true"},
         )
 
     assert response.status_code == 201
