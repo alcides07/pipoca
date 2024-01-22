@@ -18,6 +18,10 @@ class ProblemaBase(BaseModel):
         description="Nome do problema"
     )
 
+    privado: bool = Field(
+        description="Visibilidade de um problema"
+    )
+
     nome_arquivo_entrada: str = Field(
         max_length=64,
         description="Nome do arquivo de entrada do problema"
