@@ -2,6 +2,7 @@ import os
 import json
 from typing import Annotated
 from fastapi import APIRouter, Body, Depends, File, HTTPException, Path, UploadFile, status
+from filters.problema import ProblemaFilter, search_fields_problema
 from schemas.arquivo import ArquivoCreate, SecaoSchema
 from schemas.declaracao import DeclaracaoCreate
 from schemas.idioma import IdiomaSchema
@@ -36,8 +37,13 @@ router = APIRouter(
 
 
 @router.get("/", response_model=ResponsePaginationSchema[ProblemaReadSimple], summary="Lista problemas")
-def read(db: Session = Depends(get_db), common: PaginationSchema = Depends()):
-    problemas, metadata = get_all(db, Problema, common)
+def read(
+    db: Session = Depends(get_db),
+    common: PaginationSchema = Depends(),
+    filters: ProblemaFilter = Depends()
+):
+    problemas, metadata = get_all(
+        db, Problema, common, filters, search_fields_problema)
 
     return ResponsePaginationSchema(
         data=problemas,
