@@ -1,6 +1,6 @@
 from models.validador import Validador
 from models.verificador import Verificador
-from sqlalchemy import Column, ForeignKey, Integer, String, CheckConstraint, UniqueConstraint
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, CheckConstraint, UniqueConstraint
 from sqlalchemy.orm import relationship
 from database import Base
 from models.arquivo import Arquivo
@@ -19,6 +19,12 @@ class Problema(Base):
 
     nome = Column(
         String(length=64),
+        index=True,
+        nullable=False,
+    )
+
+    privado = Column(
+        Boolean(),
         index=True,
         nullable=False,
     )

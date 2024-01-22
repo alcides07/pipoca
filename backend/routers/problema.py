@@ -91,6 +91,8 @@ def create(
              )
 async def upload(
     pacote: Annotated[UploadFile, File(description="Pacote .zip gerado pelo Polygon")],
+    privado: bool = Body(
+        description="Visibilidade do problema (privado/público)"),
     db: Session = Depends(get_db),
 ):
     if (pacote.content_type not in ["application/zip", "application/x-zip-compressed"]):
@@ -114,6 +116,7 @@ async def upload(
             nome="", linguagem="", corpo="", testes=[]),
         validador=ValidadorCreate(
             nome="", linguagem="", corpo="", testes=[]),
+        privado=privado,
     )
 
     def process_files(path: str | None, secao: SecaoSchema, status: str | None = None):
