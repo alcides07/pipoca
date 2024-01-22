@@ -1,3 +1,4 @@
+from sqlalchemy import or_
 from sqlalchemy.exc import SQLAlchemyError
 from typing import Any
 from fastapi import HTTPException
@@ -23,11 +24,28 @@ def get_by_id(db: Session, model: Any, id: int):
     raise HTTPException(status.HTTP_404_NOT_FOUND)
 
 
-def get_all(db: Session, model: Any, common: PaginationSchema):
-    db_objects = db.query(model).offset(common.offset).limit(common.limit)
-    total = db.query(model).count()
+def get_all(db: Session, model: Any, common: PaginationSchema, filters: Any = None, search_fields: list[str] = []):
+    query = db.query(model)
+
+    if filters:
+        for attr, value in filters.__dict__.items():
+            if value is not None:
+                query = query.filter(getattr(model, attr) == value)
+
+    if common.q and search_fields:
+        search_query = or_(
+            *[getattr(model, field).ilike(f"%{common.q}%") for field in search_fields if hasattr(model, field)])
+        query = query.filter(search_query)
+
+    db_objects = query.offset(common.offset).limit(common.limit)
+    total = query.count()
     metadata = MetadataSchema(
-        count=db_objects.count(), total=total, offset=common.offset, limit=common.limit)
+        count=db_objects.count(),
+        total=total,
+        offset=common.offset,
+        limit=common.limit,
+        search_fields=search_fields
+    )
 
     return db_objects.all(), metadata
 
