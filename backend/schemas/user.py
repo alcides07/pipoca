@@ -1,5 +1,4 @@
 from pydantic import BaseModel, Field, EmailStr
-from schemas.problema import ProblemaReadSimple
 
 
 class UserBase(BaseModel):
@@ -13,8 +12,6 @@ class UserBase(BaseModel):
 
 class UserRead(UserBase):
     id: int
-    problemas: list[ProblemaReadSimple] = Field(
-        description="Lista de problemas do usuário")
 
     class ConfigDict:
         from_attributes = True
