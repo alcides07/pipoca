@@ -3,6 +3,7 @@ from pydantic import BaseModel, Field
 from schemas.arquivo import ArquivoCreate, ArquivoReadFull, ArquivoReadSimple
 from schemas.tag import TagRead
 from schemas.declaracao import DeclaracaoCreate, DeclaracaoReadFull, DeclaracaoReadSimple
+from schemas.user import UserRead
 from schemas.validador import ValidadorCreate, ValidadorReadFull, ValidadorReadSimple
 from schemas.verificador import VerificadorCreate, VerificadorReadFull, VerificadorReadSimple
 
@@ -10,11 +11,6 @@ DECLARACAO_DESCRIPTION = "Declarações associadas ao problema"
 VERIFICADOR_DESCRIPTION = "Arquivo verificador do problema"
 VALIDADOR_DESCRIPTION = "Arquivo validador do problema"
 ARQUIVOS_DESCRIPTION = "Arquivos associados ao problema"
-
-
-def UserReadImport():
-    from schemas.user import UserRead
-    return UserRead
 
 
 class ProblemaBase(BaseModel):
@@ -55,7 +51,7 @@ class ProblemaReadSimple(ProblemaBase):
         description="Identificador do problema"
     )
 
-    usuario: UserReadImport = Field(description="Criador do problema")
+    usuario: UserRead = Field(description="Criador do problema")
 
     tags: list[TagRead] = Field(
         description="Lista de palavras-chave"
@@ -86,7 +82,7 @@ class ProblemaReadFull(ProblemaBase):
         description="Identificador do problema"
     )
 
-    usuario: UserReadImport = Field(description="Criador do problema")
+    usuario: UserRead = Field(description="Criador do problema")
 
     tags: list[TagRead] = Field(
         description="Lista de palavras-chave"
@@ -113,7 +109,6 @@ class ProblemaReadFull(ProblemaBase):
 
 
 class ProblemaCreate(ProblemaBase):
-    usuario_id: int = Field("Identificador do criador do problema")
 
     tags: list[str] = Field(
         default=None,
