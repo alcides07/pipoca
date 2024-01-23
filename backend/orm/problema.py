@@ -68,7 +68,7 @@ def create_tags(db, tag, db_problema):
 def create_problema(db: Session, problema: ProblemaCreate):
     try:
         db_problema = Problema(
-            **problema.model_dump(exclude=set(["tags", "declaracoes", "arquivos", "verificador", "validador"])))
+            **problema.model_dump(exclude=set(["tags", "declaracoes", "arquivos", "verificador", "validador", "usuario"])))
         db.add(db_problema)
 
         for declaracao in problema.declaracoes:
