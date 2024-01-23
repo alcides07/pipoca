@@ -1,4 +1,6 @@
+from models.problema import Problema
 from sqlalchemy import Column, Integer, String
+from sqlalchemy.orm import relationship
 from database import Base
 
 
@@ -28,4 +30,9 @@ class User(Base):
     password = Column(
         String(length=64),
         nullable=False,
+    )
+
+    problemas = relationship(
+        Problema,
+        back_populates="usuario"
     )

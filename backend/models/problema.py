@@ -84,6 +84,14 @@ class Problema(Base):
         uselist=False,
         foreign_keys=[validador_id],
     )
+    usuario_id = Column(Integer, ForeignKey(
+        "users.id"
+    ))
+    usuario = relationship(
+        "User",
+        uselist=False,
+        foreign_keys=[usuario_id]
+    )
 
     __table_args__ = (
         UniqueConstraint('verificador_id'),
