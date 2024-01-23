@@ -1,4 +1,5 @@
 from fastapi import HTTPException, status
+from models.user import User
 from models.validador import Validador
 from models.validadorTeste import ValidadorTeste
 from models.verificador import Verificador
@@ -65,7 +66,7 @@ def create_tags(db, tag, db_problema):
     db_problema.tags.append(db_tag)
 
 
-def create_problema(db: Session, problema: ProblemaCreate):
+def create_problema(db: Session, problema: ProblemaCreate, user: User):
     try:
         db_problema = Problema(
             **problema.model_dump(exclude=set(["tags", "declaracoes", "arquivos", "verificador", "validador", "usuario"])))
@@ -86,6 +87,8 @@ def create_problema(db: Session, problema: ProblemaCreate):
         create_validador(db, problema, db_problema)
         create_validador_testes(db, problema, db_problema)
 
+        db_problema.usuario = user
+
         db.commit()
         db.refresh(db_problema)
 
@@ -96,7 +99,7 @@ def create_problema(db: Session, problema: ProblemaCreate):
     return db_problema
 
 
-def update_problema(db: Session, id: int, problema: ProblemaUpdatePartial | ProblemaCreate):
+def update_problema(db: Session, id: int, problema: ProblemaUpdatePartial | ProblemaCreate, user: User):
     db_problema = db.query(Problema).filter(Problema.id == id).first()
     if not db_problema:
         raise HTTPException(status.HTTP_404_NOT_FOUND)
@@ -147,6 +150,8 @@ def update_problema(db: Session, id: int, problema: ProblemaUpdatePartial | Prob
                 else:
                     if getattr(db_problema, key):
                         setattr(db_problema, key, value)
+
+        db_problema.usuario = user
 
         db.commit()
         db.refresh(db_problema)
