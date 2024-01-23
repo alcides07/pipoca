@@ -12,6 +12,11 @@ VALIDADOR_DESCRIPTION = "Arquivo validador do problema"
 ARQUIVOS_DESCRIPTION = "Arquivos associados ao problema"
 
 
+def UserReadImport():
+    from schemas.user import UserRead
+    return UserRead
+
+
 class ProblemaBase(BaseModel):
     nome: str = Field(
         max_length=64,
@@ -50,6 +55,8 @@ class ProblemaReadSimple(ProblemaBase):
         description="Identificador do problema"
     )
 
+    usuario: UserReadImport = Field(description="Criador do problema")
+
     tags: list[TagRead] = Field(
         description="Lista de palavras-chave"
     )
@@ -79,6 +86,8 @@ class ProblemaReadFull(ProblemaBase):
         description="Identificador do problema"
     )
 
+    usuario: UserReadImport = Field(description="Criador do problema")
+
     tags: list[TagRead] = Field(
         description="Lista de palavras-chave"
     )
@@ -104,6 +113,8 @@ class ProblemaReadFull(ProblemaBase):
 
 
 class ProblemaCreate(ProblemaBase):
+    usuario_id: int = Field("Identificador do criador do problema")
+
     tags: list[str] = Field(
         default=None,
         description="Palavras-chave utilizadas como etiquetas"
