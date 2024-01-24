@@ -144,6 +144,8 @@ def test_update_full_problema_fail():
 
     assert response_put.status_code == 422
 
+    resume_dependencies()
+
 
 def test_upload_problema():
     remove_dependencies()
