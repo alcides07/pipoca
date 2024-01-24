@@ -12,13 +12,13 @@ from utils.errors import errors
 router = APIRouter(
     prefix="/validadores",
     tags=["validador"],
+    dependencies=[Depends(get_authenticated_user)],
 )
 
 
 @router.get("/",
             response_model=ResponsePaginationSchema[ValidadorReadSimple],
             summary="Lista validadores",
-            dependencies=[Depends(get_authenticated_user)],
             )
 def read(
         db: Session = Depends(get_db),
@@ -35,7 +35,6 @@ def read(
 @router.get("/{id}/",
             response_model=ResponseUnitSchema[ValidadorReadFull],
             summary="Lista um validador",
-            dependencies=[Depends(get_authenticated_user)],
             responses={
                 404: errors[404]
             }

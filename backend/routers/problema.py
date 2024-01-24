@@ -1,6 +1,6 @@
+from routers.auth import oauth2_scheme
 import os
 import json
-from typing import Annotated
 from fastapi import APIRouter, Body, Depends, File, HTTPException, Path, UploadFile, status
 from filters.problema import ProblemaFilter, search_fields_problema
 from schemas.arquivo import ArquivoCreate, SecaoSchema
@@ -54,7 +54,6 @@ def read(
 @router.get("/{id}/",
             response_model=ResponseUnitSchema[ProblemaReadFull],
             summary="Lista um problema",
-            dependencies=[Depends(get_authenticated_user)],
             responses={
                 404: errors[404]
             }
@@ -78,12 +77,13 @@ def read_id(
                  422: errors[422]
              }
              )
-def create(
+async def create(
     problema: ProblemaCreate = Body(description="Problema a ser criado"),
+    token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db)
 ):
-    data = create_problema(db=db, problema=problema)
-
+    user = await get_authenticated_user(token, db)
+    data = create_problema(db=db, problema=problema, user=user)
     return ResponseUnitSchema(data=data)
 
 
@@ -96,11 +96,13 @@ def create(
              }
              )
 async def upload(
-    pacote: Annotated[UploadFile, File(description="Pacote .zip gerado pelo Polygon")],
+    pacote: UploadFile = File(description="Pacote .zip gerado pelo Polygon"),
     privado: bool = Body(
         description="Visibilidade do problema (privado/público)"),
     db: Session = Depends(get_db),
+    token: str = Depends(oauth2_scheme)
 ):
+
     if (pacote.content_type not in ["application/zip", "application/x-zip-compressed"]):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                             detail="Erro. Formato de pacote inválido!")
@@ -310,7 +312,8 @@ async def upload(
                 if filename.startswith("statements/") and filename.endswith("problem-properties.json"):
                     process_declaracoes(zip, filename)
 
-        data = create_problema(db=db, problema=problema)
+        user = await get_authenticated_user(token, db)
+        data = create_problema(db=db, problema=problema, user=user)
         return ResponseUnitSchema(data=data)
 
     except HTTPException:
@@ -324,15 +327,16 @@ async def upload(
             responses={
                 404: errors[404]
             },
-            dependencies=[Depends(get_authenticated_user)],
             )
-def total_update(
+async def total_update(
         id: int = Path(description=PROBLEMA_ID_DESCRIPTION),
         db: Session = Depends(get_db),
         data: ProblemaCreate = Body(
             description="Problema a ser atualizado por completo"),
+        token: str = Depends(oauth2_scheme),
 ):
-    response = update_problema(db, id, data)
+    user = await get_authenticated_user(token, db)
+    response = update_problema(db, id, data, user)
     return ResponseUnitSchema(
         data=response
     )
@@ -344,15 +348,16 @@ def total_update(
               responses={
                   404: errors[404]
               },
-              dependencies=[Depends(get_authenticated_user)],
               )
-def parcial_update(
+async def parcial_update(
         id: int = Path(description=PROBLEMA_ID_DESCRIPTION),
         db: Session = Depends(get_db),
         data: ProblemaUpdatePartial = Body(
             description="Problema a ser atualizado parcialmente"),
+        token: str = Depends(oauth2_scheme),
 ):
-    response = update_problema(db, id, data)
+    user = await get_authenticated_user(token, db)
+    response = update_problema(db, id, data, user)
     return ResponseUnitSchema(
         data=response
     )
