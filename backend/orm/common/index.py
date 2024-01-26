@@ -1,3 +1,4 @@
+from dependencies.authorization_user import has_authorization_user
 from sqlalchemy import or_
 from sqlalchemy.exc import SQLAlchemyError
 from typing import Any
@@ -17,9 +18,24 @@ def get_by_key_value(db: Session, model: Any, key: str, value):
     return db_object
 
 
-def get_by_id(db: Session, model: Any, id: int):
+def user_autenthicated(token: str, db: Session):
+    from dependencies.authenticated_user import get_authenticated_user
+    return get_authenticated_user(token, db)
+
+
+async def get_by_id(db: Session,
+                    model: Any,
+                    id: int,
+                    token: str = "",
+                    model_has_user_key: Any = None,
+                    ):
+
     db_object = db.query(model).filter(model.id == id).first()
+
     if db_object:
+        if (token and not await has_authorization_user(model, db, db_object, token, model_has_user_key)):
+            raise HTTPException(status.HTTP_401_UNAUTHORIZED)
+
         return db_object
     raise HTTPException(status.HTTP_404_NOT_FOUND)
 

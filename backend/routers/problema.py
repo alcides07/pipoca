@@ -58,12 +58,13 @@ def read(
                 404: errors[404]
             }
             )
-def read_id(
+async def read_id(
         id: int = Path(description=PROBLEMA_ID_DESCRIPTION),
-        db: Session = Depends(get_db)
+        db: Session = Depends(get_db),
+    token: str = Depends(oauth2_scheme)
 ):
-    problema = get_by_id(
-        db, Problema, id)
+    problema = await get_by_id(
+        db, Problema, id, token, Problema)
     return ResponseUnitSchema(
         data=problema
     )

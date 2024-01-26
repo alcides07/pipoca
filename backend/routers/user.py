@@ -1,3 +1,4 @@
+from routers.auth import oauth2_scheme
 from fastapi import APIRouter, Body, Depends, HTTPException, Path, status
 from utils.errors import errors
 from models.user import User
@@ -47,11 +48,12 @@ def read(
                 404: errors[404]
             }
             )
-def read_id(
+async def read_id(
         id: int = Path(description=USER_ID_DESCRIPTION),
-        db: Session = Depends(get_db)
+        db: Session = Depends(get_db),
+    token: str = Depends(oauth2_scheme)
 ):
-    users = get_by_id(db, User, id)
+    users = await get_by_id(db, User, id, token, User)
 
     return ResponseUnitSchema(
         data=users

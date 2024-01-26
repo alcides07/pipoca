@@ -1,6 +1,8 @@
+from routers.auth import oauth2_scheme
 from dependencies.authenticated_user import get_authenticated_user
 from dependencies.database import get_db
 from fastapi import APIRouter, Depends, Path
+from models.problema import Problema
 from models.validador import Validador
 from orm.common.index import get_all, get_by_id
 from schemas.common.pagination import PaginationSchema
@@ -39,11 +41,12 @@ def read(
                 404: errors[404]
             }
             )
-def read_id(
+async def read_id(
         id: int = Path(description="Identificador do validador"),
-        db: Session = Depends(get_db)
+        db: Session = Depends(get_db),
+    token: str = Depends(oauth2_scheme)
 ):
-    validador = get_by_id(db, Validador, id)
+    validador = await get_by_id(db, Validador, id, token, Problema)
 
     return ResponseUnitSchema(
         data=validador
