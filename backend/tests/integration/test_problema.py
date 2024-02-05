@@ -12,10 +12,15 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 def test_read_problema_unit():
     remove_dependencies()
 
-    problema, _ = create_problema_helper()
+    problema, token = create_problema_helper()
 
     problema_id = problema.json().get("data").get("id")
-    response = client.get(f"{URL_PROBLEMA}/{problema_id}/")
+    response = client.get(
+        f"{URL_PROBLEMA}/{problema_id}/",
+        headers={
+            "Authorization": f"Bearer {token}",
+        },
+    )
 
     assert response.status_code == 200
 
