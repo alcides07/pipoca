@@ -108,7 +108,7 @@ async def total_update(
         user: UserCreate = Body(),
         token: str = Depends(oauth2_scheme)
 ):
-    _ = await get_by_id(db, User, id, token, User)
+    await get_by_id(db, User, id, token, User)
     user_username = get_by_key_value(db, User, "username", user.username)
     user_email = get_by_key_value(db, User, "email", user.email)
 
