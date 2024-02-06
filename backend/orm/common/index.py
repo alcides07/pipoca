@@ -92,18 +92,28 @@ def delete_object(db: Session, model: Any, id: int):
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-def update_object(db: Session, model: Any, id: int, data: Any):
+async def update_object(db: Session,
+                        model: Any,
+                        id: int,
+                        data: Any,
+                        token: str = "",
+                        model_has_user_key: Any = None,
+                        ):
+
     db_object = db.query(model).filter(model.id == id).first()
     if not db_object:
         raise HTTPException(status.HTTP_404_NOT_FOUND)
+
+    if (token and not await has_authorization_user(model, db, db_object, token, model_has_user_key)):
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED)
 
     try:
         with db.begin_nested():
             for key, value in data.dict().items():
                 if hasattr(db_object, key):
                     setattr(db_object, key, value)
-            db.commit()
-            db.refresh(db_object)
+        db.commit()
+        db.refresh(db_object)
     except SQLAlchemyError:
         db.rollback()
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR)
