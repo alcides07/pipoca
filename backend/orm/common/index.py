@@ -78,10 +78,18 @@ def create_object(db: Session, model: Any, schema: Any):
     return db_object
 
 
-def delete_object(db: Session, model: Any, id: int):
+async def delete_object(db: Session,
+                        model: Any,
+                        id: int,
+                        token: str = "",
+                        model_has_user_key: Any = None,
+                        ):
     db_object = db.query(model).filter(model.id == id).first()
     if not db_object:
         raise HTTPException(status.HTTP_404_NOT_FOUND)
+
+    if (token and not await has_authorization_user(model, db, db_object, token, model_has_user_key)):
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED)
 
     try:
         db.delete(db_object)
