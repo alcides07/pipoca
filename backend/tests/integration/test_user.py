@@ -1,6 +1,6 @@
 import os
 import base64
-from tests.helpers.user import URL_USER, create_user_helper
+from tests.helpers.user import URL_USER, create_user_helper, login_helper
 from backend.main import app
 from fastapi.testclient import TestClient
 from tests.config_test import remove_dependencies, resume_dependencies
@@ -13,8 +13,8 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 def test_read_user_unit():
     remove_dependencies()
 
-    user, token = create_user_helper()
-    user = user.json().get("data")
+    response, token, _ = create_user_helper()
+    user = response.json().get("data")
 
     user_id = user.get("id")
     response = client.get(
@@ -42,9 +42,9 @@ def test_read_users():
 
 
 def test_create_user():
-    user, _ = create_user_helper()
+    response, _, _ = create_user_helper()
 
-    assert user.status_code == 201
+    assert response.status_code == 201
 
 
 def test_create_user_email_exists():
@@ -59,10 +59,12 @@ def test_create_user_email_exists():
         "passwordConfirmation": password
     }
 
-    client.post(
+    user = client.post(
         URL_USER,
         json=JSON_USER
     )
+
+    assert user.status_code == 201
 
     user_repeat = JSON_USER
     user_repeat["username"] = "unique_username"
@@ -87,16 +89,83 @@ def test_create_user_username_exists():
         "passwordConfirmation": password
     }
 
-    client.post(
+    user = client.post(
         URL_USER,
         json=JSON_USER
     )
+    assert user.status_code == 201
 
     user_repeat = JSON_USER
     user_repeat["email"] = "unique_email@email.com"
 
     response = client.post(
         URL_USER,
+        json=user_repeat
+    )
+
+    assert response.status_code == 400
+
+
+def test_update_full_user_username_exists():
+    response, _, JSON_USER = create_user_helper()
+    key = os.urandom(16)
+    value = base64.b64encode(key).decode()
+
+    assert response.status_code == 201
+
+    user_repeat = JSON_USER.copy()
+    user_repeat["username"] = value
+    user_repeat["email"] = f"{value}@email.com"
+
+    user_repeat_response = client.post(
+        URL_USER,
+        json=user_repeat
+    )
+
+    assert user_repeat_response.status_code == 201
+
+    token = login_helper(user_repeat["username"], user_repeat["password"])
+    user_repeat["username"] = JSON_USER["username"]
+    user_id = user_repeat_response.json().get("data").get("id")
+
+    response = client.put(
+        f"{URL_USER}/{user_id}/",
+        headers={
+            "Authorization": f"Bearer {token}",
+        },
+        json=user_repeat
+    )
+
+    assert response.status_code == 400
+
+
+def test_update_full_user_email_exists():
+    response, _, JSON_USER = create_user_helper()
+    key = os.urandom(16)
+    value = base64.b64encode(key).decode()
+
+    assert response.status_code == 201
+
+    user_repeat = JSON_USER.copy()
+    user_repeat["username"] = value
+    user_repeat["email"] = f"{value}@email.com"
+
+    user_repeat_response = client.post(
+        URL_USER,
+        json=user_repeat
+    )
+
+    assert user_repeat_response.status_code == 201
+
+    token = login_helper(user_repeat["username"], user_repeat["password"])
+    user_repeat["email"] = JSON_USER["email"]
+    user_id = user_repeat_response.json().get("data").get("id")
+
+    response = client.put(
+        f"{URL_USER}/{user_id}/",
+        headers={
+            "Authorization": f"Bearer {token}",
+        },
         json=user_repeat
     )
 
