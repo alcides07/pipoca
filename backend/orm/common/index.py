@@ -109,7 +109,7 @@ async def update_object(db: Session,
 
     try:
         with db.begin_nested():
-            for key, value in data.dict().items():
+            for key, value in data.model_dump().items():
                 if hasattr(db_object, key):
                     setattr(db_object, key, value)
         db.commit()
