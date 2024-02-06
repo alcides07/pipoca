@@ -12,9 +12,21 @@ async def has_authorization_user(
     model: Any,
     db: Session,
     db_object: Any,
-    token: str = "",
-    model_has_user_key: Any = None,
+    token: str,
+    model_has_user_key: Any,
 ):
+    """Indica se o usuário autenticado possui ou não autorização para manipular um objeto de um modelo qualquer do banco de dados.
+
+    Args:
+        model (Any): Modelo do banco de dados o qual se deseja manipular
+        db (Session): Sessão de banco de dados
+        db_object (Any): Objeto específico do modelo que se deseja manipular
+        token (str): Token do usuário autenticado
+        model_has_user_key (Any): Modelo que realmente armazena a chave estrangeira do usuário. A fim de verificar se o usuário autenticado tem permissão para operar em um objeto específico, mas essa verificação é feita a partir de um objeto pai ao qual o objeto específico pertence.
+
+    Returns:
+        bool: Retorna True ou False conforme a autorização do usuário para efetuar a ação desejada.
+    """
 
     obj_model_has_user_key = db_object
 

@@ -138,12 +138,13 @@ async def total_update(
                },
                dependencies=[Depends(get_authenticated_user)],
                )
-def delete(
+async def delete(
         id: int = Path(description=USER_ID_DESCRIPTION),
-        db: Session = Depends(get_db)
+        db: Session = Depends(get_db),
+        token: str = Depends(oauth2_scheme)
 ):
 
-    user = delete_object(db, User, id)
+    user = await delete_object(db, User, id, token, User)
     return ResponseUnitSchema(
         data=user
     )
