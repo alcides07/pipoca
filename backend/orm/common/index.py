@@ -1,3 +1,4 @@
+from dependencies.authorization_user import has_authorization_user
 from sqlalchemy import or_
 from sqlalchemy.exc import SQLAlchemyError
 from typing import Any
@@ -17,9 +18,24 @@ def get_by_key_value(db: Session, model: Any, key: str, value):
     return db_object
 
 
-def get_by_id(db: Session, model: Any, id: int):
+def user_autenthicated(token: str, db: Session):
+    from dependencies.authenticated_user import get_authenticated_user
+    return get_authenticated_user(token, db)
+
+
+async def get_by_id(db: Session,
+                    model: Any,
+                    id: int,
+                    token: str = "",
+                    model_has_user_key: Any = None,
+                    ):
+
     db_object = db.query(model).filter(model.id == id).first()
+
     if db_object:
+        if (token and not await has_authorization_user(model, db, db_object, token, model_has_user_key)):
+            raise HTTPException(status.HTTP_401_UNAUTHORIZED)
+
         return db_object
     raise HTTPException(status.HTTP_404_NOT_FOUND)
 
@@ -76,18 +92,28 @@ def delete_object(db: Session, model: Any, id: int):
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-def update_object(db: Session, model: Any, id: int, data: Any):
+async def update_object(db: Session,
+                        model: Any,
+                        id: int,
+                        data: Any,
+                        token: str = "",
+                        model_has_user_key: Any = None,
+                        ):
+
     db_object = db.query(model).filter(model.id == id).first()
     if not db_object:
         raise HTTPException(status.HTTP_404_NOT_FOUND)
 
+    if (token and not await has_authorization_user(model, db, db_object, token, model_has_user_key)):
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED)
+
     try:
         with db.begin_nested():
-            for key, value in data.dict().items():
+            for key, value in data.model_dump().items():
                 if hasattr(db_object, key):
                     setattr(db_object, key, value)
-            db.commit()
-            db.refresh(db_object)
+        db.commit()
+        db.refresh(db_object)
     except SQLAlchemyError:
         db.rollback()
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR)

@@ -15,24 +15,31 @@ def create_user_helper():
     key = os.urandom(16)
     value = base64.b64encode(key).decode()
     password = pwd_context.hash(value)
+    JSON_USER = {
+        "username": value,
+        "email": f"{value}@email.com",
+        "password": password,
+        "passwordConfirmation": password
+    }
 
-    user = client.post(
+    response = client.post(
         URL_USER,
-        json={
-            "username": value,
-            "email": f"{value}@email.com",
-            "password": password,
-            "passwordConfirmation": password
-        }
+        json=JSON_USER
     )
 
+    token = login_helper(value, password)
+
+    return response, token, JSON_USER
+
+
+def login_helper(username, password):
     token = client.post(
         URL_AUTH,
         data={
-            "username": value,
+            "username": username,
             "password": password
         },
         headers={"Content-Type": "application/x-www-form-urlencoded"}
     ).json().get("access_token")
 
-    return user, token
+    return token

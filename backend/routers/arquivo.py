@@ -1,3 +1,5 @@
+from models.problema import Problema
+from routers.auth import oauth2_scheme
 from fastapi import APIRouter, Depends, Path
 from models.arquivo import Arquivo
 from schemas.arquivo import ArquivoReadFull, ArquivoReadSimple
@@ -40,11 +42,12 @@ def read(
                 404: errors[404]
             }
             )
-def read_id(
+async def read_id(
         id: int = Path(description="Identificador do arquivo"),
-        db: Session = Depends(get_db)
+        db: Session = Depends(get_db),
+    token: str = Depends(oauth2_scheme)
 ):
-    arquivo = get_by_id(db, Arquivo, id)
+    arquivo = await get_by_id(db, Arquivo, id, token, Problema)
 
     return ResponseUnitSchema(
         data=arquivo

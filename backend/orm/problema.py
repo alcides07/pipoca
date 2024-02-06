@@ -99,10 +99,17 @@ def create_problema(db: Session, problema: ProblemaCreate, user: User):
     return db_problema
 
 
-def update_problema(db: Session, id: int, problema: ProblemaUpdatePartial | ProblemaCreate, user: User):
+async def update_problema(db: Session,
+                          id: int,
+                          problema: ProblemaUpdatePartial | ProblemaCreate,
+                          user: User,
+                          ):
     db_problema = db.query(Problema).filter(Problema.id == id).first()
     if not db_problema:
         raise HTTPException(status.HTTP_404_NOT_FOUND)
+
+    if (user.id != db_problema.usuario_id):
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED)
 
     try:
         for key, value in problema:
