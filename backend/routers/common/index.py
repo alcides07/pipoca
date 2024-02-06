@@ -2,11 +2,11 @@ from routers import arquivo, openapi, user, problema, auth, validador, verificad
 
 
 routes = [
-    openapi.router,
-    user.router,
-    problema.router,
-    auth.router,
     arquivo.router,
-    verificador.router,
+    auth.router,
+    openapi.router,
+    problema.router,
+    user.router,
     validador.router,
+    verificador.router
 ]
