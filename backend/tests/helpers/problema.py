@@ -11,7 +11,7 @@ def create_problema_helper():
     remove_dependencies()
 
     problema = JSON_PROBLEMA.copy()
-    _, token = create_user_helper()
+    _, token, _ = create_user_helper()
 
     response = client.post(
         URL_PROBLEMA,

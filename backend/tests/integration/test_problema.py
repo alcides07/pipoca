@@ -155,7 +155,7 @@ def test_update_full_problema_fail():
 def test_upload_problema():
     remove_dependencies()
 
-    _, token = create_user_helper()
+    _, token, _ = create_user_helper()
 
     with open("./tests/integration/upload_problem.zip", 'rb') as file:
         response = client.post(
