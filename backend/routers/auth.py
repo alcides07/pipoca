@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from models.administrador import Administrador
 from utils.errors import errors
 from models.user import User
 from orm.common.index import get_by_key_value
@@ -32,6 +33,11 @@ def authenticate_user(db, credential: str, password: str):
         user_db = get_by_key_value(db, User, key, credential)
         if user_db and verify_password(password, user_db.password):
             return user_db
+
+        admin_db = get_by_key_value(db, Administrador, key, credential)
+        if admin_db and verify_password(password, admin_db.password):
+            return admin_db
+
         return False
 
     return authenticate_with_key("username") or authenticate_with_key("email")
