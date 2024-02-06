@@ -91,7 +91,7 @@ async def create(
 @router.post("/upload/",
              response_model=ResponseUnitSchema[ProblemaReadFull],
              status_code=201,
-             summary="Importa problema do Polygon via pacote",
+             summary="Cadastra um problema via pacote da plataforma Polygon",
              responses={
                  422: errors[422]
              }
@@ -337,7 +337,7 @@ async def total_update(
         token: str = Depends(oauth2_scheme),
 ):
     user = await get_authenticated_user(token, db)
-    response = update_problema(db, id, data, user)
+    response = await update_problema(db, id, data, user)
     return ResponseUnitSchema(
         data=response
     )
@@ -358,7 +358,7 @@ async def parcial_update(
         token: str = Depends(oauth2_scheme),
 ):
     user = await get_authenticated_user(token, db)
-    response = update_problema(db, id, data, user)
+    response = await update_problema(db, id, data, user)
     return ResponseUnitSchema(
         data=response
     )
