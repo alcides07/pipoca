@@ -1,4 +1,5 @@
 from fastapi import Depends, HTTPException, status
+from models.administrador import Administrador
 from models.user import User
 from orm.common.index import get_by_key_value
 from schemas.auth import TokenData
@@ -26,7 +27,8 @@ async def get_authenticated_user(token: str = Depends(oauth2_scheme), db: Sessio
         token_data = TokenData(username=username)
     except JWTError:
         raise credentials_exception
-    user = get_by_key_value(db, User, "username", token_data.username)
+    user = get_by_key_value(db, User, "username", token_data.username) or get_by_key_value(
+        db, Administrador, "username", token_data.username)
     if user is None:
         raise credentials_exception
     return user
