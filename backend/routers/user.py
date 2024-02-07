@@ -28,11 +28,17 @@ router = APIRouter(
             summary="Lista usuários",
             dependencies=[Depends(get_authenticated_user)],
             )
-def read(
+async def read(
         db: Session = Depends(get_db),
         common: PaginationSchema = Depends(),
+        token: str = Depends(oauth2_scheme)
 ):
-    users, metadata = get_all(db, User, common)
+    users, metadata = await get_all(
+        db=db,
+        model=User,
+        common=common,
+        token=token
+    )
 
     return ResponsePaginationSchema(
         data=users,
@@ -53,7 +59,13 @@ async def read_id(
         db: Session = Depends(get_db),
         token: str = Depends(oauth2_scheme)
 ):
-    users = await get_by_id(db, User, id, token, User)
+    users = await get_by_id(
+        db=db,
+        model=User,
+        id=id,
+        token=token,
+        model_has_user_key=User
+    )
 
     return ResponseUnitSchema(
         data=users
@@ -108,7 +120,13 @@ async def total_update(
         user: UserCreate = Body(),
         token: str = Depends(oauth2_scheme)
 ):
-    await get_by_id(db, User, id, token, User)
+    await get_by_id(
+        db=db,
+        model=User,
+        id=id,
+        token=token,
+        model_has_user_key=User
+    )
     user_username = get_by_key_value(db, User, "username", user.username)
     user_email = get_by_key_value(db, User, "email", user.email)
 
@@ -144,7 +162,13 @@ async def delete(
         token: str = Depends(oauth2_scheme)
 ):
 
-    user = await delete_object(db, User, id, token, User)
+    user = await delete_object(
+        db=db,
+        model=User,
+        id=id,
+        token=token,
+        model_has_user_key=User
+    )
     return ResponseUnitSchema(
         data=user
     )
