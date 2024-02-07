@@ -37,13 +37,19 @@ router = APIRouter(
 
 
 @router.get("/", response_model=ResponsePaginationSchema[ProblemaReadSimple], summary="Lista problemas")
-def read(
+async def read(
     db: Session = Depends(get_db),
     common: PaginationSchema = Depends(),
-    filters: ProblemaFilter = Depends()
+    filters: ProblemaFilter = Depends(),
+    token: str = Depends(oauth2_scheme)
 ):
-    problemas, metadata = get_all(
-        db, Problema, common, filters, search_fields_problema)
+    problemas, metadata = await get_all(
+        db=db,
+        model=Problema,
+        common=common,
+        token=token,
+        filters=filters, search_fields=search_fields_problema
+    )
 
     return ResponsePaginationSchema(
         data=problemas,
@@ -64,7 +70,12 @@ async def read_id(
     token: str = Depends(oauth2_scheme)
 ):
     problema = await get_by_id(
-        db, Problema, id, token, Problema)
+        db=db,
+        model=Problema,
+        id=id,
+        token=token,
+        model_has_user_key=Problema
+    )
     return ResponseUnitSchema(
         data=problema
     )
@@ -337,7 +348,12 @@ async def total_update(
         token: str = Depends(oauth2_scheme),
 ):
     user = await get_authenticated_user(token, db)
-    response = await update_problema(db, id, data, user)
+    response = await update_problema(
+        db=db,
+        id=id,
+        problema=data,
+        user=user
+    )
     return ResponseUnitSchema(
         data=response
     )
@@ -358,7 +374,12 @@ async def parcial_update(
         token: str = Depends(oauth2_scheme),
 ):
     user = await get_authenticated_user(token, db)
-    response = await update_problema(db, id, data, user)
+    response = await update_problema(
+        db=db,
+        id=id,
+        problema=data,
+        user=user
+    )
     return ResponseUnitSchema(
         data=response
     )
