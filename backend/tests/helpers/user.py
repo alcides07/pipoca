@@ -27,13 +27,13 @@ def create_user_helper():
         json=JSON_USER
     )
 
-    token = login_helper(value, password)
+    token = login_user_helper(value, password)
 
     return response, token, JSON_USER
 
 
-def login_helper(username, password):
-    token = client.post(
+def login_user_helper(username, password):
+    token: str = client.post(
         URL_AUTH,
         data={
             "username": username,
