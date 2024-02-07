@@ -1,4 +1,6 @@
 from passlib.context import CryptContext
+from tests.database import get_db_test
+from tests.helpers.administrador import create_administrador_helper
 from tests.helpers.problema import URL_PROBLEMA, create_problema_helper
 from tests.helpers.user import create_user_helper
 from backend.main import app
@@ -27,14 +29,36 @@ def test_read_problema_unit():
     resume_dependencies()
 
 
-def test_read_problemas():
+def test_read_problemas_user():
     remove_dependencies()
 
-    response = client.get(
+    _, token_user, _ = create_user_helper()
+
+    response_user = client.get(
         URL_PROBLEMA,
+        headers={
+            "Authorization": f"Bearer {token_user}",
+        },
+    )
+    assert response_user.status_code == 401
+
+    resume_dependencies()
+
+
+def test_read_problemas_admin():
+    remove_dependencies()
+
+    database = next(get_db_test())
+    token_admin = create_administrador_helper(database)
+
+    response_admin = client.get(
+        URL_PROBLEMA,
+        headers={
+            "Authorization": f"Bearer {token_admin}",
+        },
     )
 
-    assert response.status_code == 200
+    assert response_admin.status_code == 200
 
     resume_dependencies()
 
