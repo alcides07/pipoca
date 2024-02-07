@@ -22,11 +22,17 @@ router = APIRouter(
             response_model=ResponsePaginationSchema[VerificadorReadSimple],
             summary="Lista verificadores",
             )
-def read(
+async def read(
         db: Session = Depends(get_db),
         common: PaginationSchema = Depends(),
+        token: str = Depends(oauth2_scheme)
 ):
-    verificadores, metadata = get_all(db, Verificador, common)
+    verificadores, metadata = await get_all(
+        db=db,
+        model=Verificador,
+        common=common,
+        token=token
+    )
 
     return ResponsePaginationSchema(
         data=verificadores,
@@ -46,7 +52,13 @@ async def read_id(
         db: Session = Depends(get_db),
     token: str = Depends(oauth2_scheme)
 ):
-    verificador = await get_by_id(db, Verificador, id, token, Problema)
+    verificador = await get_by_id(
+        db=db,
+        model=Verificador,
+        id=id,
+        token=token,
+        model_has_user_key=Problema
+    )
 
     return ResponseUnitSchema(
         data=verificador
