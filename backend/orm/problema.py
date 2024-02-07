@@ -1,4 +1,5 @@
 from fastapi import HTTPException, status
+from models.administrador import Administrador
 from models.user import User
 from models.validador import Validador
 from models.validadorTeste import ValidadorTeste
@@ -88,6 +89,9 @@ def create_problema(db: Session, problema: ProblemaCreate, user: User):
         create_validador_testes(db, problema, db_problema)
 
         db_problema.usuario = user
+
+        if (isinstance(user, Administrador)):
+            db_problema.usuario = None
 
         db.commit()
         db.refresh(db_problema)
