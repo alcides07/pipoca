@@ -22,7 +22,8 @@ TOKEN_EXPIRE_MINUTES = float(config("TOKEN_EXPIRE_MINUTES"))
 def create_token(data: dict, expires_delta: timedelta):
     to_encode = data.copy()
     expire = datetime.utcnow() + expires_delta
-    to_encode.update({"exp": expire})
+    expire_timestamp = int(expire.timestamp())
+    to_encode.update({"exp": expire_timestamp})
     SECRET_KEY = str(config("SECRET_KEY"))
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
