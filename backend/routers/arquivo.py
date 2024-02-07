@@ -23,11 +23,17 @@ router = APIRouter(
             response_model=ResponsePaginationSchema[ArquivoReadSimple],
             summary="Lista arquivos",
             )
-def read(
+async def read(
         db: Session = Depends(get_db),
         common: PaginationSchema = Depends(),
+        token: str = Depends(oauth2_scheme)
 ):
-    arquivos, metadata = get_all(db, Arquivo, common)
+    arquivos, metadata = await get_all(
+        db=db,
+        model=Arquivo,
+        common=common,
+        token=token,
+    )
 
     return ResponsePaginationSchema(
         data=arquivos,
@@ -47,7 +53,13 @@ async def read_id(
         db: Session = Depends(get_db),
     token: str = Depends(oauth2_scheme)
 ):
-    arquivo = await get_by_id(db, Arquivo, id, token, Problema)
+    arquivo = await get_by_id(
+        db=db,
+        model=Arquivo,
+        id=id,
+        token=token,
+        model_has_user_key=Problema
+    )
 
     return ResponseUnitSchema(
         data=arquivo
