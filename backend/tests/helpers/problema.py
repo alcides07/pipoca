@@ -19,8 +19,6 @@ def create_problema_user_helper():
         URL_PROBLEMA,
         headers={
             "Authorization": f"Bearer {token}",
-            "Content-Type": "application/json",
-            "accept": "application/json"
         },
         json=problema
     )
@@ -122,8 +120,6 @@ def create_problema_admin_helper():
         URL_PROBLEMA,
         headers={
             "Authorization": f"Bearer {token_admin}",
-            "Content-Type": "application/json",
-            "accept": "application/json"
         },
         json=problema
     )
