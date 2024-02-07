@@ -51,7 +51,8 @@ class ProblemaReadSimple(ProblemaBase):
         description="Identificador do problema"
     )
 
-    usuario: UserRead = Field(description="Criador do problema")
+    usuario: Optional[UserRead] = Field(
+        description="Criador do problema", default=None)
 
     tags: list[TagRead] = Field(
         description="Lista de palavras-chave"
@@ -82,7 +83,8 @@ class ProblemaReadFull(ProblemaBase):
         description="Identificador do problema"
     )
 
-    usuario: UserRead = Field(description="Criador do problema")
+    usuario: Optional[UserRead] = Field(
+        description="Criador do problema", default=None)
 
     tags: list[TagRead] = Field(
         description="Lista de palavras-chave"

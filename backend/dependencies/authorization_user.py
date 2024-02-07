@@ -1,4 +1,5 @@
 from typing import Any
+from models.administrador import Administrador
 from models.user import User
 from sqlalchemy.orm import Session
 
@@ -8,14 +9,30 @@ def user_autenthicated(token: str, db: Session):
     return get_authenticated_user(token, db)
 
 
-async def has_authorization_user(
+async def has_authorization_object_collection(
+    db: Session,
+    token: str
+):
+    """Verifica se o usuário autenticado é administrador e possui autorização para visualizar todos os objetos de uma coleção
+
+    Args:
+        db (Session): Sessão de banco de dados
+        token (str): Token do usuário autenticado
+    """
+
+    user = await user_autenthicated(token, db)
+    if (isinstance(user, Administrador)):
+        return True
+
+
+async def has_authorization_object_single(
     model: Any,
     db: Session,
     db_object: Any,
     token: str,
-    model_has_user_key: Any,
+    model_has_user_key: Any
 ):
-    """Indica se o usuário autenticado possui ou não autorização para manipular um objeto de um modelo qualquer do banco de dados.
+    """Verifica se o usuário autenticado possui autorização para manipular um objeto de um modelo qualquer do banco de dados.
 
     Args:
         model (Any): Modelo do banco de dados o qual se deseja manipular
@@ -37,10 +54,12 @@ async def has_authorization_user(
     user = await user_autenthicated(token, db)
 
     if (
-        isinstance(obj_model_has_user_key,
-                   User) and user.id == obj_model_has_user_key.id
+        isinstance(user, Administrador)  # É um administrador
         or
-            hasattr(obj_model_has_user_key, "usuario_id") and obj_model_has_user_key.usuario_id == user.id):
+        isinstance(obj_model_has_user_key,
+                   User) and user.id == obj_model_has_user_key.id  # Auto manipulação de usuário
+        or
+            hasattr(obj_model_has_user_key, "usuario_id") and obj_model_has_user_key.usuario_id == user.id):  # Manipulação de demais objetos permitidos
         return True
 
     return False
