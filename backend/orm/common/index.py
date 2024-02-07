@@ -48,10 +48,10 @@ async def get_all(
     token: str,
     filters: Any = None,
     search_fields: list[str] = [],
-    allowAny: bool = False
+    allow_any: bool = False
 ):
 
-    if (allowAny == False):
+    if (allow_any == False):
         if (not await has_authorization_object_collection(db, token)):
             raise HTTPException(status.HTTP_401_UNAUTHORIZED)
 
