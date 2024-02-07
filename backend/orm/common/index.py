@@ -1,4 +1,4 @@
-from dependencies.authorization_user import has_authorization_user
+from dependencies.authorization_user import has_authorization_object_single, has_authorization_object_collection
 from sqlalchemy import or_
 from sqlalchemy.exc import SQLAlchemyError
 from typing import Any
@@ -23,24 +23,38 @@ def user_autenthicated(token: str, db: Session):
     return get_authenticated_user(token, db)
 
 
-async def get_by_id(db: Session,
-                    model: Any,
-                    id: int,
-                    token: str = "",
-                    model_has_user_key: Any = None,
-                    ):
+async def get_by_id(
+    db: Session,
+    model: Any,
+    id: int,
+    token: str,
+    model_has_user_key: Any,
+):
 
     db_object = db.query(model).filter(model.id == id).first()
 
     if db_object:
-        if (token and not await has_authorization_user(model, db, db_object, token, model_has_user_key)):
+        if (not await has_authorization_object_single(model, db, db_object, token, model_has_user_key)):
             raise HTTPException(status.HTTP_401_UNAUTHORIZED)
 
         return db_object
     raise HTTPException(status.HTTP_404_NOT_FOUND)
 
 
-def get_all(db: Session, model: Any, common: PaginationSchema, filters: Any = None, search_fields: list[str] = []):
+async def get_all(
+    db: Session,
+    model: Any,
+    common: PaginationSchema,
+    token: str,
+    filters: Any = None,
+    search_fields: list[str] = [],
+    allowAny: bool = False
+):
+
+    if (allowAny == False):
+        if (not await has_authorization_object_collection(db, token)):
+            raise HTTPException(status.HTTP_401_UNAUTHORIZED)
+
     query = db.query(model)
 
     if filters:
@@ -78,17 +92,18 @@ def create_object(db: Session, model: Any, schema: Any):
     return db_object
 
 
-async def delete_object(db: Session,
-                        model: Any,
-                        id: int,
-                        token: str = "",
-                        model_has_user_key: Any = None,
-                        ):
+async def delete_object(
+    db: Session,
+    model: Any,
+    id: int,
+    token: str = "",
+    model_has_user_key: Any = None,
+):
     db_object = db.query(model).filter(model.id == id).first()
     if not db_object:
         raise HTTPException(status.HTTP_404_NOT_FOUND)
 
-    if (token and not await has_authorization_user(model, db, db_object, token, model_has_user_key)):
+    if (token and not await has_authorization_object_single(model, db, db_object, token, model_has_user_key)):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED)
 
     try:
@@ -100,19 +115,20 @@ async def delete_object(db: Session,
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-async def update_object(db: Session,
-                        model: Any,
-                        id: int,
-                        data: Any,
-                        token: str = "",
-                        model_has_user_key: Any = None,
-                        ):
+async def update_object(
+    db: Session,
+    model: Any,
+    id: int,
+    data: Any,
+    token: str = "",
+    model_has_user_key: Any = None,
+):
 
     db_object = db.query(model).filter(model.id == id).first()
     if not db_object:
         raise HTTPException(status.HTTP_404_NOT_FOUND)
 
-    if (token and not await has_authorization_user(model, db, db_object, token, model_has_user_key)):
+    if (token and not await has_authorization_object_single(model, db, db_object, token, model_has_user_key)):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED)
 
     try:
