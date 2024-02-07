@@ -1,6 +1,8 @@
 import os
 import base64
-from tests.helpers.user import URL_USER, create_user_helper, login_helper
+from tests.database import get_db_test
+from tests.helpers.administrador import create_administrador_helper
+from tests.helpers.user import URL_USER, create_user_helper, login_user_helper
 from backend.main import app
 from fastapi.testclient import TestClient
 from tests.config_test import remove_dependencies, resume_dependencies
@@ -29,14 +31,36 @@ def test_read_user_unit():
     resume_dependencies()
 
 
-def test_read_users():
+def test_read_users_user():
     remove_dependencies()
 
-    response = client.get(
+    _, token_user, _ = create_user_helper()
+
+    response_user = client.get(
         URL_USER,
+        headers={
+            "Authorization": f"Bearer {token_user}",
+        },
+    )
+    assert response_user.status_code == 401
+
+    resume_dependencies()
+
+
+def test_read_users_admin():
+    remove_dependencies()
+
+    database = next(get_db_test())
+    token_admin = create_administrador_helper(database)
+
+    response_admin = client.get(
+        URL_USER,
+        headers={
+            "Authorization": f"Bearer {token_admin}",
+        },
     )
 
-    assert response.status_code == 200
+    assert response_admin.status_code == 200
 
     resume_dependencies()
 
@@ -124,7 +148,7 @@ def test_update_full_user_username_exists():
 
     assert user_repeat_response.status_code == 201
 
-    token = login_helper(user_repeat["username"], user_repeat["password"])
+    token = login_user_helper(user_repeat["username"], user_repeat["password"])
     user_repeat["username"] = JSON_USER["username"]
     user_id = user_repeat_response.json().get("data").get("id")
 
@@ -157,7 +181,7 @@ def test_update_full_user_email_exists():
 
     assert user_repeat_response.status_code == 201
 
-    token = login_helper(user_repeat["username"], user_repeat["password"])
+    token = login_user_helper(user_repeat["username"], user_repeat["password"])
     user_repeat["email"] = JSON_USER["email"]
     user_id = user_repeat_response.json().get("data").get("id")
 
