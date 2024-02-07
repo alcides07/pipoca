@@ -119,7 +119,11 @@ async def update_problema(db: Session,
                         Declaracao.problema_id == db_problema.id).all()
 
                     for (declaracao_id,) in declaracoes_ids:
-                        await delete_object(db, Declaracao, declaracao_id)
+                        await delete_object(
+                            db=db,
+                            model=Declaracao,
+                            id=declaracao_id
+                        )
 
                     for declaracao in value:
                         create_declaracoes(db, declaracao, db_problema)
@@ -129,21 +133,31 @@ async def update_problema(db: Session,
                         Arquivo.problema_id == db_problema.id).all()
 
                     for (arquivo_id,) in arquivos_ids:
-                        await delete_object(db, Arquivo, arquivo_id)
+                        await delete_object(
+                            db=db,
+                            model=Arquivo,
+                            id=arquivo_id
+                        )
 
                     for arquivo in value:
                         create_arquivos(db, arquivo, db_problema)
 
                 elif (key == "verificador"):
-                    await delete_object(db, Verificador,
-                                        db_problema.verificador_id)  # type: ignore
+                    await delete_object(
+                        db=db,
+                        model=Verificador,
+                        id=db_problema.verificador_id  # type: ignore
+                    )
 
                     create_verificador(db, problema, db_problema)
                     create_verificador_testes(db, problema, db_problema)
 
                 elif (key == "validador"):
-                    await delete_object(db, Validador,
-                                        db_problema.validador_id)  # type: ignore
+                    await delete_object(
+                        db=db,
+                        model=Validador,
+                        id=db_problema.validador_id  # type: ignore
+                    )
 
                     create_validador(db, problema, db_problema)
                     create_validador_testes(db, problema, db_problema)
