@@ -11,7 +11,7 @@
 
 > As seguintes tecnologias foram utilizadas no desenvolvimento do backend projeto:
 
--   [FastAPI 0.104.1](https://fastapi.tiangolo.com/)
+-   [FastAPI 0.109.1](https://fastapi.tiangolo.com/)
 -   [Uvicorn 0.23.2](https://www.uvicorn.org/)
 -   [SQLAlchemy 2.0.23](https://www.sqlalchemy.org/)
 -   [PostgreSQL 14.9](https://www.postgresql.org/)

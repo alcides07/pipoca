@@ -1,11 +1,16 @@
+from models.user import User
+from routers.auth import oauth2_scheme
+import os
 import json
-from typing import Annotated
 from fastapi import APIRouter, Body, Depends, File, HTTPException, Path, UploadFile, status
+from filters.problema import ProblemaFilter, search_fields_problema
 from schemas.arquivo import ArquivoCreate, SecaoSchema
 from schemas.declaracao import DeclaracaoCreate
 from schemas.idioma import IdiomaSchema
 from schemas.validador import ValidadorCreate
+from schemas.validadorTeste import ValidadorTesteCreate, VereditoValidadorTesteEnum
 from schemas.verificador import VerificadorCreate
+from schemas.verificadorTeste import VereditoVerificadorTesteEnum, VerificadorTesteCreate
 from utils.bytes_to_megabytes import bytes_to_megabytes
 from utils.language_parser import languages_parser
 from utils.errors import errors
@@ -33,8 +38,28 @@ router = APIRouter(
 
 
 @router.get("/", response_model=ResponsePaginationSchema[ProblemaReadSimple], summary="Lista problemas")
-def read(db: Session = Depends(get_db), common: PaginationSchema = Depends()):
-    problemas, metadata = get_all(db, Problema, common)
+async def read(
+    db: Session = Depends(get_db),
+    common: PaginationSchema = Depends(),
+    filters: ProblemaFilter = Depends(),
+    token: str = Depends(oauth2_scheme)
+):
+    user = await get_authenticated_user(token, db)
+
+    if (isinstance(user, User)):
+        if (filters.privado == True):
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+        else:
+            filters.privado = False
+
+    problemas, metadata = await get_all(
+        db=db,
+        model=Problema,
+        common=common,
+        token=token,
+        filters=filters, search_fields=search_fields_problema,
+        allow_any=True
+    )
 
     return ResponsePaginationSchema(
         data=problemas,
@@ -45,17 +70,22 @@ def read(db: Session = Depends(get_db), common: PaginationSchema = Depends()):
 @router.get("/{id}/",
             response_model=ResponseUnitSchema[ProblemaReadFull],
             summary="Lista um problema",
-            dependencies=[Depends(get_authenticated_user)],
             responses={
                 404: errors[404]
             }
             )
-def read_id(
+async def read_id(
         id: int = Path(description=PROBLEMA_ID_DESCRIPTION),
-        db: Session = Depends(get_db)
+        db: Session = Depends(get_db),
+        token: str = Depends(oauth2_scheme)
 ):
-    problema = get_by_id(
-        db, Problema, id, ["tags", "declaracoes", "arquivos"])
+    problema = await get_by_id(
+        db=db,
+        model=Problema,
+        id=id,
+        token=token,
+        model_has_user_key=Problema
+    )
     return ResponseUnitSchema(
         data=problema
     )
@@ -69,28 +99,33 @@ def read_id(
                  422: errors[422]
              }
              )
-def create(
+async def create(
     problema: ProblemaCreate = Body(description="Problema a ser criado"),
+    token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db)
 ):
-    data = create_problema(db=db, problema=problema)
-
+    user = await get_authenticated_user(token, db)
+    data = create_problema(db=db, problema=problema, user=user)
     return ResponseUnitSchema(data=data)
 
 
 @router.post("/upload/",
              response_model=ResponseUnitSchema[ProblemaReadFull],
              status_code=201,
-             summary="Importa problema do Polygon via pacote",
+             summary="Cadastra um problema via pacote da plataforma Polygon",
              responses={
                  422: errors[422]
              }
              )
-def upload(
-    pacote: Annotated[UploadFile, File(description="Pacote .zip gerado pelo Polygon")],
+async def upload(
+    pacote: UploadFile = File(description="Pacote .zip gerado pelo Polygon"),
+    privado: bool = Body(
+        description="Visibilidade do problema (privado/público)"),
     db: Session = Depends(get_db),
+    token: str = Depends(oauth2_scheme)
 ):
-    if (pacote.content_type not in ["application/zip"]):
+
+    if (pacote.content_type not in ["application/zip", "application/x-zip-compressed"]):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                             detail="Erro. Formato de pacote inválido!")
 
@@ -107,8 +142,11 @@ def upload(
         tags=[],
         declaracoes=[],
         arquivos=[],
-        verificador=VerificadorCreate(nome="", linguagem="", corpo=""),
-        validador=ValidadorCreate(nome="", linguagem="", corpo=""),
+        verificador=VerificadorCreate(
+            nome="", linguagem="", corpo="", testes=[]),
+        validador=ValidadorCreate(
+            nome="", linguagem="", corpo="", testes=[]),
+        privado=privado,
     )
 
     def process_files(path: str | None, secao: SecaoSchema, status: str | None = None):
@@ -125,18 +163,18 @@ def upload(
     def process_verificador_and_validador(path: str | None, linguagem: str | None, tipo: str):
         if path is not None:
             with zip.open(path) as file:
-                nome = file.name.split("/")[-1]
+                nome = os.path.basename(file.name)
                 corpo = file.read().decode()
 
                 if tipo == "verificador":
                     verificador = VerificadorCreate(
-                        nome=nome, corpo=corpo, linguagem=linguagem or "")
+                        nome=nome, corpo=corpo, linguagem=linguagem or "", testes=[])
 
                     problema.verificador = verificador
 
                 elif tipo == "validador":
                     validador = ValidadorCreate(
-                        nome=nome, corpo=corpo, linguagem=linguagem or "")
+                        nome=nome, corpo=corpo, linguagem=linguagem or "", testes=[])
 
                     problema.validador = validador
 
@@ -153,11 +191,31 @@ def upload(
 
             problema.memoria_limite = memoria_converted
 
+    def process_verdict_verificador_teste(verdict: VereditoVerificadorTesteEnum | None):
+        if (verdict != None):
+            verificador_teste = VerificadorTesteCreate(
+                numero="",
+                veredito=verdict,
+                entrada=""
+            )
+
+            problema.verificador.testes.append(verificador_teste)
+
+    def process_verdict_validador_teste(verdict: VereditoValidadorTesteEnum | None):
+        if (verdict != None):
+            validador_teste = ValidadorTesteCreate(
+                numero="",
+                veredito=verdict,
+                entrada=""
+            )
+
+            problema.validador.testes.append(validador_teste)
+
     def process_name(data: ET.Element):
         if (data != None):
             problema.nome = str(data.get("short-name"))
 
-    def process_xml(zip, filename):
+    async def process_xml(zip, filename):
         with zip.open(filename) as xml:
             content = xml.read().decode()
             data = ET.fromstring(content)
@@ -173,7 +231,8 @@ def upload(
 
             # Atribui todos os arquivos de recursos
             for file in data.findall('.//resources/file'):
-                process_files(file.get("path"), SecaoSchema.RECURSO)
+                path = file.get("path")
+                process_files(path, SecaoSchema.RECURSO)
 
             # Atribui todos os arquivos de solução
             for solution in data.findall('.//solutions/solution'):
@@ -184,29 +243,39 @@ def upload(
                     process_files(path, SecaoSchema.SOLUCAO, status)
 
             # Atribui o verificador
-            checker = data.find('.//checker/source')
-            if (checker != None):
-                path = checker.get(
+            verificador = data.find('.//checker/source')
+            if (verificador != None):
+                path = verificador.get(
                     "path")
-                linguagem = checker.get("type")
-
+                linguagem = verificador.get("type")
                 process_verificador_and_validador(
                     path, linguagem, "verificador")
 
-            # Atribui o validador
-            validator = data.find(".//validator/source")
-            if (validator != None):
-                path = validator.get("path")
-                linguagem = validator.get("type")
+            # Atribui os testes do verificador
+            for verificador_teste in data.findall(".//checker/testset/tests/test"):
+                verdict = verificador_teste.get("verdict")
+                verdict_enum = VereditoVerificadorTesteEnum(verdict)
+                process_verdict_verificador_teste(verdict=verdict_enum)
 
+            # Atribui o validador
+            validador = data.find(".//validator/source")
+            if (validador != None):
+                path = validador.get("path")
+                linguagem = validador.get("type")
                 process_verificador_and_validador(path, linguagem, "validador")
 
-    def process_tags(zip, filename):
-        with zip.open(filename) as tags:
-            for tag in tags.readlines():
-                problema.tags.append(tag.decode().strip())
+            # Atribui os testes do validador
+            for validador_teste in data.findall(".//validator/testset/tests/test"):
+                verdict = validador_teste.get("verdict")
+                verdict_enum = VereditoValidadorTesteEnum(verdict)
+                process_verdict_validador_teste(verdict=verdict_enum)
 
-    def process_statements(zip, filename):
+            # Atribui todas as tags
+            for tag in data.findall('.//tags/tag'):
+                name = str(tag.get("value"))
+                problema.tags.append(name)
+
+    def process_declaracoes(zip, filename):
         with zip.open(filename) as statement:
             content = statement.read().decode()
             data = json.loads(content)
@@ -224,28 +293,54 @@ def upload(
 
             problema.declaracoes.append(declaracao)
 
-# try:
-    with zipfile.ZipFile(temp_file, 'r') as zip:
+    def process_verificador_teste(zip: zipfile.ZipFile, directory: str):
+        i = 0
         for filename in zip.namelist():
+            if filename != directory and filename.startswith(directory) and "." not in filename:
+                with zip.open(filename) as file:
+                    content = file.read().decode()
 
-            # Processa o xml global do problema
-            if filename.lower() == "problem.xml":
-                process_xml(zip, filename)
+                    verificador_teste = problema.verificador.testes[i]
+                    verificador_teste.entrada = content
+                    verificador_teste.numero = os.path.basename(filename)
+                    i += 1
 
-            # Processa o statement de cada idioma
-            if filename.startswith("statements/") and filename.endswith("problem-properties.json"):
-                process_statements(zip, filename)
+    def process_validador_teste(zip: zipfile.ZipFile, directory: str):
+        i = 0
 
-            # Processa as tags
-            if (filename.lower() == "tags"):
-                process_tags(zip, filename)
+        for filename in zip.namelist():
+            if filename != directory and filename.startswith(directory):
+                with zip.open(filename) as file:
+                    content = file.read().decode()
 
-    data = create_problema(db=db, problema=problema)
-    return ResponseUnitSchema(data=data)
+                    validador_teste = problema.validador.testes[i]
+                    validador_teste.entrada = content
+                    validador_teste.numero = os.path.basename(filename)
+                    i += 1
 
-    # except:
-    #     raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-    #                         detail="Erro. Ocorreu uma falha no processamento do pacote!")
+    try:
+        with zipfile.ZipFile(temp_file, 'r') as zip:
+            for filename in zip.namelist():
+
+                # Processa o xml global do problema
+                if filename.lower() == "problem.xml":
+                    await process_xml(zip, filename)
+                    process_verificador_teste(
+                        zip, "files/tests/checker-tests/")
+                    process_validador_teste(
+                        zip, "files/tests/validator-tests/")
+
+                # Processa o statement de cada idioma
+                if filename.startswith("statements/") and filename.endswith("problem-properties.json"):
+                    process_declaracoes(zip, filename)
+
+        user = await get_authenticated_user(token, db)
+        data = create_problema(db=db, problema=problema, user=user)
+        return ResponseUnitSchema(data=data)
+
+    except HTTPException:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                            detail="Erro. Ocorreu uma falha no processamento do pacote!")
 
 
 @router.put("/{id}/",
@@ -254,15 +349,21 @@ def upload(
             responses={
                 404: errors[404]
             },
-            dependencies=[Depends(get_authenticated_user)],
             )
-def total_update(
+async def total_update(
         id: int = Path(description=PROBLEMA_ID_DESCRIPTION),
         db: Session = Depends(get_db),
         data: ProblemaCreate = Body(
             description="Problema a ser atualizado por completo"),
+        token: str = Depends(oauth2_scheme),
 ):
-    response = update_problema(db, id, data)
+    user = await get_authenticated_user(token, db)
+    response = await update_problema(
+        db=db,
+        id=id,
+        problema=data,
+        user=user
+    )
     return ResponseUnitSchema(
         data=response
     )
@@ -274,15 +375,21 @@ def total_update(
               responses={
                   404: errors[404]
               },
-              dependencies=[Depends(get_authenticated_user)],
               )
-def parcial_update(
+async def parcial_update(
         id: int = Path(description=PROBLEMA_ID_DESCRIPTION),
         db: Session = Depends(get_db),
         data: ProblemaUpdatePartial = Body(
             description="Problema a ser atualizado parcialmente"),
+        token: str = Depends(oauth2_scheme),
 ):
-    response = update_problema(db, id, data)
+    user = await get_authenticated_user(token, db)
+    response = await update_problema(
+        db=db,
+        id=id,
+        problema=data,
+        user=user
+    )
     return ResponseUnitSchema(
         data=response
     )

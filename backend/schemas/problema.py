@@ -3,6 +3,7 @@ from pydantic import BaseModel, Field
 from schemas.arquivo import ArquivoCreate, ArquivoReadFull, ArquivoReadSimple
 from schemas.tag import TagRead
 from schemas.declaracao import DeclaracaoCreate, DeclaracaoReadFull, DeclaracaoReadSimple
+from schemas.user import UserRead
 from schemas.validador import ValidadorCreate, ValidadorReadFull, ValidadorReadSimple
 from schemas.verificador import VerificadorCreate, VerificadorReadFull, VerificadorReadSimple
 
@@ -16,6 +17,10 @@ class ProblemaBase(BaseModel):
     nome: str = Field(
         max_length=64,
         description="Nome do problema"
+    )
+
+    privado: bool = Field(
+        description="Visibilidade de um problema"
     )
 
     nome_arquivo_entrada: str = Field(
@@ -46,6 +51,9 @@ class ProblemaReadSimple(ProblemaBase):
         description="Identificador do problema"
     )
 
+    usuario: Optional[UserRead] = Field(
+        description="Criador do problema", default=None)
+
     tags: list[TagRead] = Field(
         description="Lista de palavras-chave"
     )
@@ -75,6 +83,9 @@ class ProblemaReadFull(ProblemaBase):
         description="Identificador do problema"
     )
 
+    usuario: Optional[UserRead] = Field(
+        description="Criador do problema", default=None)
+
     tags: list[TagRead] = Field(
         description="Lista de palavras-chave"
     )
@@ -100,6 +111,7 @@ class ProblemaReadFull(ProblemaBase):
 
 
 class ProblemaCreate(ProblemaBase):
+
     tags: list[str] = Field(
         default=None,
         description="Palavras-chave utilizadas como etiquetas"

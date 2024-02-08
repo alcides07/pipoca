@@ -1,7 +1,8 @@
+from routers.auth import oauth2_scheme
 from fastapi import APIRouter, Body, Depends, HTTPException, Path, status
 from utils.errors import errors
 from models.user import User
-from orm.common.index import delete_object, get_by_key_value_exists, get_by_id, get_all, update_object
+from orm.common.index import delete_object, get_by_key_value, get_by_key_value_exists, get_by_id, get_all, update_object
 from dependencies.authenticated_user import get_authenticated_user
 from schemas.user import UserCreate, UserRead
 from schemas.common.pagination import PaginationSchema
@@ -27,11 +28,17 @@ router = APIRouter(
             summary="Lista usuários",
             dependencies=[Depends(get_authenticated_user)],
             )
-def read(
+async def read(
         db: Session = Depends(get_db),
         common: PaginationSchema = Depends(),
+        token: str = Depends(oauth2_scheme)
 ):
-    users, metadata = get_all(db, User, common)
+    users, metadata = await get_all(
+        db=db,
+        model=User,
+        common=common,
+        token=token
+    )
 
     return ResponsePaginationSchema(
         data=users,
@@ -47,11 +54,18 @@ def read(
                 404: errors[404]
             }
             )
-def read_id(
+async def read_id(
         id: int = Path(description=USER_ID_DESCRIPTION),
-        db: Session = Depends(get_db)
+        db: Session = Depends(get_db),
+        token: str = Depends(oauth2_scheme)
 ):
-    users = get_by_id(db, User, id)
+    users = await get_by_id(
+        db=db,
+        model=User,
+        id=id,
+        token=token,
+        model_has_user_key=User
+    )
 
     return ResponseUnitSchema(
         data=users
@@ -100,13 +114,35 @@ def create(
             },
             dependencies=[Depends(get_authenticated_user)],
             )
-def total_update(
+async def total_update(
         id: int = Path(description=USER_ID_DESCRIPTION),
         db: Session = Depends(get_db),
-        data: UserCreate = Body(),
+        user: UserCreate = Body(),
+        token: str = Depends(oauth2_scheme)
 ):
+    await get_by_id(
+        db=db,
+        model=User,
+        id=id,
+        token=token,
+        model_has_user_key=User
+    )
+    user_username = get_by_key_value(db, User, "username", user.username)
+    user_email = get_by_key_value(db, User, "email", user.email)
 
-    response = update_object(db, User, id, data)
+    if (user.password != user.passwordConfirmation):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                            detail="Erro. As senhas fornecidas não coincidem!")
+
+    elif (user_username != None and user_username.id != id):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                            detail="Erro. O nome de usuário fornecido está em uso!")
+
+    elif (user_email != None and user_email.id != id):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                            detail="Erro. O e-mail fornecido está em uso!")
+
+    response = await update_object(db, User, id, user, token, User)
     return ResponseUnitSchema(
         data=response
     )
@@ -120,12 +156,19 @@ def total_update(
                },
                dependencies=[Depends(get_authenticated_user)],
                )
-def delete(
+async def delete(
         id: int = Path(description=USER_ID_DESCRIPTION),
-        db: Session = Depends(get_db)
+        db: Session = Depends(get_db),
+        token: str = Depends(oauth2_scheme)
 ):
 
-    user = delete_object(db, User, id)
+    user = await delete_object(
+        db=db,
+        model=User,
+        id=id,
+        token=token,
+        model_has_user_key=User
+    )
     return ResponseUnitSchema(
         data=user
     )

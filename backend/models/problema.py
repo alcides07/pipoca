@@ -1,6 +1,6 @@
 from models.validador import Validador
 from models.verificador import Verificador
-from sqlalchemy import Column, ForeignKey, Integer, String, CheckConstraint, UniqueConstraint
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, CheckConstraint, UniqueConstraint
 from sqlalchemy.orm import relationship
 from database import Base
 from models.arquivo import Arquivo
@@ -19,6 +19,12 @@ class Problema(Base):
 
     nome = Column(
         String(length=64),
+        index=True,
+        nullable=False,
+    )
+
+    privado = Column(
+        Boolean(),
         index=True,
         nullable=False,
     )
@@ -63,18 +69,28 @@ class Problema(Base):
         back_populates="problema"
     )
 
-    verificador_id = Column(Integer, ForeignKey('verificadores.id'))
+    verificador_id = Column(Integer, ForeignKey(
+        'verificadores.id', use_alter=True))
     verificador = relationship(
         Verificador,
         uselist=False,
         foreign_keys=[verificador_id],
     )
 
-    validador_id = Column(Integer, ForeignKey('validadores.id'))
+    validador_id = Column(Integer, ForeignKey(
+        'validadores.id', use_alter=True))
     validador = relationship(
         Validador,
         uselist=False,
         foreign_keys=[validador_id],
+    )
+    usuario_id = Column(Integer, ForeignKey(
+        "users.id"
+    ))
+    usuario = relationship(
+        "User",
+        uselist=False,
+        foreign_keys=[usuario_id]
     )
 
     __table_args__ = (
