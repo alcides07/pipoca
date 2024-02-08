@@ -1,3 +1,4 @@
+from models.user import User
 from routers.auth import oauth2_scheme
 import os
 import json
@@ -43,12 +44,21 @@ async def read(
     filters: ProblemaFilter = Depends(),
     token: str = Depends(oauth2_scheme)
 ):
+    user = await get_authenticated_user(token, db)
+
+    if (isinstance(user, User)):
+        if (filters.privado == True):
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+        else:
+            filters.privado = False
+
     problemas, metadata = await get_all(
         db=db,
         model=Problema,
         common=common,
         token=token,
-        filters=filters, search_fields=search_fields_problema
+        filters=filters, search_fields=search_fields_problema,
+        allow_any=True
     )
 
     return ResponsePaginationSchema(
@@ -67,7 +77,7 @@ async def read(
 async def read_id(
         id: int = Path(description=PROBLEMA_ID_DESCRIPTION),
         db: Session = Depends(get_db),
-    token: str = Depends(oauth2_scheme)
+        token: str = Depends(oauth2_scheme)
 ):
     problema = await get_by_id(
         db=db,
