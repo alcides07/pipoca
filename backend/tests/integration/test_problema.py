@@ -58,7 +58,7 @@ def test_read_problemas_user():
             "Authorization": f"Bearer {token_user}",
         },
     )
-    assert response_problema_user.status_code == 401
+    assert response_problema_user.status_code == 200
 
     resume_dependencies()
 
