@@ -4,7 +4,7 @@ from enum import Enum
 from pydantic import BaseModel, Field
 
 
-class LimitSchema(int, Enum):
+class LimitEnum(int, Enum):
     CINCO = 5
     DEZ = 10
     QUINZE = 15
@@ -30,7 +30,7 @@ class PaginationSchema:
         self,
         q: Optional[str] = Query(default=None,
                                  description="Palavras-chave para pesquisa"),
-        limit: LimitSchema = Query(
+        limit: LimitEnum = Query(
             default=10, description="Quantidade de registros desejados"),
         offset: int = Query(
             default=0, description="Intervalo inicial da paginação"),
