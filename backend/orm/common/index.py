@@ -59,7 +59,7 @@ async def get_all(
 
     if filters:
         for attr, value in filters.__dict__.items():
-            if value is not None:
+            if value != None:
                 query = query.filter(getattr(model, attr) == value)
 
     if common.q and search_fields:
