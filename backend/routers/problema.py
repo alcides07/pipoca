@@ -3,7 +3,7 @@ import os
 import json
 from fastapi import APIRouter, Body, Depends, File, HTTPException, Path, UploadFile, status
 from filters.problema import ProblemaFilter, search_fields_problema
-from schemas.arquivo import ArquivoCreate, SecaoSchema
+from schemas.arquivo import ArquivoCreate, SecaoEnum
 from schemas.declaracao import DeclaracaoCreate
 from schemas.idioma import IdiomaEnum
 from schemas.problemaTeste import ProblemaTesteCreate, TipoTesteProblemaEnum
@@ -141,7 +141,7 @@ async def upload(
         testes=[]
     )
 
-    def process_files(path: str | None, secao: SecaoSchema, status: str | None = None):
+    def process_files(path: str | None, secao: SecaoEnum, status: str | None = None):
         if (path != None):
             with zip.open(path) as file:
                 nome = file.name.split("/")[-1]
@@ -271,7 +271,7 @@ async def upload(
             # Atribui todos os arquivos de recursos
             for file in data.findall('.//resources/file'):
                 path = file.get("path")
-                process_files(path, SecaoSchema.RECURSO)
+                process_files(path, SecaoEnum.RECURSO)
 
             # Atribui todos os arquivos de solução
             for solution in data.findall('.//solutions/solution'):
@@ -279,7 +279,7 @@ async def upload(
                 source = solution.find('source')
                 if source is not None:
                     path = source.get("path")
-                    process_files(path, SecaoSchema.SOLUCAO, status)
+                    process_files(path, SecaoEnum.SOLUCAO, status)
 
             # Atribui o verificador
             verificador = data.find('.//checker/source')

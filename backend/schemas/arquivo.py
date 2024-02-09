@@ -6,7 +6,7 @@ ARQUIVO_ID_DESCRIPTION = "Identificador do arquivo"
 PROBLEMA_ID_DESCRIPTION = "Identificador do problema associado ao arquivo"
 
 
-class SecaoSchema(Enum):
+class SecaoEnum(Enum):
     RECURSO = "recursos"
     FONTE = "arquivos_fonte"
     ANEXO = "anexo"
@@ -20,7 +20,7 @@ class ArquivoBase(BaseModel):
         description="Nome do arquivo do problema"
     )
 
-    secao: SecaoSchema = Field(
+    secao: SecaoEnum = Field(
         description="Grupo o qual o arquivo faz parte"
     )
 
