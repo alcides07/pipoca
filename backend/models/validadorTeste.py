@@ -1,5 +1,5 @@
 from schemas.validadorTeste import VereditoValidadorTesteEnum
-from sqlalchemy import Column, ForeignKey, Integer, String, Enum
+from sqlalchemy import CheckConstraint, Column, ForeignKey, Integer, String, Enum
 from sqlalchemy.orm import relationship
 from database import Base
 
@@ -14,7 +14,9 @@ class ValidadorTeste(Base):
     )
 
     numero = Column(
-        String(length=64),
+        Integer,
+        CheckConstraint('numero >= 1'),
+        CheckConstraint('numero <= 1000'),
         nullable=False,
     )
 
