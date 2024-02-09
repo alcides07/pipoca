@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Enum, ForeignKey, Integer, String
 from database import Base
 from sqlalchemy.orm import relationship
-from schemas.idioma import IdiomaSchema
+from schemas.idioma import IdiomaEnum
 
 
 class Declaracao(Base):
@@ -49,6 +49,6 @@ class Declaracao(Base):
     )
 
     idioma = Column(
-        Enum(IdiomaSchema),
+        Enum(IdiomaEnum),
         nullable=False
     )

@@ -5,7 +5,7 @@ from fastapi import APIRouter, Body, Depends, File, HTTPException, Path, UploadF
 from filters.problema import ProblemaFilter, search_fields_problema
 from schemas.arquivo import ArquivoCreate, SecaoSchema
 from schemas.declaracao import DeclaracaoCreate
-from schemas.idioma import IdiomaSchema
+from schemas.idioma import IdiomaEnum
 from schemas.problemaTeste import ProblemaTesteCreate, TipoTesteProblemaEnum
 from schemas.validador import ValidadorCreate
 from schemas.validadorTeste import ValidadorTesteCreate, VereditoValidadorTesteEnum
@@ -315,7 +315,7 @@ async def upload(
                 formatacao_saida=data["output"],
                 tutorial=data["tutorial"],
                 observacao=data["notes"],
-                idioma=IdiomaSchema[languages_parser.get(
+                idioma=IdiomaEnum[languages_parser.get(
                     data["language"].capitalize(), "OT")]
             )
 

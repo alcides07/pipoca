@@ -1,7 +1,7 @@
 from enum import Enum
 
 
-class IdiomaSchema(Enum):
+class IdiomaEnum(Enum):
     AF = "Africâner"
     AR = "Árabe"
     HY = "Armênio"
