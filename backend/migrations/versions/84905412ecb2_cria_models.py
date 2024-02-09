@@ -66,7 +66,7 @@ def upgrade():
                     sa.Column('corpo', sa.String(
                         length=250000), nullable=False),
                     sa.Column('secao', sa.Enum('RECURSO', 'FONTE', 'ANEXO',
-                                               'SOLUCAO', name='secaoschema'), nullable=True),
+                                               'SOLUCAO', name='secaoenum'), nullable=True),
                     sa.Column('status', sa.String(), nullable=True),
                     sa.Column('problema_id', sa.Integer(), nullable=True),
                     sa.ForeignKeyConstraint(
