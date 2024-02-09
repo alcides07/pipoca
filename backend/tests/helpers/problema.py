@@ -190,6 +190,12 @@ JSON_PROBLEMA = {
             "exemplo": True,
             "entrada": "string",
             "descricao": "string"
+        },
+        {
+            "numero": 2,
+            "tipo": "gerado",
+            "exemplo": False,
+            "entrada": "string"
         }
     ],
 }
