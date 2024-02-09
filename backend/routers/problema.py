@@ -6,6 +6,7 @@ from filters.problema import ProblemaFilter, search_fields_problema
 from schemas.arquivo import ArquivoCreate, SecaoSchema
 from schemas.declaracao import DeclaracaoCreate
 from schemas.idioma import IdiomaSchema
+from schemas.problemaTeste import ProblemaTesteCreate, TipoTesteProblemaEnum
 from schemas.validador import ValidadorCreate
 from schemas.validadorTeste import ValidadorTesteCreate, VereditoValidadorTesteEnum
 from schemas.verificador import VerificadorCreate
@@ -137,6 +138,7 @@ async def upload(
         validador=ValidadorCreate(
             nome="", linguagem="", corpo="", testes=[]),
         privado=privado,
+        testes=[]
     )
 
     def process_files(path: str | None, secao: SecaoSchema, status: str | None = None):
@@ -181,29 +183,70 @@ async def upload(
 
             problema.memoria_limite = memoria_converted
 
-    def process_verdict_verificador_teste(verdict: VereditoVerificadorTesteEnum | None):
-        if (verdict != None):
-            verificador_teste = VerificadorTesteCreate(
-                numero="",
-                veredito=verdict,
-                entrada=""
-            )
+    def process_verdict_verificador_teste(data: ET.Element):
+        for verificador_teste in data.findall(".//checker/testset/tests/test"):
+            verdict = verificador_teste.get("verdict")
+            verdict_enum = VereditoVerificadorTesteEnum(verdict)
 
-            problema.verificador.testes.append(verificador_teste)
+            if (verdict_enum != None):
+                verificador_teste = VerificadorTesteCreate(
+                    numero="",
+                    veredito=verdict_enum,
+                    entrada=""
+                )
 
-    def process_verdict_validador_teste(verdict: VereditoValidadorTesteEnum | None):
-        if (verdict != None):
-            validador_teste = ValidadorTesteCreate(
-                numero="",
-                veredito=verdict,
-                entrada=""
-            )
+                problema.verificador.testes.append(verificador_teste)
 
-            problema.validador.testes.append(validador_teste)
+    def process_verdict_validador_teste(data):
+        for validador_teste in data.findall(".//validator/testset/tests/test"):
+            verdict = validador_teste.get("verdict")
+            verdict_enum = VereditoValidadorTesteEnum(verdict)
+
+            if (verdict_enum != None):
+                validador_teste = ValidadorTesteCreate(
+                    numero="",
+                    veredito=verdict_enum,
+                    entrada=""
+                )
+
+                problema.validador.testes.append(validador_teste)
 
     def process_name(data: ET.Element):
         if (data != None):
             problema.nome = str(data.get("short-name"))
+
+    def process_tags(data: ET.Element):
+        for tag in data.findall('.//tags/tag'):
+            name = str(tag.get("value"))
+            problema.tags.append(name)
+
+    def process_tests(data: ET.Element):
+        for i, test in enumerate(data.findall(".//judging/testset/tests/test"), start=1):
+            cmd = test.get("cmd")
+            tipo = test.get("method")
+            exemplo = test.get("sample")
+
+            teste = ProblemaTesteCreate(
+                numero="", tipo=TipoTesteProblemaEnum.MANUAL, exemplo=False, entrada="")
+
+            teste.numero = str(i)
+
+            if (cmd != None):
+                teste.entrada = cmd
+
+            if (tipo != None):
+                if (tipo == "manual"):
+                    teste.tipo = TipoTesteProblemaEnum.MANUAL
+                elif (tipo == "generated"):
+                    teste.tipo = TipoTesteProblemaEnum.GERADO
+
+            if (exemplo != None):
+                if (exemplo == "true"):
+                    teste.exemplo = True
+                elif (exemplo == "false"):
+                    teste.exemplo = False
+
+            problema.testes.append(teste)
 
     async def process_xml(zip, filename):
         with zip.open(filename) as xml:
@@ -218,6 +261,12 @@ async def upload(
 
             # Atribui o nome do problema
             process_name(data)
+
+            # Atribui todos os testes do problema
+            process_tests(data)
+
+            # Atribui todas as tags
+            process_tags(data)
 
             # Atribui todos os arquivos de recursos
             for file in data.findall('.//resources/file'):
@@ -242,10 +291,7 @@ async def upload(
                     path, linguagem, "verificador")
 
             # Atribui os testes do verificador
-            for verificador_teste in data.findall(".//checker/testset/tests/test"):
-                verdict = verificador_teste.get("verdict")
-                verdict_enum = VereditoVerificadorTesteEnum(verdict)
-                process_verdict_verificador_teste(verdict=verdict_enum)
+            process_verdict_verificador_teste(data)
 
             # Atribui o validador
             validador = data.find(".//validator/source")
@@ -255,15 +301,7 @@ async def upload(
                 process_verificador_and_validador(path, linguagem, "validador")
 
             # Atribui os testes do validador
-            for validador_teste in data.findall(".//validator/testset/tests/test"):
-                verdict = validador_teste.get("verdict")
-                verdict_enum = VereditoValidadorTesteEnum(verdict)
-                process_verdict_validador_teste(verdict=verdict_enum)
-
-            # Atribui todas as tags
-            for tag in data.findall('.//tags/tag'):
-                name = str(tag.get("value"))
-                problema.tags.append(name)
+            process_verdict_validador_teste(data)
 
     def process_declaracoes(zip, filename):
         with zip.open(filename) as statement:
@@ -284,29 +322,45 @@ async def upload(
             problema.declaracoes.append(declaracao)
 
     def process_verificador_teste(zip: zipfile.ZipFile, directory: str):
-        i = 0
+        indice = 0
+
         for filename in zip.namelist():
             if filename != directory and filename.startswith(directory) and "." not in filename:
                 with zip.open(filename) as file:
                     content = file.read().decode()
-
-                    verificador_teste = problema.verificador.testes[i]
+                    verificador_teste = problema.verificador.testes[indice]
                     verificador_teste.entrada = content
                     verificador_teste.numero = os.path.basename(filename)
-                    i += 1
+
+                    indice += 1
 
     def process_validador_teste(zip: zipfile.ZipFile, directory: str):
-        i = 0
+        indice = 0
 
         for filename in zip.namelist():
             if filename != directory and filename.startswith(directory):
                 with zip.open(filename) as file:
                     content = file.read().decode()
 
-                    validador_teste = problema.validador.testes[i]
+                    validador_teste = problema.validador.testes[indice]
                     validador_teste.entrada = content
                     validador_teste.numero = os.path.basename(filename)
-                    i += 1
+
+                    indice += 1
+
+    def process_entrada_teste_manual(zip: zipfile.ZipFile, directory: str):
+        indice = 0
+
+        for filename in zip.namelist():
+            if (filename != directory and filename.startswith(directory)):
+                with zip.open(filename) as file:
+                    content = file.read().decode()
+
+                    teste = problema.testes[indice]
+                    if (teste.tipo == TipoTesteProblemaEnum.MANUAL):
+                        teste.entrada = content
+
+                    indice += 1
 
     try:
         with zipfile.ZipFile(temp_file, 'r') as zip:
@@ -315,10 +369,15 @@ async def upload(
                 # Processa o xml global do problema
                 if filename.lower() == "problem.xml":
                     await process_xml(zip, filename)
+
                     process_verificador_teste(
                         zip, "files/tests/checker-tests/")
                     process_validador_teste(
                         zip, "files/tests/validator-tests/")
+
+                    process_entrada_teste_manual(
+                        zip, "tests/"
+                    )
 
                 # Processa o statement de cada idioma
                 if filename.startswith("statements/") and filename.endswith("problem-properties.json"):
