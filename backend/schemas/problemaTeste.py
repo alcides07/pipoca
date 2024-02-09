@@ -12,8 +12,9 @@ class TipoTesteProblemaEnum(Enum):
 
 
 class ProblemaTesteBase(BaseModel):
-    numero: str = Field(
-        max_length=64,
+    numero: int = Field(
+        ge=1,
+        le=1000,
         description="Código de numeração do teste"
     )
 

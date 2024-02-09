@@ -1,5 +1,5 @@
 from schemas.problemaTeste import TipoTesteProblemaEnum
-from sqlalchemy import Boolean, Column, Enum, ForeignKey, Integer, String, UniqueConstraint
+from sqlalchemy import Boolean, CheckConstraint, Column, Enum, ForeignKey, Integer, String, UniqueConstraint
 from sqlalchemy.orm import relationship
 from database import Base
 
@@ -14,7 +14,9 @@ class ProblemaTeste(Base):
     )
 
     numero = Column(
-        String(length=64),
+        Integer,
+        CheckConstraint('numero >= 1'),
+        CheckConstraint('numero <= 1000'),
         nullable=False,
     )
 
