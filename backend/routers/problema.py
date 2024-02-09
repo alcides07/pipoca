@@ -223,28 +223,26 @@ async def upload(
             verdict = verificador_teste.get("verdict")
             verdict_enum = VereditoVerificadorTesteEnum(verdict)
 
-            if (verdict_enum != None):
-                verificador_teste = VerificadorTesteCreate(
-                    numero=indice,
-                    veredito=verdict_enum,
-                    entrada=""
-                )
+            verificador_teste = VerificadorTesteCreate(
+                numero=indice,
+                veredito=verdict_enum,
+                entrada=""
+            )
 
-                problema.verificador.testes.append(verificador_teste)
+            problema.verificador.testes.append(verificador_teste)
 
     def process_validador_teste(data):
         for indice, validador_teste in enumerate(data.findall(".//validator/testset/tests/test"), start=1):
             verdict = validador_teste.get("verdict")
             verdict_enum = VereditoValidadorTesteEnum(verdict)
 
-            if (verdict_enum != None):
-                validador_teste = ValidadorTesteCreate(
-                    numero=indice,
-                    veredito=verdict_enum,
-                    entrada=""
-                )
+            validador_teste = ValidadorTesteCreate(
+                numero=indice,
+                veredito=verdict_enum,
+                entrada=""
+            )
 
-                problema.validador.testes.append(validador_teste)
+            problema.validador.testes.append(validador_teste)
 
     def process_name(data: ET.Element):
         if (data != None):
