@@ -1,5 +1,6 @@
 from fastapi import HTTPException, status
 from models.administrador import Administrador
+from models.problemaTeste import ProblemaTeste
 from models.user import User
 from models.validador import Validador
 from models.validadorTeste import ValidadorTeste
@@ -67,10 +68,16 @@ def create_tags(db, tag, db_problema):
     db_problema.tags.append(db_tag)
 
 
+def create_testes(db, teste, db_problema):
+    db_teste = ProblemaTeste(**teste.model_dump())
+    db.add(db_teste)
+    db_problema.testes.append(db_teste)
+
+
 def create_problema(db: Session, problema: ProblemaCreate, user: User):
     try:
         db_problema = Problema(
-            **problema.model_dump(exclude=set(["tags", "declaracoes", "arquivos", "verificador", "validador", "usuario"])))
+            **problema.model_dump(exclude=set(["tags", "declaracoes", "arquivos", "verificador", "validador", "usuario", "testes"])))
         db.add(db_problema)
 
         for declaracao in problema.declaracoes:
@@ -81,6 +88,9 @@ def create_problema(db: Session, problema: ProblemaCreate, user: User):
 
         for tag in problema.tags:
             create_tags(db, tag, db_problema)
+
+        for teste in problema.testes:
+            create_testes(db, teste, db_problema)
 
         create_verificador(db, problema, db_problema)
         create_verificador_testes(db, problema, db_problema)
@@ -147,6 +157,17 @@ async def update_problema(
 
                     for arquivo in value:
                         create_arquivos(db, arquivo, db_problema)
+
+                elif (key == "testes"):
+                    testes_ids = db.query(ProblemaTeste.id).filter(
+                        ProblemaTeste.problema_id == db_problema.id).all()
+
+                    for (teste_id, ) in testes_ids:
+                        await delete_object(
+                            db=db,
+                            model=ProblemaTeste,
+                            id=teste_id
+                        )
 
                 elif (key == "verificador"):
                     await delete_object(

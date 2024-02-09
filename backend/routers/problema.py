@@ -4,9 +4,10 @@ import os
 import json
 from fastapi import APIRouter, Body, Depends, File, HTTPException, Path, UploadFile, status
 from filters.problema import ProblemaFilter, search_fields_problema
-from schemas.arquivo import ArquivoCreate, SecaoSchema
+from schemas.arquivo import ArquivoCreate, SecaoEnum
 from schemas.declaracao import DeclaracaoCreate
-from schemas.idioma import IdiomaSchema
+from schemas.idioma import IdiomaEnum
+from schemas.problemaTeste import ProblemaTesteCreate, TipoTesteProblemaEnum
 from schemas.validador import ValidadorCreate
 from schemas.validadorTeste import ValidadorTesteCreate, VereditoValidadorTesteEnum
 from schemas.verificador import VerificadorCreate
@@ -147,36 +148,40 @@ async def upload(
         validador=ValidadorCreate(
             nome="", linguagem="", corpo="", testes=[]),
         privado=privado,
+        testes=[]
     )
 
-    def process_files(path: str | None, secao: SecaoSchema, status: str | None = None):
-        if (path != None):
-            with zip.open(path) as file:
-                nome = file.name.split("/")[-1]
-                corpo = file.read().decode()
+    def process_files_recursos(data: ET.Element):
+        for file in data.findall('.//resources/file'):
+            path = file.get("path")
 
-                arquivo = ArquivoCreate(
-                    nome=nome, corpo=corpo, secao=secao, status=status)
+            if (path != None):
+                with zip.open(path) as file:
+                    nome = file.name.split("/")[-1]
+                    corpo = file.read().decode()
 
-                problema.arquivos.append(arquivo)
+                    arquivo = ArquivoCreate(
+                        nome=nome, corpo=corpo, secao=SecaoEnum.RECURSO, status=None)
 
-    def process_verificador_and_validador(path: str | None, linguagem: str | None, tipo: str):
-        if path is not None:
-            with zip.open(path) as file:
-                nome = os.path.basename(file.name)
-                corpo = file.read().decode()
+                    problema.arquivos.append(arquivo)
 
-                if tipo == "verificador":
-                    verificador = VerificadorCreate(
-                        nome=nome, corpo=corpo, linguagem=linguagem or "", testes=[])
+    def process_files_solucao(data: ET.Element):
+        for solution in data.findall('.//solutions/solution'):
+            status = str(solution.get("tag"))
+            source = solution.find('source')
 
-                    problema.verificador = verificador
+            if source != None:
+                path = source.get("path")
 
-                elif tipo == "validador":
-                    validador = ValidadorCreate(
-                        nome=nome, corpo=corpo, linguagem=linguagem or "", testes=[])
+            if (path != None):
+                with zip.open(path) as file:
+                    nome = file.name.split("/")[-1]
+                    corpo = file.read().decode()
 
-                    problema.validador = validador
+                    arquivo = ArquivoCreate(
+                        nome=nome, corpo=corpo, secao=SecaoEnum.SOLUCAO, status=status)
+
+                    problema.arquivos.append(arquivo)
 
     def process_tempo_limite(data: ET.Element):
         tempo_limite = data.find('.//time-limit')
@@ -191,21 +196,59 @@ async def upload(
 
             problema.memoria_limite = memoria_converted
 
-    def process_verdict_verificador_teste(verdict: VereditoVerificadorTesteEnum | None):
-        if (verdict != None):
+    def process_verificador(data: ET.Element):
+        verificador = data.find('.//checker/source')
+        if (verificador != None):
+            path = verificador.get("path")
+            linguagem = verificador.get("type")
+
+            if path != None:
+                with zip.open(path) as file:
+                    nome = os.path.basename(file.name)
+                    corpo = file.read().decode()
+
+                    verificador = VerificadorCreate(
+                        nome=nome, corpo=corpo, linguagem=linguagem or "", testes=[])
+
+                    problema.verificador = verificador
+
+    def process_validador(data: ET.Element):
+        validador = data.find(".//validator/source")
+        if (validador != None):
+            path = validador.get("path")
+            linguagem = validador.get("type")
+
+        if path != None:
+            with zip.open(path) as file:
+                nome = os.path.basename(file.name)
+                corpo = file.read().decode()
+
+                validador = ValidadorCreate(
+                    nome=nome, corpo=corpo, linguagem=linguagem or "", testes=[])
+
+                problema.validador = validador
+
+    def process_verificador_teste(data: ET.Element):
+        for indice, verificador_teste in enumerate(data.findall(".//checker/testset/tests/test"), start=1):
+            verdict = verificador_teste.get("verdict")
+            verdict_enum = VereditoVerificadorTesteEnum(verdict)
+
             verificador_teste = VerificadorTesteCreate(
-                numero="",
-                veredito=verdict,
+                numero=indice,
+                veredito=verdict_enum,
                 entrada=""
             )
 
             problema.verificador.testes.append(verificador_teste)
 
-    def process_verdict_validador_teste(verdict: VereditoValidadorTesteEnum | None):
-        if (verdict != None):
+    def process_validador_teste(data):
+        for indice, validador_teste in enumerate(data.findall(".//validator/testset/tests/test"), start=1):
+            verdict = validador_teste.get("verdict")
+            verdict_enum = VereditoValidadorTesteEnum(verdict)
+
             validador_teste = ValidadorTesteCreate(
-                numero="",
-                veredito=verdict,
+                numero=indice,
+                veredito=verdict_enum,
                 entrada=""
             )
 
@@ -214,6 +257,37 @@ async def upload(
     def process_name(data: ET.Element):
         if (data != None):
             problema.nome = str(data.get("short-name"))
+
+    def process_tags(data: ET.Element):
+        for tag in data.findall('.//tags/tag'):
+            name = str(tag.get("value"))
+            problema.tags.append(name)
+
+    def process_tests(data: ET.Element):
+        for indice, test in enumerate(data.findall(".//judging/testset/tests/test"), start=1):
+            cmd = test.get("cmd")
+            tipo = test.get("method")
+            exemplo = test.get("sample")
+
+            teste = ProblemaTesteCreate(
+                numero=indice, tipo=TipoTesteProblemaEnum.MANUAL, exemplo=False, entrada="")
+
+            if (cmd != None):
+                teste.entrada = cmd
+
+            if (tipo != None):
+                if (tipo == "manual"):
+                    teste.tipo = TipoTesteProblemaEnum.MANUAL
+                elif (tipo == "generated"):
+                    teste.tipo = TipoTesteProblemaEnum.GERADO
+
+            if (exemplo != None):
+                if (exemplo == "true"):
+                    teste.exemplo = True
+                elif (exemplo == "false"):
+                    teste.exemplo = False
+
+            problema.testes.append(teste)
 
     async def process_xml(zip, filename):
         with zip.open(filename) as xml:
@@ -229,51 +303,29 @@ async def upload(
             # Atribui o nome do problema
             process_name(data)
 
-            # Atribui todos os arquivos de recursos
-            for file in data.findall('.//resources/file'):
-                path = file.get("path")
-                process_files(path, SecaoSchema.RECURSO)
-
-            # Atribui todos os arquivos de solução
-            for solution in data.findall('.//solutions/solution'):
-                status = str(solution.get("tag"))
-                source = solution.find('source')
-                if source is not None:
-                    path = source.get("path")
-                    process_files(path, SecaoSchema.SOLUCAO, status)
-
-            # Atribui o verificador
-            verificador = data.find('.//checker/source')
-            if (verificador != None):
-                path = verificador.get(
-                    "path")
-                linguagem = verificador.get("type")
-                process_verificador_and_validador(
-                    path, linguagem, "verificador")
-
-            # Atribui os testes do verificador
-            for verificador_teste in data.findall(".//checker/testset/tests/test"):
-                verdict = verificador_teste.get("verdict")
-                verdict_enum = VereditoVerificadorTesteEnum(verdict)
-                process_verdict_verificador_teste(verdict=verdict_enum)
-
-            # Atribui o validador
-            validador = data.find(".//validator/source")
-            if (validador != None):
-                path = validador.get("path")
-                linguagem = validador.get("type")
-                process_verificador_and_validador(path, linguagem, "validador")
-
-            # Atribui os testes do validador
-            for validador_teste in data.findall(".//validator/testset/tests/test"):
-                verdict = validador_teste.get("verdict")
-                verdict_enum = VereditoValidadorTesteEnum(verdict)
-                process_verdict_validador_teste(verdict=verdict_enum)
+            # Atribui todos os testes do problema
+            process_tests(data)
 
             # Atribui todas as tags
-            for tag in data.findall('.//tags/tag'):
-                name = str(tag.get("value"))
-                problema.tags.append(name)
+            process_tags(data)
+
+            # Atribui todos os arquivos de recursos
+            process_files_recursos(data)
+
+            # Atribui todos os arquivos de solução
+            process_files_solucao(data)
+
+            # Atribui o verificador
+            process_verificador(data)
+
+            # Atribui os testes do verificador
+            process_verificador_teste(data)
+
+            # Atribui o validador
+            process_validador(data)
+
+            # Atribui os testes do validador
+            process_validador_teste(data)
 
     def process_declaracoes(zip, filename):
         with zip.open(filename) as statement:
@@ -287,36 +339,50 @@ async def upload(
                 formatacao_saida=data["output"],
                 tutorial=data["tutorial"],
                 observacao=data["notes"],
-                idioma=IdiomaSchema[languages_parser.get(
+                idioma=IdiomaEnum[languages_parser.get(
                     data["language"].capitalize(), "OT")]
             )
 
             problema.declaracoes.append(declaracao)
 
-    def process_verificador_teste(zip: zipfile.ZipFile, directory: str):
-        i = 0
+    def process_entrada_verificador_teste(zip: zipfile.ZipFile, directory: str):
+        indice = 0
+
         for filename in zip.namelist():
             if filename != directory and filename.startswith(directory) and "." not in filename:
                 with zip.open(filename) as file:
                     content = file.read().decode()
-
-                    verificador_teste = problema.verificador.testes[i]
+                    verificador_teste = problema.verificador.testes[indice]
                     verificador_teste.entrada = content
-                    verificador_teste.numero = os.path.basename(filename)
-                    i += 1
 
-    def process_validador_teste(zip: zipfile.ZipFile, directory: str):
-        i = 0
+                    indice += 1
+
+    def process_entrada_validador_teste(zip: zipfile.ZipFile, directory: str):
+        indice = 0
 
         for filename in zip.namelist():
             if filename != directory and filename.startswith(directory):
                 with zip.open(filename) as file:
                     content = file.read().decode()
 
-                    validador_teste = problema.validador.testes[i]
+                    validador_teste = problema.validador.testes[indice]
                     validador_teste.entrada = content
-                    validador_teste.numero = os.path.basename(filename)
-                    i += 1
+
+                    indice += 1
+
+    def process_entrada_teste_manual(zip: zipfile.ZipFile, directory: str):
+        indice = 0
+
+        for filename in zip.namelist():
+            if (filename != directory and filename.startswith(directory)):
+                with zip.open(filename) as file:
+                    content = file.read().decode()
+
+                    teste = problema.testes[indice]
+                    if (teste.tipo == TipoTesteProblemaEnum.MANUAL):
+                        teste.entrada = content
+
+                    indice += 1
 
     try:
         with zipfile.ZipFile(temp_file, 'r') as zip:
@@ -325,10 +391,15 @@ async def upload(
                 # Processa o xml global do problema
                 if filename.lower() == "problem.xml":
                     await process_xml(zip, filename)
-                    process_verificador_teste(
+
+                    process_entrada_verificador_teste(
                         zip, "files/tests/checker-tests/")
-                    process_validador_teste(
+                    process_entrada_validador_teste(
                         zip, "files/tests/validator-tests/")
+
+                    process_entrada_teste_manual(
+                        zip, "tests/"
+                    )
 
                 # Processa o statement de cada idioma
                 if filename.startswith("statements/") and filename.endswith("problem-properties.json"):

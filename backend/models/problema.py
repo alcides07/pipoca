@@ -1,3 +1,4 @@
+from models.problemaTeste import ProblemaTeste
 from models.validador import Validador
 from models.verificador import Verificador
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, CheckConstraint, UniqueConstraint
@@ -69,6 +70,11 @@ class Problema(Base):
         back_populates="problema"
     )
 
+    testes = relationship(
+        ProblemaTeste,
+        back_populates="problema"
+    )
+
     verificador_id = Column(Integer, ForeignKey(
         'verificadores.id', use_alter=True))
     verificador = relationship(
@@ -84,6 +90,7 @@ class Problema(Base):
         uselist=False,
         foreign_keys=[validador_id],
     )
+
     usuario_id = Column(Integer, ForeignKey(
         "users.id"
     ))

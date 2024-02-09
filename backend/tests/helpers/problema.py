@@ -158,7 +158,7 @@ JSON_PROBLEMA = {
                 "corpo": "string",
         "testes": [
             {
-                "numero": "string",
+                "numero": 1,
                 "entrada": "string",
                 "veredito": "ok"
             }
@@ -170,17 +170,32 @@ JSON_PROBLEMA = {
                 "corpo": "string",
         "testes": [
             {
-                "numero": "string",
+                "numero": 1,
                 "entrada": "string",
                 "veredito": "valid"
 
             },
             {
-                "numero": "string",
+                "numero": 1,
                 "entrada": "string",
                 "veredito": "invalid"
             },
         ]
     },
     "tags": ["1", "2"],
+    "testes": [
+        {
+            "numero": 1,
+            "tipo": "manual",
+            "exemplo": True,
+            "entrada": "string",
+            "descricao": "string"
+        },
+        {
+            "numero": 2,
+            "tipo": "gerado",
+            "exemplo": False,
+            "entrada": "string"
+        }
+    ],
 }
