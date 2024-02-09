@@ -185,12 +185,12 @@ async def upload(
 
     def process_tempo_limite(data: ET.Element):
         tempo_limite = data.find('.//time-limit')
-        if tempo_limite is not None and tempo_limite.text is not None:
+        if tempo_limite != None and tempo_limite.text != None:
             problema.tempo_limite = int(tempo_limite.text)
 
     def process_memoria_limite(data: ET.Element):
         memoria_limite = data.find('.//memory-limit')
-        if memoria_limite is not None and memoria_limite.text is not None:
+        if memoria_limite != None and memoria_limite.text != None:
             memoria_converted = bytes_to_megabytes(int(
                 (memoria_limite.text)))
 
