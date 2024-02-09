@@ -159,9 +159,8 @@ async def update_problema(
                         create_arquivos(db, arquivo, db_problema)
 
                 elif (key == "testes"):
-                    testes_ids = db.query(ProblemaTeste).filter(
-                        ProblemaTeste.problema_id == db_problema.id.all()
-                    )
+                    testes_ids = db.query(ProblemaTeste.id).filter(
+                        ProblemaTeste.problema_id == db_problema.id).all()
 
                     for (teste_id, ) in testes_ids:
                         await delete_object(
