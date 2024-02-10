@@ -25,13 +25,13 @@ router = APIRouter(
             )
 async def read(
         db: Session = Depends(get_db),
-        common: PaginationSchema = Depends(),
+        pagination: PaginationSchema = Depends(),
         token: str = Depends(oauth2_scheme)
 ):
     arquivos, metadata = await get_all(
         db=db,
         model=Arquivo,
-        common=common,
+        pagination=pagination,
         token=token,
     )
 

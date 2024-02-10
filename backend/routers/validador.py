@@ -24,13 +24,13 @@ router = APIRouter(
             )
 async def read(
         db: Session = Depends(get_db),
-        common: PaginationSchema = Depends(),
+        pagination: PaginationSchema = Depends(),
         token: str = Depends(oauth2_scheme)
 ):
     validadores, metadata = await get_all(
         db=db,
         model=Validador,
-        common=common,
+        pagination=pagination,
         token=token
     )
 
