@@ -41,7 +41,7 @@ router = APIRouter(
 @router.get("/", response_model=ResponsePaginationSchema[ProblemaReadSimple], summary="Lista problemas")
 async def read(
     db: Session = Depends(get_db),
-    common: PaginationSchema = Depends(),
+    pagination: PaginationSchema = Depends(),
     filters: ProblemaFilter = Depends(),
     token: str = Depends(oauth2_scheme)
 ):
@@ -56,10 +56,39 @@ async def read(
     problemas, metadata = await get_all(
         db=db,
         model=Problema,
-        common=common,
+        pagination=pagination,
         token=token,
-        filters=filters, search_fields=search_fields_problema,
+        filters=filters,
+        search_fields=search_fields_problema,
         allow_any=True
+    )
+
+    return ResponsePaginationSchema(
+        data=problemas,
+        metadata=metadata
+    )
+
+
+@router.get("/me/",
+            response_model=ResponsePaginationSchema[ProblemaReadSimple],
+            summary="Lista problemas pertencentes ao usuário autenticado",
+            )
+async def read_problemas_me(
+    db: Session = Depends(get_db),
+    pagination: PaginationSchema = Depends(),
+    filters: ProblemaFilter = Depends(),
+    token: str = Depends(oauth2_scheme)
+):
+
+    problemas, metadata = await get_all(
+        db=db,
+        model=Problema,
+        pagination=pagination,
+        token=token,
+        filters=filters,
+        search_fields=search_fields_problema,
+        allow_any=True,
+        me_author=True
     )
 
     return ResponsePaginationSchema(
@@ -95,7 +124,7 @@ async def read_id(
 @router.post("/",
              response_model=ResponseUnitSchema[ProblemaReadFull],
              status_code=201,
-             summary="Cadastra problema",
+             summary="Cadastra um problema",
              responses={
                  422: errors[422]
              }
