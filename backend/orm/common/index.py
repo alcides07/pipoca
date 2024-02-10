@@ -1,4 +1,5 @@
 from dependencies.authorization_user import has_authorization_object_single, has_authorization_object_collection
+from models.user import User
 from sqlalchemy import or_
 from sqlalchemy.exc import SQLAlchemyError
 from typing import Any
@@ -44,11 +45,12 @@ async def get_by_id(
 async def get_all(
     db: Session,
     model: Any,
-    common: PaginationSchema,
+    pagination: PaginationSchema,
     token: str,
     filters: Any = None,
     search_fields: list[str] = [],
-    allow_any: bool = False
+    allow_any: bool = False,
+    me_author: bool = False
 ):
 
     if (allow_any == False):
@@ -57,23 +59,28 @@ async def get_all(
 
     query = db.query(model)
 
+    if (me_author == True and hasattr(model, "usuario_id")):
+        user = await user_autenthicated(token, db)
+        if (isinstance(user, User)):
+            query = db.query(model).filter(model.usuario_id == user.id)
+
     if filters:
         for attr, value in filters.__dict__.items():
             if value != None:
                 query = query.filter(getattr(model, attr) == value)
 
-    if common.q and search_fields:
+    if pagination.q and search_fields:
         search_query = or_(
-            *[getattr(model, field).ilike(f"%{common.q}%") for field in search_fields if hasattr(model, field)])
+            *[getattr(model, field).ilike(f"%{pagination.q}%") for field in search_fields if hasattr(model, field)])
         query = query.filter(search_query)
 
-    db_objects = query.offset(common.offset).limit(common.limit)
+    db_objects = query.offset(pagination.offset).limit(pagination.limit)
     total = query.count()
     metadata = MetadataSchema(
         count=db_objects.count(),
         total=total,
-        offset=common.offset,
-        limit=common.limit,
+        offset=pagination.offset,
+        limit=pagination.limit,
         search_fields=search_fields
     )
 
