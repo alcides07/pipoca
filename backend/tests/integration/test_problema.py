@@ -63,6 +63,22 @@ def test_read_problemas_user():
     resume_dependencies()
 
 
+def test_read_meus_problemas_user():
+    remove_dependencies()
+
+    _, token_user, _ = create_user_helper()
+
+    response_problema_user = client.get(
+        f"{URL_PROBLEMA}/me/",
+        headers={
+            "Authorization": f"Bearer {token_user}",
+        },
+    )
+    assert response_problema_user.status_code == 200
+
+    resume_dependencies()
+
+
 def test_read_problemas_admin():
     remove_dependencies()
 
