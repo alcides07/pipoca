@@ -1,6 +1,5 @@
-from dependencies.authorization_user import is_admin
+from dependencies.authorization_user import is_admin, is_user
 from fastapi import HTTPException, status
-from models.administrador import Administrador
 from models.problemaTeste import ProblemaTeste
 from models.user import User
 from models.validador import Validador
@@ -124,9 +123,8 @@ async def update_problema(
     if not db_problema:
         raise HTTPException(status.HTTP_404_NOT_FOUND)
 
-    if (not is_admin(user)):
-        if (user.id != db_problema.usuario_id):  # type: ignore
-            raise HTTPException(status.HTTP_401_UNAUTHORIZED)
+    if (is_user(user) and user.id != db_problema.usuario_id):  # type: ignore
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED)
 
     try:
         for key, value in problema:

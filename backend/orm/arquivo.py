@@ -62,15 +62,13 @@ async def update_arquivo(
             raise HTTPException(status.HTTP_404_NOT_FOUND,
                                 detail="Problema não encontrado!")
 
-        if (is_user(user)):
-            if (user.id != db_new_problema.usuario_id):  # type: ignore
-                raise HTTPException(status.HTTP_401_UNAUTHORIZED)
+        if (is_user(user) and user.id != db_new_problema.usuario_id):  # type: ignore
+            raise HTTPException(status.HTTP_401_UNAUTHORIZED)
 
     try:
         for key, value in arquivo:
-            if (value != None):
-                if getattr(db_arquivo, key):
-                    setattr(db_arquivo, key, value)
+            if (value != None and getattr(db_arquivo, key)):
+                setattr(db_arquivo, key, value)
 
         db.commit()
         db.refresh(db_arquivo)
