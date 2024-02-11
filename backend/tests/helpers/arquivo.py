@@ -47,6 +47,62 @@ def create_arquivo_admin_helper():
     return response, token
 
 
+def update_partial_arquivo_helper(profile: str = ""):
+    remove_dependencies()
+
+    response_arquivo, token = create_arquivo_user_helper()
+
+    if (profile == "admin"):
+        response_arquivo, token = create_arquivo_admin_helper()
+
+    arquivo = response_arquivo.json().get("data")
+    arquivo_id = arquivo.get("id")
+
+    json_partial = {
+        "corpo": "novoCorpo"
+    }
+
+    response = client.patch(
+        f"{URL_ARQUIVO}/{arquivo_id}/",
+        json=json_partial,
+        headers={
+            "Authorization": f"Bearer {token}",
+        },
+    )
+
+    return response, arquivo
+
+
+def update_full_arquivo_success_helper(profile: str = ""):
+    remove_dependencies()
+
+    response_arquivo, token = create_arquivo_user_helper()
+
+    if (profile == "admin"):
+        response_arquivo, token = create_arquivo_admin_helper()
+
+    arquivo = response_arquivo.json().get("data")
+    arquivo_id = arquivo.get("id")
+
+    arquivo_copy = arquivo.copy()
+
+    arquivo["nome"] = "PUT"
+    arquivo["secao"] = "anexo"
+    arquivo["status"] = "PUT"
+    arquivo["corpo"] = "PUT"
+    arquivo["problema_id"] = arquivo.get("problema_id")
+
+    response = client.put(
+        f"{URL_ARQUIVO}/{arquivo_id}/",
+        headers={
+            "Authorization": f"Bearer {token}",
+        },
+        json=arquivo
+    )
+
+    return response, arquivo_copy
+
+
 JSON_ARQUIVO = {
     "nome": "string",
     "secao": "recursos",
