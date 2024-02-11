@@ -1,9 +1,9 @@
 from models.problema import Problema
-from orm.arquivo import create_arquivo
+from orm.arquivo import create_arquivo, update_arquivo
 from routers.auth import oauth2_scheme
-from fastapi import APIRouter, Depends, Path
+from fastapi import APIRouter, Body, Depends, Path
 from models.arquivo import Arquivo
-from schemas.arquivo import ARQUIVO_ID_DESCRIPTION, ArquivoCreateSingle, ArquivoReadFull, ArquivoReadSimple
+from schemas.arquivo import ARQUIVO_ID_DESCRIPTION, ArquivoCreateSingle, ArquivoReadFull, ArquivoReadSimple, ArquivoUpdatePartial
 from utils.errors import errors
 from orm.common.index import delete_object, get_by_id, get_all
 from dependencies.authenticated_user import get_authenticated_user
@@ -92,6 +92,60 @@ async def create(
     )
 
     return ResponseUnitSchema(data=arquivo)
+
+
+@router.put("/{id}/",
+            response_model=ResponseUnitSchema[ArquivoReadFull],
+            summary="Atualiza um arquivo por completo",
+            responses={
+                404: errors[404]
+            },
+            )
+async def total_update(
+        id: int = Path(description=ARQUIVO_ID_DESCRIPTION),
+        db: Session = Depends(get_db),
+        arquivo: ArquivoCreateSingle = Body(
+            description="Arquivo a ser atualizado por completo"),
+        token: str = Depends(oauth2_scheme),
+):
+    user = await get_authenticated_user(token, db)
+
+    response = await update_arquivo(
+        db=db,
+        id=id,
+        arquivo=arquivo,
+        user=user
+    )
+    return ResponseUnitSchema(
+        data=response
+    )
+
+
+@router.patch("/{id}/",
+              response_model=ResponseUnitSchema[ArquivoReadFull],
+              summary="Atualiza um arquivo parcialmente",
+              responses={
+                  404: errors[404]
+              },
+              )
+async def parcial_update(
+        id: int = Path(description=ARQUIVO_ID_DESCRIPTION),
+        db: Session = Depends(get_db),
+        data: ArquivoUpdatePartial = Body(
+            description="Arquivo a ser atualizado parcialmente"),
+        token: str = Depends(oauth2_scheme),
+):
+    user = await get_authenticated_user(token, db)
+
+    response = await update_arquivo(
+        db=db,
+        id=id,
+        arquivo=data,
+        user=user
+    )
+    return ResponseUnitSchema(
+        data=response
+    )
 
 
 @router.delete("/{id}/",
