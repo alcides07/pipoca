@@ -1,4 +1,4 @@
-from dependencies.authorization_user import has_authorization_object_single, has_authorization_object_collection
+from dependencies.authorization_user import has_authorization_object_single, has_authorization_object_collection, is_user
 from models.user import User
 from sqlalchemy import or_
 from sqlalchemy.exc import SQLAlchemyError
@@ -61,7 +61,7 @@ async def get_all(
 
     if (me_author == True and hasattr(model, "usuario_id")):
         user = await user_autenthicated(token, db)
-        if (isinstance(user, User)):
+        if (is_user(user)):
             query = db.query(model).filter(model.usuario_id == user.id)
 
     if filters:

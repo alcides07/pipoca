@@ -1,5 +1,5 @@
+from dependencies.authorization_user import is_admin, is_user
 from fastapi import HTTPException, status
-from models.administrador import Administrador
 from models.problemaTeste import ProblemaTeste
 from models.user import User
 from models.validador import Validador
@@ -100,7 +100,7 @@ def create_problema(db: Session, problema: ProblemaCreate, user: User):
 
         db_problema.usuario = user
 
-        if (isinstance(user, Administrador)):
+        if (is_admin(user)):
             db_problema.usuario = None
 
         db.commit()
@@ -123,9 +123,8 @@ async def update_problema(
     if not db_problema:
         raise HTTPException(status.HTTP_404_NOT_FOUND)
 
-    if (not isinstance(user, Administrador)):
-        if (user.id != db_problema.usuario_id):  # type: ignore
-            raise HTTPException(status.HTTP_401_UNAUTHORIZED)
+    if (is_user(user) and user.id != db_problema.usuario_id):  # type: ignore
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED)
 
     try:
         for key, value in problema:
@@ -201,14 +200,14 @@ async def update_problema(
 
         db_problema.usuario = user
 
-        if (isinstance(user, Administrador)):
+        if (is_admin(user)):
             db_problema.usuario = None
 
         db.commit()
         db.refresh(db_problema)
 
+        return db_problema
+
     except SQLAlchemyError:
         db.rollback()
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-    return db_problema

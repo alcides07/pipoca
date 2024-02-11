@@ -1,3 +1,4 @@
+from dependencies.authorization_user import is_user
 from models.user import User
 from routers.auth import oauth2_scheme
 import os
@@ -47,7 +48,7 @@ async def read(
 ):
     user = await get_authenticated_user(token, db)
 
-    if (isinstance(user, User)):
+    if (is_user(user)):
         if (filters.privado == True):
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
         else:

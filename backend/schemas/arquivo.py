@@ -55,3 +55,31 @@ class ArquivoCreate(ArquivoWithBody):
 class ArquivoCreateSingle(ArquivoWithBody):
     problema_id: int = Field(
         description=PROBLEMA_ID_DESCRIPTION)
+
+
+class ArquivoUpdatePartial(BaseModel):
+    nome: Optional[str] = Field(
+        default=None,
+        max_length=64,
+        description="Nome do arquivo do problema"
+    )
+
+    secao: Optional[SecaoEnum] = Field(
+        default=None,
+        description="Grupo o qual o arquivo faz parte"
+    )
+
+    status: Optional[str] = Field(
+        default=None,
+        description="Tipos de status de veredíto para arquivos de solução"
+    )
+
+    corpo: Optional[str] = Field(
+        default=None,
+        max_length=250000,
+        description="Conteúdo do arquivo"
+    )
+
+    problema_id: Optional[int] = Field(
+        default=None,
+        description=PROBLEMA_ID_DESCRIPTION)
