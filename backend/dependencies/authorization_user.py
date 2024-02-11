@@ -21,7 +21,7 @@ async def has_authorization_object_collection(
     """
 
     user = await user_autenthicated(token, db)
-    if (isinstance(user, Administrador)):
+    if (is_admin(user)):
         return True
 
 
@@ -54,7 +54,7 @@ async def has_authorization_object_single(
     user = await user_autenthicated(token, db)
 
     if (
-        isinstance(user, Administrador)  # É um administrador
+        is_admin(user)
         or
         isinstance(obj_model_has_user_key,
                    User) and user.id == obj_model_has_user_key.id  # Auto manipulação de usuário
@@ -62,4 +62,16 @@ async def has_authorization_object_single(
             hasattr(obj_model_has_user_key, "usuario_id") and obj_model_has_user_key.usuario_id == user.id):  # Manipulação de demais objetos permitidos
         return True
 
+    return False
+
+
+def is_admin(user):
+    if (isinstance(user, Administrador)):
+        return True
+    return False
+
+
+def is_user(user):
+    if (isinstance(user, User)):
+        return True
     return False

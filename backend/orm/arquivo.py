@@ -1,3 +1,4 @@
+from dependencies.authorization_user import is_user
 from fastapi import HTTPException, status
 from models.administrador import Administrador
 from models.user import User
@@ -20,7 +21,7 @@ async def create_arquivo(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail="Problema não encontrado!")
     try:
-        if (isinstance(user, User) and problema.usuario_id != user.id):  # type: ignore
+        if (is_user(user) and problema.usuario_id != user.id):  # type: ignore
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
 
         db_arquivo = Arquivo(
@@ -53,7 +54,7 @@ async def update_arquivo(
         raise HTTPException(status.HTTP_404_NOT_FOUND,
                             detail="Arquivo não encontrado!")
 
-    if (user.id != db_arquivo.problema.usuario_id):
+    if (is_user(user) and user.id != db_arquivo.problema.usuario_id):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED)
 
     if (arquivo.problema_id != None):
@@ -61,7 +62,7 @@ async def update_arquivo(
             raise HTTPException(status.HTTP_404_NOT_FOUND,
                                 detail="Problema não encontrado!")
 
-        if (isinstance(user, User)):
+        if (is_user(user)):
             if (user.id != db_new_problema.usuario_id):  # type: ignore
                 raise HTTPException(status.HTTP_401_UNAUTHORIZED)
 

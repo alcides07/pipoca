@@ -1,3 +1,4 @@
+from dependencies.authorization_user import is_admin
 from fastapi import HTTPException, status
 from models.administrador import Administrador
 from models.problemaTeste import ProblemaTeste
@@ -100,7 +101,7 @@ def create_problema(db: Session, problema: ProblemaCreate, user: User):
 
         db_problema.usuario = user
 
-        if (isinstance(user, Administrador)):
+        if (is_admin(user)):
             db_problema.usuario = None
 
         db.commit()
@@ -123,7 +124,7 @@ async def update_problema(
     if not db_problema:
         raise HTTPException(status.HTTP_404_NOT_FOUND)
 
-    if (not isinstance(user, Administrador)):
+    if (not is_admin(user)):
         if (user.id != db_problema.usuario_id):  # type: ignore
             raise HTTPException(status.HTTP_401_UNAUTHORIZED)
 
@@ -201,7 +202,7 @@ async def update_problema(
 
         db_problema.usuario = user
 
-        if (isinstance(user, Administrador)):
+        if (is_admin(user)):
             db_problema.usuario = None
 
         db.commit()
