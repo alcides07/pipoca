@@ -1,8 +1,9 @@
 from models.problema import Problema
+from orm.arquivo import create_arquivo
 from routers.auth import oauth2_scheme
 from fastapi import APIRouter, Depends, Path
 from models.arquivo import Arquivo
-from schemas.arquivo import ARQUIVO_ID_DESCRIPTION, ArquivoReadFull, ArquivoReadSimple
+from schemas.arquivo import ARQUIVO_ID_DESCRIPTION, ArquivoCreateSingle, ArquivoReadFull, ArquivoReadSimple
 from utils.errors import errors
 from orm.common.index import delete_object, get_by_id, get_all
 from dependencies.authenticated_user import get_authenticated_user
@@ -51,7 +52,7 @@ async def read(
 async def read_id(
         id: int = Path(description=ARQUIVO_ID_DESCRIPTION),
         db: Session = Depends(get_db),
-    token: str = Depends(oauth2_scheme)
+        token: str = Depends(oauth2_scheme)
 ):
     arquivo = await get_by_id(
         db=db,
@@ -64,6 +65,33 @@ async def read_id(
     return ResponseUnitSchema(
         data=arquivo
     )
+
+
+@router.post("/",
+             response_model=ResponseUnitSchema[ArquivoReadFull],
+             status_code=201,
+             summary="Cadastra um arquivo",
+             responses={
+                 400: errors[400],
+                 422: errors[422],
+                 404: errors[404]
+             }
+             )
+async def create(
+    arquivo: ArquivoCreateSingle,
+    db: Session = Depends(get_db),
+    token: str = Depends(oauth2_scheme)
+):
+    user = await get_authenticated_user(token=token, db=db)
+
+    arquivo = await create_arquivo(
+        db=db,
+        user=user,
+        arquivo=arquivo,
+        problema_id=arquivo.problema_id
+    )
+
+    return ResponseUnitSchema(data=arquivo)
 
 
 @router.delete("/{id}/",
