@@ -207,8 +207,8 @@ async def update_problema(
         db.commit()
         db.refresh(db_problema)
 
+        return db_problema
+
     except SQLAlchemyError:
         db.rollback()
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-    return db_problema
