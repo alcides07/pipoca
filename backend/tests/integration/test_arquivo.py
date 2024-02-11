@@ -1,6 +1,6 @@
 from tests.database import get_db_test
 from tests.helpers.administrador import create_administrador_helper
-from tests.helpers.arquivo import URL_ARQUIVO, create_arquivo_admin_helper, create_arquivo_user_helper
+from tests.helpers.arquivo import URL_ARQUIVO, create_arquivo_admin_helper, create_arquivo_user_helper, update_full_arquivo_success_helper, update_partial_arquivo_helper
 from tests.helpers.user import create_user_helper
 from backend.main import app
 from fastapi.testclient import TestClient
@@ -130,5 +130,69 @@ def test_delete_arquivo_admin():
     )
 
     assert response.status_code == 200
+
+    resume_dependencies()
+
+
+def test_update_partial_arquivo_user():
+    remove_dependencies()
+
+    response_arquivo_user, arquivo_antigo = update_partial_arquivo_helper()
+
+    assert response_arquivo_user.status_code == 200
+
+    response_json = response_arquivo_user.json().get("data")
+
+    assert response_json.get("corpo") != arquivo_antigo.get("corpo")
+
+    resume_dependencies()
+
+
+def test_update_partial_arquivo_admin():
+    remove_dependencies()
+
+    response_arquivo_user, arquivo_antigo = update_partial_arquivo_helper(
+        "admin")
+
+    assert response_arquivo_user.status_code == 200
+
+    response_json = response_arquivo_user.json().get("data")
+
+    assert response_json.get("corpo") != arquivo_antigo.get("corpo")
+
+    resume_dependencies()
+
+
+def test_update_full_arquivo_success_user():
+    remove_dependencies()
+
+    response_arquivo_user, arquivo_antigo = update_full_arquivo_success_helper()
+
+    assert response_arquivo_user.status_code == 200
+
+    response_json = response_arquivo_user.json().get("data")
+
+    assert response_json.get("nome") != arquivo_antigo.get("nome")
+    assert response_json.get("secao") != arquivo_antigo.get("secao")
+    assert response_json.get("status") != arquivo_antigo.get("status")
+    assert response_json.get("corpo") != arquivo_antigo.get("corpo")
+
+    resume_dependencies()
+
+
+def test_update_full_arquivo_success_admin():
+    remove_dependencies()
+
+    response_arquivo_user, arquivo_antigo = update_full_arquivo_success_helper(
+        "admin")
+
+    assert response_arquivo_user.status_code == 200
+
+    response_json = response_arquivo_user.json().get("data")
+
+    assert response_json.get("nome") != arquivo_antigo.get("nome")
+    assert response_json.get("secao") != arquivo_antigo.get("secao")
+    assert response_json.get("status") != arquivo_antigo.get("status")
+    assert response_json.get("corpo") != arquivo_antigo.get("corpo")
 
     resume_dependencies()
