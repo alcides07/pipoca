@@ -47,3 +47,8 @@ class VerificadorReadSimple(VerificadorBase):
 class VerificadorCreate(VerificadorWithBody):
     testes: list[VerificadorTesteCreate] = Field(
         description=VERIFICADOR_TESTS_DESCRITPTION)
+
+
+class VerificadorCreateSingle(VerificadorWithBody):
+    problema_id: int = Field(
+        description=PROBLEMA_ID_DESCRIPTION)

@@ -1,3 +1,4 @@
+from orm.verificador import create_verificador
 from routers.auth import oauth2_scheme
 from dependencies.authenticated_user import get_authenticated_user
 from dependencies.database import get_db
@@ -7,7 +8,7 @@ from models.verificador import Verificador
 from orm.common.index import get_all, get_by_id
 from schemas.common.pagination import PaginationSchema
 from schemas.common.response import ResponsePaginationSchema, ResponseUnitSchema
-from schemas.verificador import VerificadorReadFull, VerificadorReadSimple
+from schemas.verificador import VerificadorCreateSingle, VerificadorReadFull, VerificadorReadSimple
 from sqlalchemy.orm import Session
 from utils.errors import errors
 
@@ -63,3 +64,28 @@ async def read_id(
     return ResponseUnitSchema(
         data=verificador
     )
+
+
+@router.post("/",
+             response_model=ResponseUnitSchema[VerificadorReadFull],
+             status_code=201,
+             summary="Cadastra um verificador",
+             responses={
+                 422: errors[422],
+                 404: errors[404]
+             }
+             )
+async def create(
+    verificador: VerificadorCreateSingle,
+    db: Session = Depends(get_db),
+    token: str = Depends(oauth2_scheme)
+):
+    user = await get_authenticated_user(token=token, db=db)
+
+    verificador = await create_verificador(
+        db=db,
+        verificador=verificador,
+        user=user,
+    )
+
+    return ResponseUnitSchema(data=verificador)
