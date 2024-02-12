@@ -72,7 +72,6 @@ async def read_id(
              status_code=201,
              summary="Cadastra um arquivo",
              responses={
-                 400: errors[400],
                  422: errors[422],
                  404: errors[404]
              }
@@ -88,7 +87,6 @@ async def create(
         db=db,
         user=user,
         arquivo=arquivo,
-        problema_id=arquivo.problema_id
     )
 
     return ResponseUnitSchema(data=arquivo)

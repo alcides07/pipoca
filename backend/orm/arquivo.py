@@ -12,10 +12,10 @@ from models.problema import Problema
 async def create_arquivo(
     db: Session,
     arquivo: ArquivoCreateSingle,
-    problema_id: int,
     user: User | Administrador
 ):
-    problema = db.query(Problema).filter(Problema.id == problema_id).first()
+    problema = db.query(Problema).filter(
+        Problema.id == arquivo.problema_id).first()
 
     if (problema == None):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
