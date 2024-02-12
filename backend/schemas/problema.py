@@ -68,7 +68,8 @@ class ProblemaReadSimple(ProblemaBase):
         description=ARQUIVOS_DESCRIPTION
     )
 
-    verificador: VerificadorReadSimple = Field(
+    verificador: Optional[VerificadorReadSimple] = Field(
+        default=None,
         description=VERIFICADOR_DESCRIPTION
     )
 
@@ -108,7 +109,8 @@ class ProblemaReadFull(ProblemaBase):
         description=TESTES_DESCRIPTION
     )
 
-    verificador: VerificadorReadFull = Field(
+    verificador: Optional[VerificadorReadFull] = Field(
+        default=None,
         description=VERIFICADOR_DESCRIPTION
     )
 
