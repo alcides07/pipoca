@@ -148,8 +148,9 @@ async def update_object(
                     setattr(db_object, key, value)
         db.commit()
         db.refresh(db_object)
+
+        return db_object
+
     except SQLAlchemyError:
         db.rollback()
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-    return db_object
