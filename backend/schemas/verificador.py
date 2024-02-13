@@ -59,3 +59,27 @@ class VerificadorCreate(VerificadorWithBody):
 class VerificadorCreateSingle(VerificadorWithBody):
     problema_id: int = Field(
         description=PROBLEMA_ID_DESCRIPTION)
+
+
+class VerificadorUpdateTotal(VerificadorWithBody):
+    pass
+
+
+class VerificadorUpdatePartial(BaseModel):
+    nome: Optional[str] = Field(
+        default=None,
+        max_length=64,
+        description="Nome do verificador"
+    )
+
+    # Talvez Enum em breve
+    linguagem: Optional[str] = Field(
+        default=None,
+        description="Linguagem em que o verificador está escrito"
+    )
+
+    corpo: Optional[str] = Field(
+        default=None,
+        max_length=250000,
+        description="Conteúdo do verificador"
+    )
