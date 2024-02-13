@@ -54,7 +54,7 @@ def update_partial_problema_helper(profile: str = ""):
     return response, problema
 
 
-def update_full_problema_success_helper(profile: str = ""):
+def update_full_problema_helper(profile: str = ""):
     remove_dependencies()
 
     response_problema, token = create_problema_user_helper()
