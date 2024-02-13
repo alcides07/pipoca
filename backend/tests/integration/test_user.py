@@ -31,6 +31,27 @@ def test_read_user_unit():
     resume_dependencies()
 
 
+def test_read_user_unit_admin():
+    remove_dependencies()
+
+    response_user, _, _ = create_user_helper()
+    user_id = response_user.json().get("data").get("id")
+
+    database = next(get_db_test())
+    token_admin = create_administrador_helper(database)
+
+    response = client.get(
+        f"{URL_USER}/{user_id}/",
+        headers={
+            "Authorization": f"Bearer {token_admin}",
+        },
+    )
+
+    assert response.status_code == 200
+
+    resume_dependencies()
+
+
 def test_read_users_user():
     remove_dependencies()
 
