@@ -73,7 +73,7 @@ def update_partial_arquivo_helper(profile: str = ""):
     return response, arquivo
 
 
-def update_full_arquivo_success_helper(profile: str = ""):
+def update_full_arquivo_helper(profile: str = ""):
     remove_dependencies()
 
     response_arquivo, token = create_arquivo_user_helper()
