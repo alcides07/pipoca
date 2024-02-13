@@ -178,7 +178,7 @@ def test_delete_verificador_user():
         }
     )
 
-    assert response.status_code == 200
+    assert response.status_code == 204
 
     resume_dependencies()
 
@@ -197,6 +197,6 @@ def test_delete_verificador_admin():
         }
     )
 
-    assert response.status_code == 200
+    assert response.status_code == 204
 
     resume_dependencies()
