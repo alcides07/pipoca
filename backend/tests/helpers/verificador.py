@@ -7,30 +7,15 @@ client = TestClient(app)
 URL_VERIFICADOR = "/verificadores"
 
 
-def create_verificador_user_helper():
+def create_verificador_helper(profile: str = ""):
     remove_dependencies()
 
-    response_problema_, token = create_problema_user_helper()
-    problema_id = response_problema_.json().get("data").get("id")
+    if (profile == "admin"):
+        response_problema_, token = create_problema_admin_helper()
 
-    verificador = JSON_VERIFICADOR.copy()
-    verificador["problema_id"] = problema_id
+    else:
+        response_problema_, token = create_problema_user_helper()
 
-    response = client.post(
-        URL_VERIFICADOR,
-        headers={
-            "Authorization": f"Bearer {token}",
-        },
-        json=verificador
-    )
-
-    return response, token
-
-
-def create_verificador_admin_helper():
-    remove_dependencies()
-
-    response_problema_, token = create_problema_admin_helper()
     problema_id = response_problema_.json().get("data").get("id")
 
     verificador = JSON_VERIFICADOR.copy()
@@ -50,10 +35,11 @@ def create_verificador_admin_helper():
 def update_partial_verificador_helper(profile: str = ""):
     remove_dependencies()
 
-    response_verificador, token = create_verificador_user_helper()
-
     if (profile == "admin"):
-        response_verificador, token = create_verificador_admin_helper()
+        response_verificador, token = create_verificador_helper("admin")
+
+    else:
+        response_verificador, token = create_verificador_helper()
 
     verificador = response_verificador.json().get("data")
     verificador_id = verificador.get("id")
@@ -76,10 +62,11 @@ def update_partial_verificador_helper(profile: str = ""):
 def update_full_verificador_helper(profile: str = ""):
     remove_dependencies()
 
-    response_verificador, token = create_verificador_user_helper()
-
     if (profile == "admin"):
-        response_verificador, token = create_verificador_admin_helper()
+        response_verificador, token = create_verificador_helper("admin")
+
+    else:
+        response_verificador, token = create_verificador_helper()
 
     verificador = response_verificador.json().get("data")
     verificador_id = verificador.get("id")
