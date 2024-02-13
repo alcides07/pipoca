@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Optional
 from pydantic import BaseModel, Field
 from schemas.arquivo import ArquivoCreate, ArquivoReadFull, ArquivoReadSimple
@@ -64,6 +65,10 @@ class ProblemaReadSimple(ProblemaBase):
         description=DECLARACAO_DESCRIPTION
     )
 
+    criado_em: datetime = Field(
+        description="Data e horário de criação do problema"
+    )
+
     arquivos: list[ArquivoReadSimple] = Field(
         description=ARQUIVOS_DESCRIPTION
     )
@@ -95,6 +100,10 @@ class ProblemaReadFull(ProblemaBase):
 
     tags: list[TagRead] = Field(
         description="Lista de palavras-chave"
+    )
+
+    criado_em: datetime = Field(
+        description="Data e horário de criação do problema"
     )
 
     declaracoes: list[DeclaracaoReadFull] = Field(
