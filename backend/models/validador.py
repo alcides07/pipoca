@@ -34,7 +34,8 @@ class Validador(Base):
         Integer,
         ForeignKey(
             'problemas.id',
-            name="validadores_problema_id_fkey"
+            name="validadores_problema_id_fkey",
+            ondelete='CASCADE'
         )
     )
     problema = relationship(
@@ -42,6 +43,7 @@ class Validador(Base):
         uselist=False,
         foreign_keys=[problema_id],
         post_update=True,
+        passive_deletes=True
     )
 
     testes = relationship(
