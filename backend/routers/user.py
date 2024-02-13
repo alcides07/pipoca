@@ -1,14 +1,14 @@
 from routers.auth import oauth2_scheme
-from fastapi import APIRouter, Body, Depends, HTTPException, Path, Response, status
+from fastapi import APIRouter, Body, Depends, Path, Response, status
 from utils.errors import errors
 from models.user import User
-from orm.common.index import delete_object, get_by_key_value, get_by_key_value_exists, get_by_id, get_all, update_object
+from orm.common.index import delete_object, get_by_id, get_all
 from dependencies.authenticated_user import get_authenticated_user
-from schemas.user import UserCreate, UserRead
+from schemas.user import UserCreate, UserRead, UserUpdatePartial, UserUpdateTotal
 from schemas.common.pagination import PaginationSchema
 from dependencies.database import get_db
 from sqlalchemy.orm import Session
-from orm.user import create_user
+from orm.user import create_user, update_user
 from schemas.common.response import ResponsePaginationSchema, ResponseUnitSchema
 from passlib.context import CryptContext
 
@@ -86,24 +86,9 @@ def create(
     user: UserCreate,
     db: Session = Depends(get_db),
 ):
+    data = create_user(db=db, user=user)
 
-    if (user.password != user.passwordConfirmation):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                            detail="Erro. As senhas fornecidas não coincidem!")
-
-    elif (get_by_key_value_exists(db, User, "username", user.username)):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                            detail="Erro. O nome de usuário fornecido está em uso!")
-
-    elif (get_by_key_value_exists(db, User, "email", user.email)):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                            detail="Erro. O e-mail fornecido está em uso!")
-
-    else:
-        user.password = pwd_context.hash(user.password)
-        data = create_user(db=db, user=user)
-
-        return ResponseUnitSchema(data=data)
+    return ResponseUnitSchema(data=data)
 
 
 @router.put("/{id}/",
@@ -117,32 +102,49 @@ def create(
 async def total_update(
         id: int = Path(description=USER_ID_DESCRIPTION),
         db: Session = Depends(get_db),
-        user: UserCreate = Body(),
+        data: UserUpdateTotal = Body(
+            description="Usuário a ser atualizado por completo"),
         token: str = Depends(oauth2_scheme)
 ):
-    await get_by_id(
+    user = await get_authenticated_user(db=db, token=token)
+
+    response = await update_user(
         db=db,
-        model=User,
         id=id,
-        token=token,
-        model_has_user_key=User
+        data=data,
+        user=user
     )
-    user_username = get_by_key_value(db, User, "username", user.username)
-    user_email = get_by_key_value(db, User, "email", user.email)
 
-    if (user.password != user.passwordConfirmation):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                            detail="Erro. As senhas fornecidas não coincidem!")
+    return ResponseUnitSchema(
+        data=response
+    )
 
-    elif (user_username != None and user_username.id != id):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                            detail="Erro. O nome de usuário fornecido está em uso!")
 
-    elif (user_email != None and user_email.id != id):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                            detail="Erro. O e-mail fornecido está em uso!")
+@router.patch("/{id}/",
+              response_model=ResponseUnitSchema[UserRead],
+              summary="Atualiza um usuário parcialmente",
+              responses={
+                  400: errors[400],
+                  404: errors[404]
+              },
+              dependencies=[Depends(get_authenticated_user)],
+              )
+async def partial_update(
+        id: int = Path(description=USER_ID_DESCRIPTION),
+        db: Session = Depends(get_db),
+        data: UserUpdatePartial = Body(
+            description="Usuário a ser atualizado parcialmente"),
+        token: str = Depends(oauth2_scheme)
+):
+    user = await get_authenticated_user(db=db, token=token)
 
-    response = await update_object(db, User, id, user, token, User)
+    response = await update_user(
+        db=db,
+        id=id,
+        data=data,
+        user=user
+    )
+
     return ResponseUnitSchema(
         data=response
     )
