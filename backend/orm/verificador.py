@@ -67,10 +67,10 @@ async def delete_verificador(
         raise HTTPException(status.HTTP_401_UNAUTHORIZED)
 
     try:
-        db_verificador.problema.verificador_id = None
         db.delete(db_verificador)
         db.commit()
-        return db_verificador
+
+        return True
 
     except SQLAlchemyError:
         db.rollback()

@@ -2,7 +2,7 @@ from orm.verificador import create_verificador, delete_verificador, update_verif
 from routers.auth import oauth2_scheme
 from dependencies.authenticated_user import get_authenticated_user
 from dependencies.database import get_db
-from fastapi import APIRouter, Body, Depends, Path
+from fastapi import APIRouter, Body, Depends, Path, Response, status
 from models.problema import Problema
 from models.verificador import Verificador
 from orm.common.index import get_all, get_by_id
@@ -74,7 +74,7 @@ async def read_id(
                  422: errors[422],
                  404: errors[404]
              },
-             description="Ao cadastrar um verificador em um problema que já possui um, o antigo é deletado e o problema é vinculado ao novo verificador."
+             description="Ao cadastrar um verificador em um problema que já possui um, **o antigo é deletado juntamente com seus testes** e o problema é vinculado ao novo verificador."
              )
 async def create(
     verificador: VerificadorCreateSingle,
@@ -147,7 +147,7 @@ async def total_update(
 
 
 @router.delete("/{id}/",
-               response_model=ResponseUnitSchema[VerificadorReadFull],
+               status_code=204,
                summary="Deleta um verificador",
                responses={
                    404: errors[404]
@@ -161,12 +161,11 @@ async def delete(
 
     user = await get_authenticated_user(db=db, token=token)
 
-    verificador = await delete_verificador(
+    verificador_deleted = await delete_verificador(
         db=db,
         id=id,
         user=user
     )
 
-    return ResponseUnitSchema(
-        data=verificador
-    )
+    if (verificador_deleted):
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
