@@ -1,3 +1,4 @@
+from typing import Optional
 from pydantic import BaseModel, Field
 from schemas.verificadorTeste import VerificadorTesteCreate, VerificadorTesteReadFull, VerificadorTesteReadSimple
 
@@ -27,18 +28,24 @@ class VerificadorWithBody(VerificadorBase):
 
 class VerificadorReadFull(VerificadorWithBody):
     id: int = Field(description=VERIFICADOR_ID_DESCRIPTION)
-    problema_id: int = Field(
+    problema_id: Optional[int] = Field(
+        default=None,
         description=PROBLEMA_ID_DESCRIPTION)
-    testes: list[VerificadorTesteReadFull] = Field(
-        description=VERIFICADOR_TESTS_DESCRITPTION)
+    testes: Optional[list[VerificadorTesteReadFull]] = Field(
+        default=None,
+        description=VERIFICADOR_TESTS_DESCRITPTION
+    )
 
 
 class VerificadorReadSimple(VerificadorBase):
     id: int = Field(description=VERIFICADOR_ID_DESCRIPTION)
-    problema_id: int = Field(
+    problema_id: Optional[int] = Field(
+        default=None,
         description=PROBLEMA_ID_DESCRIPTION)
-    testes: list[VerificadorTesteReadSimple] = Field(
-        description=VERIFICADOR_TESTS_DESCRITPTION)
+    testes: Optional[list[VerificadorTesteReadSimple]] = Field(
+        default=None,
+        description=VERIFICADOR_TESTS_DESCRITPTION
+    )
 
     class ConfigDict:
         from_attributes = True
