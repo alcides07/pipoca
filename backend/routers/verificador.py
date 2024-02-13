@@ -159,7 +159,7 @@ async def delete(
         token: str = Depends(oauth2_scheme)
 ):
 
-    verificador_deleted = await delete_object(
+    verificador = await delete_object(
         db=db,
         model=Verificador,
         id=id,
@@ -168,5 +168,5 @@ async def delete(
         return_true=True
     )
 
-    if (verificador_deleted):
+    if (verificador):
         return Response(status_code=status.HTTP_204_NO_CONTENT)
