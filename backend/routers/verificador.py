@@ -1,4 +1,4 @@
-from orm.verificador import create_verificador
+from orm.verificador import create_verificador, delete_verificador
 from routers.auth import oauth2_scheme
 from dependencies.authenticated_user import get_authenticated_user
 from dependencies.database import get_db
@@ -8,7 +8,7 @@ from models.verificador import Verificador
 from orm.common.index import get_all, get_by_id
 from schemas.common.pagination import PaginationSchema
 from schemas.common.response import ResponsePaginationSchema, ResponseUnitSchema
-from schemas.verificador import VerificadorCreateSingle, VerificadorReadFull, VerificadorReadSimple
+from schemas.verificador import VERIFICADOR_ID_DESCRIPTION, VerificadorCreateSingle, VerificadorReadFull, VerificadorReadSimple
 from sqlalchemy.orm import Session
 from utils.errors import errors
 
@@ -89,3 +89,29 @@ async def create(
     )
 
     return ResponseUnitSchema(data=verificador)
+
+
+@router.delete("/{id}/",
+               response_model=ResponseUnitSchema[VerificadorReadFull],
+               summary="Deleta um verificador",
+               responses={
+                   404: errors[404]
+               }
+               )
+async def delete(
+        id: int = Path(description=VERIFICADOR_ID_DESCRIPTION),
+        db: Session = Depends(get_db),
+        token: str = Depends(oauth2_scheme)
+):
+
+    user = await get_authenticated_user(db=db, token=token)
+
+    verificador = await delete_verificador(
+        db=db,
+        id=id,
+        user=user
+    )
+
+    return ResponseUnitSchema(
+        data=verificador
+    )
