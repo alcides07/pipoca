@@ -7,31 +7,16 @@ client = TestClient(app)
 URL_ARQUIVO = "/arquivos"
 
 
-def create_arquivo_user_helper():
+def create_arquivo_helper(profile: str = ""):
     remove_dependencies()
 
-    response_problema_, token = create_problema_user_helper()
+    if (profile == "admin"):
+        response_problema_, token = create_problema_admin_helper()
+
+    else:
+        response_problema_, token = create_problema_user_helper()
+
     problema_id = response_problema_.json().get("data").get("id")
-
-    arquivo = JSON_ARQUIVO.copy()
-    arquivo["problema_id"] = problema_id
-
-    response = client.post(
-        URL_ARQUIVO,
-        headers={
-            "Authorization": f"Bearer {token}",
-        },
-        json=arquivo
-    )
-
-    return response, token
-
-
-def create_arquivo_admin_helper():
-    remove_dependencies()
-
-    response_problema, token = create_problema_admin_helper()
-    problema_id = response_problema.json().get("data").get("id")
 
     arquivo = JSON_ARQUIVO.copy()
     arquivo["problema_id"] = problema_id
@@ -50,10 +35,11 @@ def create_arquivo_admin_helper():
 def update_partial_arquivo_helper(profile: str = ""):
     remove_dependencies()
 
-    response_arquivo, token = create_arquivo_user_helper()
-
     if (profile == "admin"):
-        response_arquivo, token = create_arquivo_admin_helper()
+        response_arquivo, token = create_arquivo_helper("admin")
+
+    else:
+        response_arquivo, token = create_arquivo_helper()
 
     arquivo = response_arquivo.json().get("data")
     arquivo_id = arquivo.get("id")
@@ -76,10 +62,11 @@ def update_partial_arquivo_helper(profile: str = ""):
 def update_full_arquivo_helper(profile: str = ""):
     remove_dependencies()
 
-    response_arquivo, token = create_arquivo_user_helper()
-
     if (profile == "admin"):
-        response_arquivo, token = create_arquivo_admin_helper()
+        response_arquivo, token = create_arquivo_helper("admin")
+
+    else:
+        response_arquivo, token = create_arquivo_helper()
 
     arquivo = response_arquivo.json().get("data")
     arquivo_id = arquivo.get("id")
