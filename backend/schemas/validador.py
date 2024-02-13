@@ -47,3 +47,8 @@ class ValidadorReadSimple(ValidadorBase):
 class ValidadorCreate(ValidadorBaseFull):
     testes: list[ValidadorTesteCreate] = Field(
         description=VALIDADOR_TESTS_DESCRITPTION)
+
+
+class ValidadorCreateSingle(ValidadorBaseFull):
+    problema_id: int = Field(
+        description=PROBLEMA_ID_DESCRIPTION)
