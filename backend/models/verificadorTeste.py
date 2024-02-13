@@ -30,7 +30,13 @@ class VerificadorTeste(Base):
         nullable=False
     )
 
-    verificador_id = Column(Integer, ForeignKey('verificadores.id'))
+    verificador_id = Column(
+        Integer,
+        ForeignKey(
+            'verificadores.id',
+            name="verificador_testes_verificador_id_fkey"
+        )
+    )
     verificador = relationship(
         "Verificador",
         uselist=False,

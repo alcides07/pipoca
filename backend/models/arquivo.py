@@ -34,7 +34,13 @@ class Arquivo(Base):
         index=True
     )
 
-    problema_id = Column(Integer, ForeignKey('problemas.id'))
+    problema_id = Column(
+        Integer,
+        ForeignKey(
+            'problemas.id',
+            name="arquivos_problema_id_fkey"
+        )
+    )
     problema = relationship(
         "Problema",
         back_populates="arquivos",

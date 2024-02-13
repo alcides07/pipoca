@@ -30,7 +30,13 @@ class Validador(Base):
         nullable=False,
     )
 
-    problema_id = Column(Integer, ForeignKey('problemas.id'))
+    problema_id = Column(
+        Integer,
+        ForeignKey(
+            'problemas.id',
+            name="validadores_problema_id_fkey"
+        )
+    )
     problema = relationship(
         "Problema",
         uselist=False,
