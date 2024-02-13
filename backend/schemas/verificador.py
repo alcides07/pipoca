@@ -19,14 +19,14 @@ class VerificadorBase(BaseModel):
     )
 
 
-class VerificadorWithBody(VerificadorBase):
+class VerificadorBaseFull(VerificadorBase):
     corpo: str = Field(
         max_length=250000,
         description="Conteúdo do verificador"
     )
 
 
-class VerificadorReadFull(VerificadorWithBody):
+class VerificadorReadFull(VerificadorBaseFull):
     id: int = Field(description=VERIFICADOR_ID_DESCRIPTION)
     problema_id: Optional[int] = Field(
         default=None,
@@ -51,17 +51,17 @@ class VerificadorReadSimple(VerificadorBase):
         from_attributes = True
 
 
-class VerificadorCreate(VerificadorWithBody):
+class VerificadorCreate(VerificadorBaseFull):
     testes: list[VerificadorTesteCreate] = Field(
         description=VERIFICADOR_TESTS_DESCRITPTION)
 
 
-class VerificadorCreateSingle(VerificadorWithBody):
+class VerificadorCreateSingle(VerificadorBaseFull):
     problema_id: int = Field(
         description=PROBLEMA_ID_DESCRIPTION)
 
 
-class VerificadorUpdateTotal(VerificadorWithBody):
+class VerificadorUpdateTotal(VerificadorBaseFull):
     pass
 
 
