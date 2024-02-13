@@ -3,11 +3,12 @@ from fastapi.testclient import TestClient
 from tests.helpers.problema import create_problema_admin_helper, create_problema_user_helper
 from backend.main import app
 
+
 client = TestClient(app)
-URL_ARQUIVO = "/arquivos"
+URL_VALIDADOR = "/validadores"
 
 
-def create_arquivo_helper(profile: str = ""):
+def create_validador_helper(profile: str = ""):
     remove_dependencies()
 
     if (profile == "admin"):
@@ -18,82 +19,79 @@ def create_arquivo_helper(profile: str = ""):
 
     problema_id = response_problema_.json().get("data").get("id")
 
-    arquivo = JSON_ARQUIVO.copy()
-    arquivo["problema_id"] = problema_id
+    validador = JSON_VALIDADOR.copy()
+    validador["problema_id"] = problema_id
 
     response = client.post(
-        URL_ARQUIVO,
+        URL_VALIDADOR,
         headers={
             "Authorization": f"Bearer {token}",
         },
-        json=arquivo
+        json=validador
     )
 
     return response, token
 
 
-def update_partial_arquivo_helper(profile: str = ""):
+def update_partial_validador_helper(profile: str = ""):
     remove_dependencies()
 
     if (profile == "admin"):
-        response_arquivo, token = create_arquivo_helper("admin")
+        response_validador, token = create_validador_helper("admin")
 
     else:
-        response_arquivo, token = create_arquivo_helper()
+        response_validador, token = create_validador_helper()
 
-    arquivo = response_arquivo.json().get("data")
-    arquivo_id = arquivo.get("id")
+    validador = response_validador.json().get("data")
+    validador_id = validador.get("id")
 
     json_partial = {
         "corpo": "novoCorpo"
     }
 
     response = client.patch(
-        f"{URL_ARQUIVO}/{arquivo_id}/",
+        f"{URL_VALIDADOR}/{validador_id}/",
         json=json_partial,
         headers={
             "Authorization": f"Bearer {token}",
         },
     )
 
-    return response, arquivo
+    return response, validador
 
 
-def update_full_arquivo_helper(profile: str = ""):
+def update_full_validador_helper(profile: str = ""):
     remove_dependencies()
 
     if (profile == "admin"):
-        response_arquivo, token = create_arquivo_helper("admin")
+        response_validador, token = create_validador_helper("admin")
 
     else:
-        response_arquivo, token = create_arquivo_helper()
+        response_validador, token = create_validador_helper()
 
-    arquivo = response_arquivo.json().get("data")
-    arquivo_id = arquivo.get("id")
+    validador = response_validador.json().get("data")
+    validador_id = validador.get("id")
 
-    arquivo_copy = arquivo.copy()
+    validador_copy = validador.copy()
 
-    arquivo["nome"] = "PUT"
-    arquivo["secao"] = "anexo"
-    arquivo["status"] = "PUT"
-    arquivo["corpo"] = "PUT"
-    arquivo["problema_id"] = arquivo.get("problema_id")
+    validador["nome"] = "PUT"
+    validador["linguagem"] = "PUT"
+    validador["corpo"] = "PUT"
 
     response = client.put(
-        f"{URL_ARQUIVO}/{arquivo_id}/",
+        f"{URL_VALIDADOR}/{validador_id}/",
         headers={
             "Authorization": f"Bearer {token}",
         },
-        json=arquivo
+        json=validador
     )
 
-    return response, arquivo_copy
+    return response, validador_copy
 
 
-JSON_ARQUIVO = {
+JSON_VALIDADOR = {
     "nome": "string",
-    "secao": "recursos",
-    "status": "string",
+    "linguagem": "string",
     "corpo": "string",
     "problema_id": 0
 }

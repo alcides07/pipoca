@@ -105,6 +105,7 @@ async def delete_object(
     id: int,
     token: str = "",
     model_has_user_key: Any = None,
+    return_true: bool = False
 ):
     db_object = db.query(model).filter(model.id == id).first()
     if not db_object:
@@ -116,6 +117,8 @@ async def delete_object(
     try:
         db.delete(db_object)
         db.commit()
+        if (return_true):
+            return True
         return db_object
     except SQLAlchemyError:
         db.rollback()

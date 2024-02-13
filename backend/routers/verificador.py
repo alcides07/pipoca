@@ -1,11 +1,11 @@
-from orm.verificador import create_verificador, delete_verificador, update_verificador
+from orm.verificador import create_verificador, update_verificador
 from routers.auth import oauth2_scheme
 from dependencies.authenticated_user import get_authenticated_user
 from dependencies.database import get_db
-from fastapi import APIRouter, Body, Depends, Path
+from fastapi import APIRouter, Body, Depends, Path, Response, status
 from models.problema import Problema
 from models.verificador import Verificador
-from orm.common.index import get_all, get_by_id
+from orm.common.index import delete_object, get_all, get_by_id
 from schemas.common.pagination import PaginationSchema
 from schemas.common.response import ResponsePaginationSchema, ResponseUnitSchema
 from schemas.verificador import VERIFICADOR_ID_DESCRIPTION, VerificadorCreateSingle, VerificadorReadFull, VerificadorReadSimple, VerificadorUpdatePartial, VerificadorUpdateTotal
@@ -73,7 +73,8 @@ async def read_id(
              responses={
                  422: errors[422],
                  404: errors[404]
-             }
+             },
+             description="Ao cadastrar um verificador em um problema que já possui um, **o antigo é deletado juntamente com seus testes** e o problema é vinculado ao novo verificador."
              )
 async def create(
     verificador: VerificadorCreateSingle,
@@ -146,7 +147,7 @@ async def total_update(
 
 
 @router.delete("/{id}/",
-               response_model=ResponseUnitSchema[VerificadorReadFull],
+               status_code=204,
                summary="Deleta um verificador",
                responses={
                    404: errors[404]
@@ -158,14 +159,14 @@ async def delete(
         token: str = Depends(oauth2_scheme)
 ):
 
-    user = await get_authenticated_user(db=db, token=token)
-
-    verificador = await delete_verificador(
+    verificador = await delete_object(
         db=db,
+        model=Verificador,
         id=id,
-        user=user
+        token=token,
+        model_has_user_key=Problema,
+        return_true=True
     )
 
-    return ResponseUnitSchema(
-        data=verificador
-    )
+    if (verificador):
+        return Response(status_code=status.HTTP_204_NO_CONTENT)

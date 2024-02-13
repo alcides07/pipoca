@@ -34,12 +34,13 @@ class VerificadorTeste(Base):
         Integer,
         ForeignKey(
             'verificadores.id',
-            name="verificador_testes_verificador_id_fkey"
+            name="verificador_testes_verificador_id_fkey",
+            ondelete='CASCADE'
         )
     )
     verificador = relationship(
         "Verificador",
         uselist=False,
         foreign_keys=[verificador_id],
-        post_update=True,
+        post_update=True
     )

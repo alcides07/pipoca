@@ -96,26 +96,30 @@ class Problema(Base):
         ForeignKey(
             'validadores.id',
             name="problemas_validador_id_fkey",
-            use_alter=True
+            use_alter=True,
+            ondelete='SET NULL'
         )
     )
     validador = relationship(
         Validador,
         uselist=False,
         foreign_keys=[validador_id],
+        passive_deletes=True
     )
 
     usuario_id = Column(
         Integer,
         ForeignKey(
             "users.id",
-            name="problemas_usuario_id_fkey"
+            name="problemas_usuario_id_fkey",
+            ondelete='SET NULL'
         )
     )
     usuario = relationship(
         "User",
         uselist=False,
-        foreign_keys=[usuario_id]
+        foreign_keys=[usuario_id],
+        passive_deletes=True
     )
 
     __table_args__ = (

@@ -1,5 +1,5 @@
 from routers.auth import oauth2_scheme
-from fastapi import APIRouter, Body, Depends, HTTPException, Path, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Path, Response, status
 from utils.errors import errors
 from models.user import User
 from orm.common.index import delete_object, get_by_key_value, get_by_key_value_exists, get_by_id, get_all, update_object
@@ -149,7 +149,7 @@ async def total_update(
 
 
 @router.delete("/{id}/",
-               response_model=ResponseUnitSchema[UserRead],
+               status_code=204,
                summary="Deleta um usuário",
                responses={
                    404: errors[404]
@@ -169,6 +169,5 @@ async def delete(
         token=token,
         model_has_user_key=User
     )
-    return ResponseUnitSchema(
-        data=user
-    )
+    if (user):
+        return Response(status_code=status.HTTP_204_NO_CONTENT)

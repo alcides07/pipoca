@@ -2,21 +2,21 @@ from dependencies.authorization_user import is_user
 from fastapi import HTTPException, status
 from models.administrador import Administrador
 from models.user import User
-from models.verificador import Verificador
+from models.validador import Validador
 from orm.common.index import delete_object
-from schemas.verificador import VerificadorCreateSingle, VerificadorUpdatePartial, VerificadorUpdateTotal
+from schemas.validador import ValidadorCreateSingle, ValidadorUpdatePartial, ValidadorUpdateTotal
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 from models.problema import Problema
 
 
-async def create_verificador(
+async def create_validador(
     db: Session,
-    verificador: VerificadorCreateSingle,
+    validador: ValidadorCreateSingle,
     user: User | Administrador
 ):
     db_problema = db.query(Problema).filter(
-        Problema.id == verificador.problema_id
+        Problema.id == validador.problema_id
     ).first()
 
     if (not db_problema):
@@ -27,55 +27,55 @@ async def create_verificador(
         if (is_user(user) and db_problema.usuario_id != user.id):  # type: ignore
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
 
-        db_verificador = Verificador(
-            **verificador.model_dump(exclude=set(["problema"])))
+        db_validador = Validador(
+            **validador.model_dump(exclude=set(["problema"])))
 
-        if (db_problema.verificador != None):
+        if (db_problema.validador != None):
             await delete_object(
                 db=db,
-                model=Verificador,
-                id=db_problema.verificador_id,  # type: ignore
+                model=Validador,
+                id=db_problema.validador_id,  # type: ignore
                 model_has_user_key=Problema
             )
 
-        db.add(db_verificador)
-        db_verificador.problema = db_problema
-        db_problema.verificador = db_verificador
+        db.add(db_validador)
+        db_validador.problema = db_problema
+        db_problema.validador = db_validador
 
         db.commit()
-        db.refresh(db_verificador)
+        db.refresh(db_validador)
         db.refresh(db_problema)
 
-        return db_verificador
+        return db_validador
 
     except SQLAlchemyError:
         db.rollback()
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-async def update_verificador(
+async def update_validador(
     db: Session,
     id: int,
-    verificador: VerificadorUpdateTotal | VerificadorUpdatePartial,
+    validador: ValidadorUpdateTotal | ValidadorUpdatePartial,
     user: User | Administrador
 ):
-    db_verificador = db.query(Verificador).filter(Verificador.id == id).first()
+    db_validador = db.query(Validador).filter(Validador.id == id).first()
 
-    if (not db_verificador):
+    if (not db_validador):
         raise HTTPException(status.HTTP_404_NOT_FOUND)
 
-    if (is_user(user) and user.id != db_verificador.problema.usuario_id):
+    if (is_user(user) and user.id != db_validador.problema.usuario_id):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED)
 
     try:
-        for key, value in verificador:
-            if (value != None and getattr(db_verificador, key)):
-                setattr(db_verificador, key, value)
+        for key, value in validador:
+            if (value != None and getattr(db_validador, key)):
+                setattr(db_validador, key, value)
 
         db.commit()
-        db.refresh(db_verificador)
+        db.refresh(db_validador)
 
-        return db_verificador
+        return db_validador
 
     except SQLAlchemyError:
         db.rollback()
