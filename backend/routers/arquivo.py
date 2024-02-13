@@ -151,8 +151,7 @@ async def parcial_update(
                summary="Deleta um arquivo",
                responses={
                    404: errors[404]
-               },
-               dependencies=[Depends(get_authenticated_user)],
+               }
                )
 async def delete(
         id: int = Path(description=ARQUIVO_ID_DESCRIPTION),
