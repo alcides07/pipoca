@@ -1,7 +1,8 @@
+from datetime import datetime
 from models.problemaTeste import ProblemaTeste
 from models.validador import Validador
 from models.verificador import Verificador
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, CheckConstraint, UniqueConstraint
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, CheckConstraint, UniqueConstraint, DateTime
 from sqlalchemy.orm import relationship
 from database import Base
 from models.arquivo import Arquivo
@@ -52,6 +53,11 @@ class Problema(Base):
         CheckConstraint('memoria_limite >= 4'),
         CheckConstraint('memoria_limite <= 1024'),
         nullable=False,
+    )
+
+    criado_em = Column(
+        DateTime,
+        default=datetime.utcnow
     )
 
     tags = relationship(
