@@ -3,7 +3,7 @@ from orm.arquivo import create_arquivo, update_arquivo
 from routers.auth import oauth2_scheme
 from fastapi import APIRouter, Body, Depends, Path
 from models.arquivo import Arquivo
-from schemas.arquivo import ARQUIVO_ID_DESCRIPTION, ArquivoCreateSingle, ArquivoReadFull, ArquivoReadSimple, ArquivoUpdatePartial
+from schemas.arquivo import ARQUIVO_ID_DESCRIPTION, ArquivoCreateSingle, ArquivoReadFull, ArquivoReadSimple, ArquivoUpdatePartial, ArquivoUpdateTotal
 from utils.errors import errors
 from orm.common.index import delete_object, get_by_id, get_all
 from dependencies.authenticated_user import get_authenticated_user
@@ -72,7 +72,6 @@ async def read_id(
              status_code=201,
              summary="Cadastra um arquivo",
              responses={
-                 400: errors[400],
                  422: errors[422],
                  404: errors[404]
              }
@@ -88,7 +87,6 @@ async def create(
         db=db,
         user=user,
         arquivo=arquivo,
-        problema_id=arquivo.problema_id
     )
 
     return ResponseUnitSchema(data=arquivo)
@@ -104,7 +102,7 @@ async def create(
 async def total_update(
         id: int = Path(description=ARQUIVO_ID_DESCRIPTION),
         db: Session = Depends(get_db),
-        arquivo: ArquivoCreateSingle = Body(
+        arquivo: ArquivoUpdateTotal = Body(
             description="Arquivo a ser atualizado por completo"),
         token: str = Depends(oauth2_scheme),
 ):
@@ -153,8 +151,7 @@ async def parcial_update(
                summary="Deleta um arquivo",
                responses={
                    404: errors[404]
-               },
-               dependencies=[Depends(get_authenticated_user)],
+               }
                )
 async def delete(
         id: int = Path(description=ARQUIVO_ID_DESCRIPTION),

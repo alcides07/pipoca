@@ -1,13 +1,14 @@
+from orm.verificador import create_verificador, delete_verificador, update_verificador
 from routers.auth import oauth2_scheme
 from dependencies.authenticated_user import get_authenticated_user
 from dependencies.database import get_db
-from fastapi import APIRouter, Depends, Path
+from fastapi import APIRouter, Body, Depends, Path
 from models.problema import Problema
 from models.verificador import Verificador
 from orm.common.index import get_all, get_by_id
 from schemas.common.pagination import PaginationSchema
 from schemas.common.response import ResponsePaginationSchema, ResponseUnitSchema
-from schemas.verificador import VerificadorReadFull, VerificadorReadSimple
+from schemas.verificador import VERIFICADOR_ID_DESCRIPTION, VerificadorCreateSingle, VerificadorReadFull, VerificadorReadSimple, VerificadorUpdatePartial, VerificadorUpdateTotal
 from sqlalchemy.orm import Session
 from utils.errors import errors
 
@@ -58,6 +59,111 @@ async def read_id(
         id=id,
         token=token,
         model_has_user_key=Problema
+    )
+
+    return ResponseUnitSchema(
+        data=verificador
+    )
+
+
+@router.post("/",
+             response_model=ResponseUnitSchema[VerificadorReadFull],
+             status_code=201,
+             summary="Cadastra um verificador",
+             responses={
+                 422: errors[422],
+                 404: errors[404]
+             }
+             )
+async def create(
+    verificador: VerificadorCreateSingle,
+    db: Session = Depends(get_db),
+    token: str = Depends(oauth2_scheme)
+):
+    user = await get_authenticated_user(token=token, db=db)
+
+    verificador = await create_verificador(
+        db=db,
+        verificador=verificador,
+        user=user,
+    )
+
+    return ResponseUnitSchema(data=verificador)
+
+
+@router.patch("/{id}/",
+              response_model=ResponseUnitSchema[VerificadorReadFull],
+              summary="Atualiza um verificador parcialmente",
+              responses={
+                  404: errors[404]
+              },
+              )
+async def parcial_update(
+        id: int = Path(description=VERIFICADOR_ID_DESCRIPTION),
+        db: Session = Depends(get_db),
+        data: VerificadorUpdatePartial = Body(
+            description="Verificador a ser atualizado parcialmente"),
+        token: str = Depends(oauth2_scheme),
+):
+    user = await get_authenticated_user(token, db)
+
+    verificador = await update_verificador(
+        db=db,
+        id=id,
+        verificador=data,
+        user=user
+    )
+    return ResponseUnitSchema(
+        data=verificador
+    )
+
+
+@router.put("/{id}/",
+            response_model=ResponseUnitSchema[VerificadorReadFull],
+            summary="Atualiza um verificador por completo",
+            responses={
+                404: errors[404]
+            },
+            )
+async def total_update(
+        id: int = Path(description=VERIFICADOR_ID_DESCRIPTION),
+        db: Session = Depends(get_db),
+        data: VerificadorUpdateTotal = Body(
+            description="Verificador a ser atualizado por completo"),
+        token: str = Depends(oauth2_scheme),
+):
+    user = await get_authenticated_user(token, db)
+
+    verificador = await update_verificador(
+        db=db,
+        id=id,
+        verificador=data,
+        user=user
+    )
+    return ResponseUnitSchema(
+        data=verificador
+    )
+
+
+@router.delete("/{id}/",
+               response_model=ResponseUnitSchema[VerificadorReadFull],
+               summary="Deleta um verificador",
+               responses={
+                   404: errors[404]
+               }
+               )
+async def delete(
+        id: int = Path(description=VERIFICADOR_ID_DESCRIPTION),
+        db: Session = Depends(get_db),
+        token: str = Depends(oauth2_scheme)
+):
+
+    user = await get_authenticated_user(db=db, token=token)
+
+    verificador = await delete_verificador(
+        db=db,
+        id=id,
+        user=user
     )
 
     return ResponseUnitSchema(

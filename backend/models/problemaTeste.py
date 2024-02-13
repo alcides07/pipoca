@@ -39,7 +39,13 @@ class ProblemaTeste(Base):
         String(length=250000)
     )
 
-    problema_id = Column(Integer, ForeignKey('problemas.id'))
+    problema_id = Column(
+        Integer,
+        ForeignKey(
+            'problemas.id',
+            name="problema_testes_problema_id_fkey"
+        )
+    )
     problema = relationship(
         "Problema",
         uselist=False,
