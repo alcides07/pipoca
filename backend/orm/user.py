@@ -1,3 +1,4 @@
+from dependencies.authorization_user import is_user
 from models.administrador import Administrador
 from sqlalchemy.exc import SQLAlchemyError
 from fastapi import HTTPException, status
@@ -45,7 +46,7 @@ async def update_user(
     if (not user_db):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
-    if (user_db.id != user.id):  # type: ignore
+    if (is_user(user) and user_db.id != user.id):  # type: ignore
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
 
     user_by_username = db.query(User).filter(
