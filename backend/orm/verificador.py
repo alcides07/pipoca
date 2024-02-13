@@ -4,7 +4,7 @@ from models.administrador import Administrador
 from models.user import User
 from models.verificador import Verificador
 from orm.common.index import delete_object
-from schemas.verificador import VerificadorCreateSingle
+from schemas.verificador import VerificadorCreateSingle, VerificadorUpdatePartial, VerificadorUpdateTotal
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 from models.problema import Problema
@@ -75,3 +75,32 @@ async def delete_verificador(
     except SQLAlchemyError:
         db.rollback()
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+async def update_verificador(
+    db: Session,
+    id: int,
+    verificador: VerificadorUpdateTotal | VerificadorUpdatePartial,
+    user: User | Administrador
+):
+    db_verificador = db.query(Verificador).filter(Verificador.id == id).first()
+
+    if (not db_verificador):
+        raise HTTPException(status.HTTP_404_NOT_FOUND)
+
+    if (is_user(user) and user.id != db_verificador.problema.usuario_id):
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED)
+
+    try:
+        for key, value in verificador:
+            if (value != None and getattr(db_verificador, key)):
+                setattr(db_verificador, key, value)
+
+        db.commit()
+        db.refresh(db_verificador)
+
+        return db_verificador
+
+    except SQLAlchemyError:
+        db.rollback()
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
