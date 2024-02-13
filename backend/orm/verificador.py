@@ -53,30 +53,6 @@ async def create_verificador(
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-async def delete_verificador(
-    db: Session,
-    id: int,
-    user: User | Administrador,
-):
-
-    db_verificador = db.query(Verificador).filter(Verificador.id == id).first()
-    if not db_verificador:
-        raise HTTPException(status.HTTP_404_NOT_FOUND)
-
-    if (is_user(user) and user.id != db_verificador.problema.usuario_id):
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED)
-
-    try:
-        db.delete(db_verificador)
-        db.commit()
-
-        return True
-
-    except SQLAlchemyError:
-        db.rollback()
-        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
 async def update_verificador(
     db: Session,
     id: int,

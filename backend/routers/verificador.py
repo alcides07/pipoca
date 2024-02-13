@@ -1,11 +1,11 @@
-from orm.verificador import create_verificador, delete_verificador, update_verificador
+from orm.verificador import create_verificador, update_verificador
 from routers.auth import oauth2_scheme
 from dependencies.authenticated_user import get_authenticated_user
 from dependencies.database import get_db
 from fastapi import APIRouter, Body, Depends, Path, Response, status
 from models.problema import Problema
 from models.verificador import Verificador
-from orm.common.index import get_all, get_by_id
+from orm.common.index import delete_object, get_all, get_by_id
 from schemas.common.pagination import PaginationSchema
 from schemas.common.response import ResponsePaginationSchema, ResponseUnitSchema
 from schemas.verificador import VERIFICADOR_ID_DESCRIPTION, VerificadorCreateSingle, VerificadorReadFull, VerificadorReadSimple, VerificadorUpdatePartial, VerificadorUpdateTotal
@@ -159,12 +159,13 @@ async def delete(
         token: str = Depends(oauth2_scheme)
 ):
 
-    user = await get_authenticated_user(db=db, token=token)
-
-    verificador_deleted = await delete_verificador(
+    verificador_deleted = await delete_object(
         db=db,
+        model=Verificador,
         id=id,
-        user=user
+        token=token,
+        model_has_user_key=Problema,
+        return_true=True
     )
 
     if (verificador_deleted):
