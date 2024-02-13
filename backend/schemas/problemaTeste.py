@@ -27,7 +27,7 @@ class ProblemaTesteBase(BaseModel):
     )
 
 
-class ProblemaTesteWithEntrada(ProblemaTesteBase):
+class ProblemaTesteBaseFull(ProblemaTesteBase):
     entrada: str = Field(
         max_length=250000,
         description="Dados de entrada do teste"
@@ -40,7 +40,7 @@ class ProblemaTesteWithEntrada(ProblemaTesteBase):
     )
 
 
-class ProblemaTesteReadFull(ProblemaTesteWithEntrada):
+class ProblemaTesteReadFull(ProblemaTesteBaseFull):
     id: int = Field(description=TESTE_ID_DESCRIPTION)
     problema_id: int = Field(
         description=PROBLEMA_ID_DESCRIPTION)
@@ -52,5 +52,5 @@ class ProblemaTesteReadSimple(ProblemaTesteBase):
         description=PROBLEMA_ID_DESCRIPTION)
 
 
-class ProblemaTesteCreate(ProblemaTesteWithEntrada):
+class ProblemaTesteCreate(ProblemaTesteBaseFull):
     pass
