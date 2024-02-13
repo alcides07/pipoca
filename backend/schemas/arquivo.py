@@ -57,6 +57,10 @@ class ArquivoCreateSingle(ArquivoWithBody):
         description=PROBLEMA_ID_DESCRIPTION)
 
 
+class ArquivoUpdateTotal(ArquivoWithBody):
+    pass
+
+
 class ArquivoUpdatePartial(BaseModel):
     nome: Optional[str] = Field(
         default=None,

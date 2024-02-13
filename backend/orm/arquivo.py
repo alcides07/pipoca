@@ -2,7 +2,7 @@ from dependencies.authorization_user import is_user
 from fastapi import HTTPException, status
 from models.administrador import Administrador
 from models.user import User
-from schemas.arquivo import ArquivoCreateSingle, ArquivoUpdatePartial
+from schemas.arquivo import ArquivoCreateSingle, ArquivoUpdatePartial, ArquivoUpdateTotal
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 from models.arquivo import Arquivo
@@ -42,7 +42,7 @@ async def create_arquivo(
 async def update_arquivo(
     db: Session,
     id: int,
-    arquivo: ArquivoCreateSingle | ArquivoUpdatePartial,
+    arquivo: ArquivoUpdateTotal | ArquivoUpdatePartial,
     user: User | Administrador
 ):
 
