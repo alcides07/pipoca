@@ -47,6 +47,60 @@ def create_verificador_admin_helper():
     return response, token
 
 
+def update_partial_verificador_helper(profile: str = ""):
+    remove_dependencies()
+
+    response_verificador, token = create_verificador_user_helper()
+
+    if (profile == "admin"):
+        response_verificador, token = create_verificador_admin_helper()
+
+    verificador = response_verificador.json().get("data")
+    verificador_id = verificador.get("id")
+
+    json_partial = {
+        "corpo": "novoCorpo"
+    }
+
+    response = client.patch(
+        f"{URL_VERIFICADOR}/{verificador_id}/",
+        json=json_partial,
+        headers={
+            "Authorization": f"Bearer {token}",
+        },
+    )
+
+    return response, verificador
+
+
+def update_full_verificador_helper(profile: str = ""):
+    remove_dependencies()
+
+    response_verificador, token = create_verificador_user_helper()
+
+    if (profile == "admin"):
+        response_verificador, token = create_verificador_admin_helper()
+
+    verificador = response_verificador.json().get("data")
+    verificador_id = verificador.get("id")
+
+    verificador_copy = verificador.copy()
+
+    verificador["nome"] = "PUT"
+    verificador["linguagem"] = "PUT"
+    verificador["corpo"] = "PUT"
+
+    response = client.put(
+        f"{URL_VERIFICADOR}/{verificador_id}/",
+        headers={
+            "Authorization": f"Bearer {token}",
+        },
+        json=verificador
+    )
+
+    return response, verificador_copy
+
+
 JSON_VERIFICADOR = {
     "nome": "string",
     "linguagem": "string",
