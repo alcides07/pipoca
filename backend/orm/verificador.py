@@ -19,7 +19,7 @@ async def create_verificador(
         Problema.id == verificador.problema_id
     ).first()
 
-    if (db_problema == None):
+    if (not db_problema):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail="Problema não encontrado!")
 

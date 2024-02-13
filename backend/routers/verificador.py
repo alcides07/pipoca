@@ -73,7 +73,8 @@ async def read_id(
              responses={
                  422: errors[422],
                  404: errors[404]
-             }
+             },
+             description="Ao cadastrar um verificador em um problema que já possui um, o antigo é deletado e o problema é vinculado ao novo verificador."
              )
 async def create(
     verificador: VerificadorCreateSingle,
