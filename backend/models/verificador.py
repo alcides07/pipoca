@@ -48,7 +48,8 @@ class Verificador(Base):
 
     testes = relationship(
         VerificadorTeste,
-        back_populates="verificador"
+        back_populates="verificador",
+        passive_deletes=True
     )
 
     __table_args__ = (
