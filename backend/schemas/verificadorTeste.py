@@ -24,14 +24,14 @@ class VerificadorTesteBase(BaseModel):
     )
 
 
-class VerificadorTesteWithEntrada(VerificadorTesteBase):
+class VerificadorTesteBaseFull(VerificadorTesteBase):
     entrada: str = Field(
         max_length=250000,
         description="Dados de entrada do teste do verificador"
     )
 
 
-class VerificadorTesteReadFull(VerificadorTesteWithEntrada):
+class VerificadorTesteReadFull(VerificadorTesteBaseFull):
     id: int = Field(description=VERIFICADOR_TESTE_ID_DESCRIPTION)
     verificador_id: int = Field(
         description=VERIFICADOR_ID_DESCRIPTION)
@@ -46,5 +46,5 @@ class VerificadorTesteReadSimple(VerificadorTesteBase):
         from_attributes = True
 
 
-class VerificadorTesteCreate(VerificadorTesteWithEntrada):
+class VerificadorTesteCreate(VerificadorTesteBaseFull):
     pass
