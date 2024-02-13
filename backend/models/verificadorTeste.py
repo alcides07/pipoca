@@ -1,5 +1,5 @@
 from schemas.verificadorTeste import VereditoVerificadorTesteEnum
-from sqlalchemy import Column, ForeignKey, Integer, String, Enum
+from sqlalchemy import CheckConstraint, Column, ForeignKey, Integer, String, Enum
 from sqlalchemy.orm import relationship
 from database import Base
 
@@ -14,7 +14,9 @@ class VerificadorTeste(Base):
     )
 
     numero = Column(
-        String(length=64),
+        Integer,
+        CheckConstraint('numero >= 1'),
+        CheckConstraint('numero <= 1000'),
         nullable=False
     )
 
@@ -28,10 +30,17 @@ class VerificadorTeste(Base):
         nullable=False
     )
 
-    verificador_id = Column(Integer, ForeignKey('verificadores.id'))
+    verificador_id = Column(
+        Integer,
+        ForeignKey(
+            'verificadores.id',
+            name="verificador_testes_verificador_id_fkey",
+            ondelete='CASCADE'
+        )
+    )
     verificador = relationship(
         "Verificador",
         uselist=False,
         foreign_keys=[verificador_id],
-        post_update=True,
+        post_update=True
     )

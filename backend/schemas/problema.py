@@ -1,6 +1,7 @@
 from typing import Optional
 from pydantic import BaseModel, Field
 from schemas.arquivo import ArquivoCreate, ArquivoReadFull, ArquivoReadSimple
+from schemas.problemaTeste import ProblemaTesteCreate, ProblemaTesteReadFull, ProblemaTesteReadSimple
 from schemas.tag import TagRead
 from schemas.declaracao import DeclaracaoCreate, DeclaracaoReadFull, DeclaracaoReadSimple
 from schemas.user import UserRead
@@ -11,6 +12,7 @@ DECLARACAO_DESCRIPTION = "Declarações associadas ao problema"
 VERIFICADOR_DESCRIPTION = "Arquivo verificador do problema"
 VALIDADOR_DESCRIPTION = "Arquivo validador do problema"
 ARQUIVOS_DESCRIPTION = "Arquivos associados ao problema"
+TESTES_DESCRIPTION = "Testes associados ao problema"
 
 
 class ProblemaBase(BaseModel):
@@ -66,12 +68,17 @@ class ProblemaReadSimple(ProblemaBase):
         description=ARQUIVOS_DESCRIPTION
     )
 
-    verificador: VerificadorReadSimple = Field(
+    verificador: Optional[VerificadorReadSimple] = Field(
+        default=None,
         description=VERIFICADOR_DESCRIPTION
     )
 
     validador: ValidadorReadSimple = Field(
         description=VALIDADOR_DESCRIPTION
+    )
+
+    testes: list[ProblemaTesteReadSimple] = Field(
+        description=TESTES_DESCRIPTION
     )
 
     class ConfigDict:
@@ -98,7 +105,12 @@ class ProblemaReadFull(ProblemaBase):
         description=ARQUIVOS_DESCRIPTION
     )
 
-    verificador: VerificadorReadFull = Field(
+    testes: list[ProblemaTesteReadFull] = Field(
+        description=TESTES_DESCRIPTION
+    )
+
+    verificador: Optional[VerificadorReadFull] = Field(
+        default=None,
         description=VERIFICADOR_DESCRIPTION
     )
 
@@ -123,6 +135,10 @@ class ProblemaCreate(ProblemaBase):
 
     arquivos: list[ArquivoCreate] = Field(
         description=ARQUIVOS_DESCRIPTION
+    )
+
+    testes: list[ProblemaTesteCreate] = Field(
+        description=TESTES_DESCRIPTION
     )
 
     verificador: VerificadorCreate = Field(
@@ -180,6 +196,11 @@ class ProblemaUpdatePartial(BaseModel):
     arquivos: Optional[list[ArquivoCreate]] = Field(
         default=None,
         description=ARQUIVOS_DESCRIPTION
+    )
+
+    testes: Optional[list[ProblemaTesteCreate]] = Field(
+        default=None,
+        description=TESTES_DESCRIPTION
     )
 
     verificador: Optional[VerificadorCreate] = Field(

@@ -1,5 +1,6 @@
+from dependencies.authorization_user import is_admin, is_user
 from fastapi import HTTPException, status
-from models.administrador import Administrador
+from models.problemaTeste import ProblemaTeste
 from models.user import User
 from models.validador import Validador
 from models.validadorTeste import ValidadorTeste
@@ -67,10 +68,16 @@ def create_tags(db, tag, db_problema):
     db_problema.tags.append(db_tag)
 
 
+def create_testes(db, teste, db_problema):
+    db_teste = ProblemaTeste(**teste.model_dump())
+    db.add(db_teste)
+    db_problema.testes.append(db_teste)
+
+
 def create_problema(db: Session, problema: ProblemaCreate, user: User):
     try:
         db_problema = Problema(
-            **problema.model_dump(exclude=set(["tags", "declaracoes", "arquivos", "verificador", "validador", "usuario"])))
+            **problema.model_dump(exclude=set(["tags", "declaracoes", "arquivos", "verificador", "validador", "usuario", "testes"])))
         db.add(db_problema)
 
         for declaracao in problema.declaracoes:
@@ -82,6 +89,9 @@ def create_problema(db: Session, problema: ProblemaCreate, user: User):
         for tag in problema.tags:
             create_tags(db, tag, db_problema)
 
+        for teste in problema.testes:
+            create_testes(db, teste, db_problema)
+
         create_verificador(db, problema, db_problema)
         create_verificador_testes(db, problema, db_problema)
 
@@ -90,7 +100,7 @@ def create_problema(db: Session, problema: ProblemaCreate, user: User):
 
         db_problema.usuario = user
 
-        if (isinstance(user, Administrador)):
+        if (is_admin(user)):
             db_problema.usuario = None
 
         db.commit()
@@ -113,9 +123,8 @@ async def update_problema(
     if not db_problema:
         raise HTTPException(status.HTTP_404_NOT_FOUND)
 
-    if (not isinstance(user, Administrador)):
-        if (user.id != db_problema.usuario_id):  # type: ignore
-            raise HTTPException(status.HTTP_401_UNAUTHORIZED)
+    if (is_user(user) and user.id != db_problema.usuario_id):  # type: ignore
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED)
 
     try:
         for key, value in problema:
@@ -147,6 +156,17 @@ async def update_problema(
 
                     for arquivo in value:
                         create_arquivos(db, arquivo, db_problema)
+
+                elif (key == "testes"):
+                    testes_ids = db.query(ProblemaTeste.id).filter(
+                        ProblemaTeste.problema_id == db_problema.id).all()
+
+                    for (teste_id, ) in testes_ids:
+                        await delete_object(
+                            db=db,
+                            model=ProblemaTeste,
+                            id=teste_id
+                        )
 
                 elif (key == "verificador"):
                     await delete_object(
@@ -180,14 +200,14 @@ async def update_problema(
 
         db_problema.usuario = user
 
-        if (isinstance(user, Administrador)):
+        if (is_admin(user)):
             db_problema.usuario = None
 
         db.commit()
         db.refresh(db_problema)
 
+        return db_problema
+
     except SQLAlchemyError:
         db.rollback()
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-    return db_problema

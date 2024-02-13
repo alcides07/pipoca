@@ -1,13 +1,14 @@
+from orm.validador import create_validador, update_validador
 from routers.auth import oauth2_scheme
 from dependencies.authenticated_user import get_authenticated_user
 from dependencies.database import get_db
-from fastapi import APIRouter, Depends, Path
+from fastapi import APIRouter, Body, Depends, Path, Response, status
 from models.problema import Problema
 from models.validador import Validador
-from orm.common.index import get_all, get_by_id
+from orm.common.index import delete_object, get_all, get_by_id
 from schemas.common.pagination import PaginationSchema
 from schemas.common.response import ResponsePaginationSchema, ResponseUnitSchema
-from schemas.validador import ValidadorReadFull, ValidadorReadSimple
+from schemas.validador import VALIDADOR_ID_DESCRIPTION, ValidadorCreateSingle, ValidadorReadFull, ValidadorReadSimple, ValidadorUpdatePartial, ValidadorUpdateTotal
 from sqlalchemy.orm import Session
 from utils.errors import errors
 
@@ -24,13 +25,13 @@ router = APIRouter(
             )
 async def read(
         db: Session = Depends(get_db),
-        common: PaginationSchema = Depends(),
+        pagination: PaginationSchema = Depends(),
         token: str = Depends(oauth2_scheme)
 ):
     validadores, metadata = await get_all(
         db=db,
         model=Validador,
-        common=common,
+        pagination=pagination,
         token=token
     )
 
@@ -63,3 +64,109 @@ async def read_id(
     return ResponseUnitSchema(
         data=validador
     )
+
+
+@router.post("/",
+             response_model=ResponseUnitSchema[ValidadorReadFull],
+             status_code=201,
+             summary="Cadastra um validador",
+             responses={
+                 422: errors[422],
+                 404: errors[404]
+             },
+             description="Ao cadastrar um validador em um problema que já possui um, **o antigo é deletado juntamente com seus testes** e o problema é vinculado ao novo validador."
+             )
+async def create(
+    validador: ValidadorCreateSingle,
+    db: Session = Depends(get_db),
+    token: str = Depends(oauth2_scheme)
+):
+    user = await get_authenticated_user(token=token, db=db)
+
+    validador = await create_validador(
+        db=db,
+        validador=validador,
+        user=user
+    )
+
+    return ResponseUnitSchema(data=validador)
+
+
+@router.patch("/{id}/",
+              response_model=ResponseUnitSchema[ValidadorReadFull],
+              summary="Atualiza um validador parcialmente",
+              responses={
+                  404: errors[404]
+              },
+              )
+async def parcial_update(
+        id: int = Path(description=VALIDADOR_ID_DESCRIPTION),
+        db: Session = Depends(get_db),
+        data: ValidadorUpdatePartial = Body(
+            description="Validador a ser atualizado parcialmente"),
+        token: str = Depends(oauth2_scheme),
+):
+    user = await get_authenticated_user(token, db)
+
+    validador = await update_validador(
+        db=db,
+        id=id,
+        validador=data,
+        user=user
+    )
+    return ResponseUnitSchema(
+        data=validador
+    )
+
+
+@router.put("/{id}/",
+            response_model=ResponseUnitSchema[ValidadorReadFull],
+            summary="Atualiza um validador por completo",
+            responses={
+                404: errors[404]
+            },
+            )
+async def total_update(
+        id: int = Path(description=VALIDADOR_ID_DESCRIPTION),
+        db: Session = Depends(get_db),
+        data: ValidadorUpdateTotal = Body(
+            description="Validador a ser atualizado por completo"),
+        token: str = Depends(oauth2_scheme),
+):
+    user = await get_authenticated_user(token, db)
+
+    validador = await update_validador(
+        db=db,
+        id=id,
+        validador=data,
+        user=user
+    )
+    return ResponseUnitSchema(
+        data=validador
+    )
+
+
+@router.delete("/{id}/",
+               status_code=204,
+               summary="Deleta um validador",
+               responses={
+                   404: errors[404]
+               }
+               )
+async def delete(
+        id: int = Path(description=VALIDADOR_ID_DESCRIPTION),
+        db: Session = Depends(get_db),
+        token: str = Depends(oauth2_scheme)
+):
+
+    validador = await delete_object(
+        db=db,
+        model=Validador,
+        id=id,
+        token=token,
+        model_has_user_key=Problema,
+        return_true=True
+    )
+
+    if (validador):
+        return Response(status_code=status.HTTP_204_NO_CONTENT)

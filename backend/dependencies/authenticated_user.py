@@ -1,3 +1,4 @@
+from datetime import datetime
 from fastapi import Depends, HTTPException, status
 from models.administrador import Administrador
 from models.user import User
@@ -21,12 +22,22 @@ async def get_authenticated_user(token: str = Depends(oauth2_scheme), db: Sessio
     try:
         SECRET_KEY = str(config("SECRET_KEY"))
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+
+        expire_timestamp: float | None = payload.get("exp")
+        current_time = datetime.utcnow()
+        current_timestamp = int(current_time.timestamp())
+
+        if (expire_timestamp and current_timestamp > expire_timestamp):
+            raise credentials_exception
+
         username: str | None = (payload.get("sub"))
         if username is None:
             raise credentials_exception
         token_data = TokenData(username=username)
+
     except JWTError:
         raise credentials_exception
+
     user = get_by_key_value(db, User, "username", token_data.username) or get_by_key_value(
         db, Administrador, "username", token_data.username)
     if user is None:

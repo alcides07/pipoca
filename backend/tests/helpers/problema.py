@@ -19,8 +19,6 @@ def create_problema_user_helper():
         URL_PROBLEMA,
         headers={
             "Authorization": f"Bearer {token}",
-            "Content-Type": "application/json",
-            "accept": "application/json"
         },
         json=problema
     )
@@ -56,7 +54,7 @@ def update_partial_problema_helper(profile: str = ""):
     return response, problema
 
 
-def update_full_problema_success_helper(profile: str = ""):
+def update_full_problema_helper(profile: str = ""):
     remove_dependencies()
 
     response_problema, token = create_problema_user_helper()
@@ -122,8 +120,6 @@ def create_problema_admin_helper():
         URL_PROBLEMA,
         headers={
             "Authorization": f"Bearer {token_admin}",
-            "Content-Type": "application/json",
-            "accept": "application/json"
         },
         json=problema
     )
@@ -162,7 +158,7 @@ JSON_PROBLEMA = {
                 "corpo": "string",
         "testes": [
             {
-                "numero": "string",
+                "numero": 1,
                 "entrada": "string",
                 "veredito": "ok"
             }
@@ -174,17 +170,32 @@ JSON_PROBLEMA = {
                 "corpo": "string",
         "testes": [
             {
-                "numero": "string",
+                "numero": 1,
                 "entrada": "string",
                 "veredito": "valid"
 
             },
             {
-                "numero": "string",
+                "numero": 1,
                 "entrada": "string",
                 "veredito": "invalid"
             },
         ]
     },
     "tags": ["1", "2"],
+    "testes": [
+        {
+            "numero": 1,
+            "tipo": "manual",
+            "exemplo": True,
+            "entrada": "string",
+            "descricao": "string"
+        },
+        {
+            "numero": 2,
+            "tipo": "gerado",
+            "exemplo": False,
+            "entrada": "string"
+        }
+    ],
 }

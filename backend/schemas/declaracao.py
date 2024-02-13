@@ -1,6 +1,6 @@
 from typing import Optional
 from pydantic import BaseModel, Field
-from schemas.idioma import IdiomaSchema
+from schemas.idioma import IdiomaEnum
 
 
 class DeclaracaoBase(BaseModel):
@@ -37,7 +37,7 @@ class DeclaracaoBase(BaseModel):
         description="Tutorial de resolução do problema"
     )
 
-    idioma: IdiomaSchema = Field(
+    idioma: IdiomaEnum = Field(
         description="Idioma em que o problema está escrito")
 
 

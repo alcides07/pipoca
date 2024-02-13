@@ -1,3 +1,4 @@
+from typing import Optional
 from pydantic import BaseModel, Field, EmailStr
 
 
@@ -26,4 +27,21 @@ class UserCreate(UserBase):
     passwordConfirmation: str = Field(
         max_length=64,
         description="Confirmação da senha do usuário"
+    )
+
+
+class UserUpdateTotal(UserBase):
+    pass
+
+
+class UserUpdatePartial(BaseModel):
+    username: Optional[str] = Field(
+        default=None,
+        max_length=32,
+        description="Apelido do usuário"
+    )
+
+    email: Optional[EmailStr] = Field(
+        default=None,
+        description="E-mail do usuário"
     )

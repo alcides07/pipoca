@@ -31,6 +31,27 @@ def test_read_user_unit():
     resume_dependencies()
 
 
+def test_read_user_unit_admin():
+    remove_dependencies()
+
+    response_user, _, _ = create_user_helper()
+    user_id = response_user.json().get("data").get("id")
+
+    database = next(get_db_test())
+    token_admin = create_administrador_helper(database)
+
+    response = client.get(
+        f"{URL_USER}/{user_id}/",
+        headers={
+            "Authorization": f"Bearer {token_admin}",
+        },
+    )
+
+    assert response.status_code == 200
+
+    resume_dependencies()
+
+
 def test_read_users_user():
     remove_dependencies()
 
@@ -131,6 +152,8 @@ def test_create_user_username_exists():
 
 
 def test_update_full_user_username_exists():
+    remove_dependencies()
+
     response, _, JSON_USER = create_user_helper()
     key = os.urandom(16)
     value = base64.b64encode(key).decode()
@@ -162,8 +185,12 @@ def test_update_full_user_username_exists():
 
     assert response.status_code == 400
 
+    resume_dependencies()
+
 
 def test_update_full_user_email_exists():
+    remove_dependencies()
+
     response, _, JSON_USER = create_user_helper()
     key = os.urandom(16)
     value = base64.b64encode(key).decode()
@@ -194,3 +221,58 @@ def test_update_full_user_email_exists():
     )
 
     assert response.status_code == 400
+
+    resume_dependencies()
+
+
+def test_update_partial_user_by_user():
+    remove_dependencies()
+
+    key = os.urandom(16)
+    value = base64.b64encode(key).decode()
+    response_user, token, _ = create_user_helper()
+    user_id = response_user.json().get("data").get("id")
+
+    JSON_USER_PARCIAL = {
+        "email": f"{value}@email.com"
+    }
+
+    response = client.patch(
+        f"{URL_USER}/{user_id}/",
+        json=JSON_USER_PARCIAL,
+        headers={
+            "Authorization": f"Bearer {token}",
+        }
+    )
+
+    assert response.status_code == 200
+
+    resume_dependencies()
+
+
+def test_update_partial_user_by_admin():
+    remove_dependencies()
+
+    key = os.urandom(16)
+    value = base64.b64encode(key).decode()
+    response_user, _, _ = create_user_helper()
+
+    database = next(get_db_test())
+    token_admin = create_administrador_helper(database)
+    user_id = response_user.json().get("data").get("id")
+
+    JSON_USER_PARCIAL = {
+        "email": f"{value}@email.com"
+    }
+
+    response = client.patch(
+        f"{URL_USER}/{user_id}/",
+        json=JSON_USER_PARCIAL,
+        headers={
+            "Authorization": f"Bearer {token_admin}",
+        }
+    )
+
+    assert response.status_code == 200
+
+    resume_dependencies()

@@ -5,7 +5,7 @@ class ProblemaFilter:
     def __init__(
         self,
         privado: bool = Query(
-            default=False,
+            default=None,
             description="Privacidade do problema (privado/público)"
         ),
     ):
