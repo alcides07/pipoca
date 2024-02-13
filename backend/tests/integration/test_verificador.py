@@ -1,7 +1,7 @@
 from tests.database import get_db_test
 from tests.helpers.administrador import create_administrador_helper
 from tests.helpers.user import create_user_helper
-from tests.helpers.verificador import create_verificador_admin_helper, create_verificador_user_helper
+from tests.helpers.verificador import create_verificador_admin_helper, create_verificador_user_helper, update_full_verificador_helper, update_partial_verificador_helper
 from backend.main import app
 from fastapi.testclient import TestClient
 from tests.config_test import remove_dependencies, resume_dependencies
@@ -96,6 +96,70 @@ def test_create_verificador_admin():
     response, _ = create_verificador_admin_helper()
 
     assert response.status_code == 201
+
+    resume_dependencies()
+
+
+def test_update_partial_verificador_user():
+    remove_dependencies()
+
+    response_verificador_user, verificador_antigo = update_partial_verificador_helper()
+
+    assert response_verificador_user.status_code == 200
+
+    response_json = response_verificador_user.json().get("data")
+
+    assert response_json.get("corpo") != verificador_antigo.get("corpo")
+
+    resume_dependencies()
+
+
+def test_update_partial_verificador_admin():
+    remove_dependencies()
+
+    response_verificador_user, verificador_antigo = update_partial_verificador_helper(
+        "admin")
+
+    assert response_verificador_user.status_code == 200
+
+    response_json = response_verificador_user.json().get("data")
+
+    assert response_json.get("corpo") != verificador_antigo.get("corpo")
+
+    resume_dependencies()
+
+
+def test_update_full_verificador_user():
+    remove_dependencies()
+
+    response_verificador_user, verificador_antigo = update_full_verificador_helper()
+
+    assert response_verificador_user.status_code == 200
+
+    response_json = response_verificador_user.json().get("data")
+
+    assert response_json.get("nome") != verificador_antigo.get("nome")
+    assert response_json.get(
+        "linguagem") != verificador_antigo.get("linguagem")
+    assert response_json.get("corpo") != verificador_antigo.get("corpo")
+
+    resume_dependencies()
+
+
+def test_update_full_verificador_admin():
+    remove_dependencies()
+
+    response_verificador_user, verificador_antigo = update_full_verificador_helper(
+        "admin")
+
+    assert response_verificador_user.status_code == 200
+
+    response_json = response_verificador_user.json().get("data")
+
+    assert response_json.get("nome") != verificador_antigo.get("nome")
+    assert response_json.get(
+        "linguagem") != verificador_antigo.get("linguagem")
+    assert response_json.get("corpo") != verificador_antigo.get("corpo")
 
     resume_dependencies()
 
