@@ -79,7 +79,3 @@ class ArquivoUpdatePartial(BaseModel):
         max_length=250000,
         description="Conteúdo do arquivo"
     )
-
-    problema_id: Optional[int] = Field(
-        default=None,
-        description=PROBLEMA_ID_DESCRIPTION)

@@ -47,23 +47,12 @@ async def update_arquivo(
 ):
 
     db_arquivo = db.query(Arquivo).filter(Arquivo.id == id).first()
-    db_new_problema = db.query(Problema).filter(
-        Problema.id == arquivo.problema_id).first()
 
-    if not db_arquivo:
-        raise HTTPException(status.HTTP_404_NOT_FOUND,
-                            detail="Arquivo não encontrado!")
+    if (not db_arquivo):
+        raise HTTPException(status.HTTP_404_NOT_FOUND)
 
     if (is_user(user) and user.id != db_arquivo.problema.usuario_id):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED)
-
-    if (arquivo.problema_id != None):
-        if (not db_new_problema):
-            raise HTTPException(status.HTTP_404_NOT_FOUND,
-                                detail="Problema não encontrado!")
-
-        if (is_user(user) and user.id != db_new_problema.usuario_id):  # type: ignore
-            raise HTTPException(status.HTTP_401_UNAUTHORIZED)
 
     try:
         for key, value in arquivo:
