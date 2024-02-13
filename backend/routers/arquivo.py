@@ -1,7 +1,7 @@
 from models.problema import Problema
 from orm.arquivo import create_arquivo, update_arquivo
 from routers.auth import oauth2_scheme
-from fastapi import APIRouter, Body, Depends, Path
+from fastapi import APIRouter, Body, Depends, Path, status, Response
 from models.arquivo import Arquivo
 from schemas.arquivo import ARQUIVO_ID_DESCRIPTION, ArquivoCreateSingle, ArquivoReadFull, ArquivoReadSimple, ArquivoUpdatePartial, ArquivoUpdateTotal
 from utils.errors import errors
@@ -147,7 +147,7 @@ async def parcial_update(
 
 
 @router.delete("/{id}/",
-               response_model=ResponseUnitSchema[ArquivoReadFull],
+               status_code=204,
                summary="Deleta um arquivo",
                responses={
                    404: errors[404]
@@ -164,8 +164,9 @@ async def delete(
         model=Arquivo,
         id=id,
         token=token,
-        model_has_user_key=Problema
+        model_has_user_key=Problema,
+        return_true=True
     )
-    return ResponseUnitSchema(
-        data=arquivo
-    )
+
+    if (arquivo):
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
