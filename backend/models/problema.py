@@ -75,25 +75,43 @@ class Problema(Base):
         back_populates="problema"
     )
 
-    verificador_id = Column(Integer, ForeignKey(
-        'verificadores.id', use_alter=True))
+    verificador_id = Column(
+        Integer,
+        ForeignKey(
+            'verificadores.id',
+            name="problemas_verificador_id_fkey",
+            use_alter=True,
+            ondelete='SET NULL'
+        )
+    )
     verificador = relationship(
         Verificador,
         uselist=False,
         foreign_keys=[verificador_id],
+        passive_deletes=True
     )
 
-    validador_id = Column(Integer, ForeignKey(
-        'validadores.id', use_alter=True))
+    validador_id = Column(
+        Integer,
+        ForeignKey(
+            'validadores.id',
+            name="problemas_validador_id_fkey",
+            use_alter=True
+        )
+    )
     validador = relationship(
         Validador,
         uselist=False,
         foreign_keys=[validador_id],
     )
 
-    usuario_id = Column(Integer, ForeignKey(
-        "users.id"
-    ))
+    usuario_id = Column(
+        Integer,
+        ForeignKey(
+            "users.id",
+            name="problemas_usuario_id_fkey"
+        )
+    )
     usuario = relationship(
         "User",
         uselist=False,
