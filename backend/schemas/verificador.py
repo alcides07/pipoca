@@ -28,8 +28,7 @@ class VerificadorBaseFull(VerificadorBase):
 
 class VerificadorReadFull(VerificadorBaseFull):
     id: int = Field(description=VERIFICADOR_ID_DESCRIPTION)
-    problema_id: Optional[int] = Field(
-        default=None,
+    problema_id: int = Field(
         description=PROBLEMA_ID_DESCRIPTION)
     testes: Optional[list[VerificadorTesteReadFull]] = Field(
         default=None,
@@ -39,8 +38,7 @@ class VerificadorReadFull(VerificadorBaseFull):
 
 class VerificadorReadSimple(VerificadorBase):
     id: int = Field(description=VERIFICADOR_ID_DESCRIPTION)
-    problema_id: Optional[int] = Field(
-        default=None,
+    problema_id: int = Field(
         description=PROBLEMA_ID_DESCRIPTION)
     testes: Optional[list[VerificadorTesteReadSimple]] = Field(
         default=None,
