@@ -34,7 +34,8 @@ class ValidadorTeste(Base):
         Integer,
         ForeignKey(
             'validadores.id',
-            name="validador_testes_validador_id_fkey"
+            name="validador_testes_validador_id_fkey",
+            ondelete='CASCADE'
         )
     )
     validador = relationship(
