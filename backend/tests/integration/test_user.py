@@ -259,7 +259,6 @@ def test_update_partial_user_by_admin():
 
     database = next(get_db_test())
     token_admin = create_administrador_helper(database)
-    print("token adm: ", token_admin)
     user_id = response_user.json().get("data").get("id")
 
     JSON_USER_PARCIAL = {
