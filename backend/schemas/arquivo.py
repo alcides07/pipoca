@@ -24,19 +24,20 @@ class ArquivoBase(BaseModel):
         description="Grupo o qual o arquivo faz parte"
     )
 
-    status: Optional[str] = Field(default=None,
-                                  description="Tipos de status de veredíto para arquivos de solução"
-                                  )
+    status: Optional[str] = Field(
+        default=None,
+        description="Tipos de status de veredíto para arquivos de solução"
+    )
 
 
-class ArquivoWithBody(ArquivoBase):
+class ArquivoBaseFull(ArquivoBase):
     corpo: str = Field(
         max_length=250000,
         description="Conteúdo do arquivo"
     )
 
 
-class ArquivoReadFull(ArquivoWithBody):
+class ArquivoReadFull(ArquivoBaseFull):
     id: int = Field(description=ARQUIVO_ID_DESCRIPTION)
     problema_id: int = Field(
         description=PROBLEMA_ID_DESCRIPTION)
@@ -48,16 +49,16 @@ class ArquivoReadSimple(ArquivoBase):
         description=PROBLEMA_ID_DESCRIPTION)
 
 
-class ArquivoCreate(ArquivoWithBody):
+class ArquivoCreate(ArquivoBaseFull):
     pass
 
 
-class ArquivoCreateSingle(ArquivoWithBody):
+class ArquivoCreateSingle(ArquivoBaseFull):
     problema_id: int = Field(
         description=PROBLEMA_ID_DESCRIPTION)
 
 
-class ArquivoUpdateTotal(ArquivoWithBody):
+class ArquivoUpdateTotal(ArquivoBaseFull):
     pass
 
 
