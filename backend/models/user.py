@@ -1,4 +1,5 @@
 from models.problema import Problema
+from models.problemaResposta import ProblemaResposta
 from sqlalchemy import Column, Integer, String
 from sqlalchemy.orm import relationship
 from database import Base
@@ -34,5 +35,10 @@ class User(Base):
 
     problemas = relationship(
         Problema,
+        back_populates="usuario"
+    )
+
+    problemas_respostas = relationship(
+        ProblemaResposta,
         back_populates="usuario"
     )
