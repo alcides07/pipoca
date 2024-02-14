@@ -1,4 +1,13 @@
+from enum import Enum
 from fastapi import Query
+
+
+search_fields_problema = ["nome"]
+
+
+class OrderByFieldsProblemaEnum(Enum):
+    NOME = "nome"
+    CRIADO_EM = "criado_em"
 
 
 class ProblemaFilter:
@@ -7,9 +16,6 @@ class ProblemaFilter:
         privado: bool = Query(
             default=None,
             description="Privacidade do problema (privado/público)"
-        ),
+        )
     ):
         self.privado = privado
-
-
-search_fields_problema = ["nome"]
