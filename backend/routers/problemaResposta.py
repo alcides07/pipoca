@@ -17,13 +17,13 @@ router = APIRouter(
 )
 
 
-@router.get("/")
+@router.get("/", deprecated=True)
 async def read(
 ):
     raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED)
 
 
-@router.get("/{id}/")
+@router.get("/{id}/", deprecated=True)
 async def read_id(
 ):
     raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED)
