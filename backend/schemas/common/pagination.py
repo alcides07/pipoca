@@ -21,7 +21,8 @@ class MetadataSchema(BaseModel):
     offset: int = Field(description="Intervalo inicial da paginação")
     total: int = Field(
         description="Quantidade de registros existentes")
-    search_fields: list[str] = Field(
+    search_fields: Optional[list[str]] = Field(
+        default=None,
         description="Lista de campos nos quais a busca é realizada")
 
 
