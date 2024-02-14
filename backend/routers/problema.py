@@ -92,7 +92,7 @@ async def read_problema_id_respostas(
     )
 
 
-@router.get("/me/",
+@router.get("/user/",
             response_model=ResponsePaginationSchema[ProblemaReadSimple],
             summary="Lista problemas pertencentes ao usuário autenticado",
             )

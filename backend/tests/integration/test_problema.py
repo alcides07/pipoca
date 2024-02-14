@@ -69,7 +69,7 @@ def test_read_meus_problemas_user():
     _, token_user, _ = create_user_helper()
 
     response_problema_user = client.get(
-        f"{URL_PROBLEMA}/me/",
+        f"{URL_PROBLEMA}/user/",
         headers={
             "Authorization": f"Bearer {token_user}",
         },
