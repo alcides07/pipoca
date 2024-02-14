@@ -1,11 +1,10 @@
-from dependencies.authorization_user import is_user
-from models.user import User
 from routers.auth import oauth2_scheme
 import os
 import json
-from fastapi import APIRouter, Body, Depends, File, HTTPException, Path, UploadFile, status
-from filters.problema import ProblemaFilter, search_fields_problema
+from fastapi import APIRouter, Body, Depends, File, HTTPException, Path, Query, UploadFile, status
+from filters.problema import OrderByFieldsProblemaEnum, ProblemaFilter
 from schemas.arquivo import ArquivoCreate, SecaoEnum
+from schemas.common.direction_order_by import DirectionOrderByEnum
 from schemas.declaracao import DeclaracaoCreate
 from schemas.idioma import IdiomaEnum
 from schemas.problemaResposta import ProblemaRespostaReadFull
@@ -24,14 +23,15 @@ from schemas.problema import ProblemaCreate, ProblemaReadFull, ProblemaReadSimpl
 from schemas.common.pagination import PaginationSchema
 from dependencies.database import get_db
 from sqlalchemy.orm import Session
-from orm.problema import create_problema, get_problemas, get_respostas_problema, update_problema
+from orm.problema import create_problema, get_problemas, get_problemas_me, get_respostas_problema, update_problema
 from schemas.common.response import ResponsePaginationSchema, ResponseUnitSchema
 import zipfile
 import tempfile
 import xml.etree.ElementTree as ET
 
 PROBLEMA_ID_DESCRIPTION = "Identificador do problema"
-
+FIELDS_ORDER_BY_DESCRIPTION = "Lista de campos que podem ser ordenados"
+DIRECTION_ORDER_BY_DESCRIPTION = "Direção da ordenação. 'ASC' para ordem crescente e 'DESC' para ordem decrescente."
 
 router = APIRouter(
     prefix="/problemas",
@@ -45,7 +45,15 @@ async def read(
     db: Session = Depends(get_db),
     pagination: PaginationSchema = Depends(),
     filters: ProblemaFilter = Depends(),
-    token: str = Depends(oauth2_scheme)
+    token: str = Depends(oauth2_scheme),
+    sort: OrderByFieldsProblemaEnum = Query(
+        default=None,
+        description=FIELDS_ORDER_BY_DESCRIPTION
+    ),
+    direction: DirectionOrderByEnum = Query(
+        default=None,
+        description=DIRECTION_ORDER_BY_DESCRIPTION
+    )
 ):
 
     problemas, metadata = await get_problemas(
@@ -53,6 +61,8 @@ async def read(
         pagination=pagination,
         token=token,
         filters=filters,
+        field_order_by=sort,
+        direction=direction
     )
 
     return ResponsePaginationSchema(
@@ -90,17 +100,23 @@ async def read_problemas_me(
     db: Session = Depends(get_db),
     pagination: PaginationSchema = Depends(),
     filters: ProblemaFilter = Depends(),
-    token: str = Depends(oauth2_scheme)
+    token: str = Depends(oauth2_scheme),
+    sort: OrderByFieldsProblemaEnum = Query(
+        default=None,
+        description=FIELDS_ORDER_BY_DESCRIPTION
+    ),
+    direction: DirectionOrderByEnum = Query(
+        default=None,
+        description=DIRECTION_ORDER_BY_DESCRIPTION
+    )
 ):
-    problemas, metadata = await get_all(
+    problemas, metadata = await get_problemas_me(
         db=db,
-        model=Problema,
         pagination=pagination,
         token=token,
         filters=filters,
-        search_fields=search_fields_problema,
-        allow_any=True,
-        me_author=True
+        field_order_by=sort,
+        direction=direction
     )
 
     return ResponsePaginationSchema(
