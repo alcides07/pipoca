@@ -1,5 +1,7 @@
+from dependencies.authenticated_user import get_authenticated_user
 from dependencies.authorization_user import is_admin, is_user
 from fastapi import HTTPException, status
+from filters.problema import ProblemaFilter, search_fields_problema
 from models.problemaResposta import ProblemaResposta
 from models.problemaTeste import ProblemaTeste
 from models.user import User
@@ -10,6 +12,7 @@ from models.verificadorTeste import VerificadorTeste
 from orm.common.index import delete_object
 from orm.tag import create_tag
 from schemas.common.pagination import MetadataSchema, PaginationSchema
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 from models.arquivo import Arquivo
@@ -213,6 +216,44 @@ async def update_problema(
     except SQLAlchemyError:
         db.rollback()
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+async def get_problemas(
+    db: Session,
+    pagination: PaginationSchema,
+    token: str,
+    filters: ProblemaFilter = ProblemaFilter(),
+):
+
+    user = await get_authenticated_user(token, db)
+    query = db.query(Problema)
+
+    if (is_user(user)):
+        if (filters.privado == True):
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+
+        filters.privado = False
+
+        for attr, value in filters.__dict__.items():
+            if value != None:
+                query = query.filter(getattr(Problema, attr) == value)
+
+    if (pagination.q):
+        search_query = or_(
+            *[getattr(Problema, field).ilike(f"%{pagination.q}%") for field in search_fields_problema if hasattr(Problema, field)])
+        query = query.filter(search_query)
+
+    db_problemas = query.offset(pagination.offset).limit(pagination.limit)
+    total = query.count()
+    metadata = MetadataSchema(
+        count=db_problemas.count(),
+        total=total,
+        offset=pagination.offset,
+        limit=pagination.limit,
+        search_fields=search_fields_problema
+    )
+
+    return db_problemas.all(), metadata
 
 
 async def get_respostas_problema(

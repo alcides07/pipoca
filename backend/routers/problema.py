@@ -24,7 +24,7 @@ from schemas.problema import ProblemaCreate, ProblemaReadFull, ProblemaReadSimpl
 from schemas.common.pagination import PaginationSchema
 from dependencies.database import get_db
 from sqlalchemy.orm import Session
-from orm.problema import create_problema, get_respostas_problema, update_problema
+from orm.problema import create_problema, get_problemas, get_respostas_problema, update_problema
 from schemas.common.response import ResponsePaginationSchema, ResponseUnitSchema
 import zipfile
 import tempfile
@@ -47,22 +47,12 @@ async def read(
     filters: ProblemaFilter = Depends(),
     token: str = Depends(oauth2_scheme)
 ):
-    user = await get_authenticated_user(token, db)
 
-    if (is_user(user)):
-        if (filters.privado == True):
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
-        else:
-            filters.privado = False
-
-    problemas, metadata = await get_all(
+    problemas, metadata = await get_problemas(
         db=db,
-        model=Problema,
         pagination=pagination,
         token=token,
         filters=filters,
-        search_fields=search_fields_problema,
-        allow_any=True
     )
 
     return ResponsePaginationSchema(
@@ -102,7 +92,6 @@ async def read_problemas_me(
     filters: ProblemaFilter = Depends(),
     token: str = Depends(oauth2_scheme)
 ):
-
     problemas, metadata = await get_all(
         db=db,
         model=Problema,
