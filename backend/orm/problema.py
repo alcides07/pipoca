@@ -1,7 +1,7 @@
 from dependencies.authenticated_user import get_authenticated_user
 from dependencies.authorization_user import is_admin, is_user
 from fastapi import HTTPException, status
-from filters.problema import ProblemaFilter, search_fields_problema
+from filters.problema import OrderByFieldsProblemaEnum, ProblemaFilter, search_fields_problema
 from models.problemaResposta import ProblemaResposta
 from models.problemaTeste import ProblemaTeste
 from models.user import User
@@ -11,14 +11,54 @@ from models.verificador import Verificador
 from models.verificadorTeste import VerificadorTeste
 from orm.common.index import delete_object
 from orm.tag import create_tag
+from schemas.common.direction_order_by import DirectionOrderByEnum
 from schemas.common.pagination import MetadataSchema, PaginationSchema
-from sqlalchemy import or_
-from sqlalchemy.orm import Session
+from sqlalchemy import asc, desc, or_
+from sqlalchemy.orm import Session, Query
 from sqlalchemy.exc import SQLAlchemyError
 from models.arquivo import Arquivo
 from models.declaracao import Declaracao
 from models.problema import Problema
 from schemas.problema import ProblemaCreate, ProblemaUpdatePartial
+
+
+def filter_problemas(
+    filters: ProblemaFilter,
+    pagination: PaginationSchema,
+    query: Query[Problema],
+    field_order_by: OrderByFieldsProblemaEnum,
+    direction: DirectionOrderByEnum
+):
+    total = query.count()
+
+    for attr, value in filters.__dict__.items():
+        if value != None:
+            query = query.filter(getattr(Problema, attr) == value)
+
+    if (pagination.q):
+        search_query = or_(
+            *[getattr(Problema, field).ilike(f"%{pagination.q}%") for field in search_fields_problema if hasattr(Problema, field)])
+        query = query.filter(search_query)
+
+    if (field_order_by):
+        if direction == DirectionOrderByEnum.DESC:
+            query = query.order_by(
+                desc(getattr(Problema, field_order_by.value)))
+        else:
+            query = query.order_by(
+                asc(getattr(Problema, field_order_by.value)))
+
+    query = query.offset(pagination.offset).limit(pagination.limit)
+
+    metadata = MetadataSchema(
+        count=query.count(),
+        total=total,
+        offset=pagination.offset,
+        limit=pagination.limit,
+        search_fields=search_fields_problema
+    )
+
+    return query, metadata
 
 
 def create_verificador(db, problema, db_problema):
@@ -222,7 +262,9 @@ async def get_problemas(
     db: Session,
     pagination: PaginationSchema,
     token: str,
-    filters: ProblemaFilter = ProblemaFilter(),
+    filters: ProblemaFilter,
+    field_order_by: OrderByFieldsProblemaEnum,
+    direction: DirectionOrderByEnum,
 ):
 
     user = await get_authenticated_user(token, db)
@@ -234,23 +276,37 @@ async def get_problemas(
 
         filters.privado = False
 
-        for attr, value in filters.__dict__.items():
-            if value != None:
-                query = query.filter(getattr(Problema, attr) == value)
+    db_problemas, metadata = filter_problemas(
+        filters,
+        pagination,
+        query,
+        field_order_by,
+        direction
+    )
 
-    if (pagination.q):
-        search_query = or_(
-            *[getattr(Problema, field).ilike(f"%{pagination.q}%") for field in search_fields_problema if hasattr(Problema, field)])
-        query = query.filter(search_query)
+    return db_problemas.all(), metadata
 
-    db_problemas = query.offset(pagination.offset).limit(pagination.limit)
-    total = query.count()
-    metadata = MetadataSchema(
-        count=db_problemas.count(),
-        total=total,
-        offset=pagination.offset,
-        limit=pagination.limit,
-        search_fields=search_fields_problema
+
+async def get_problemas_me(
+    db: Session,
+    pagination: PaginationSchema,
+    token: str,
+    filters: ProblemaFilter,
+    field_order_by: OrderByFieldsProblemaEnum,
+    direction: DirectionOrderByEnum,
+):
+    user = await get_authenticated_user(token, db)
+    query = db.query(Problema)
+
+    if (is_user(user)):
+        query = query.filter(Problema.usuario_id == user.id)
+
+    db_problemas, metadata = filter_problemas(
+        filters,
+        pagination,
+        query,
+        field_order_by,
+        direction
     )
 
     return db_problemas.all(), metadata
