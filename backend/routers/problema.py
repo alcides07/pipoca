@@ -7,7 +7,7 @@ from schemas.arquivo import ArquivoCreate, SecaoEnum
 from schemas.common.direction_order_by import DirectionOrderByEnum
 from schemas.declaracao import DeclaracaoCreate
 from schemas.idioma import IdiomaEnum
-from schemas.problemaResposta import ProblemaRespostaReadFull
+from schemas.problemaResposta import ProblemaRespostaReadSimple
 from schemas.problemaTeste import ProblemaTesteCreate, TipoTesteProblemaEnum
 from schemas.validador import ValidadorCreate
 from schemas.validadorTeste import ValidadorTesteCreate, VereditoValidadorTesteEnum
@@ -72,7 +72,7 @@ async def read(
 
 
 @router.get("/{id}/respostas/",
-            response_model=ResponsePaginationSchema[ProblemaRespostaReadFull],
+            response_model=ResponsePaginationSchema[ProblemaRespostaReadSimple],
             summary="Lista respostas pertencentes a um problema",
             )
 async def read_problema_id_respostas(
