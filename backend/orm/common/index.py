@@ -67,6 +67,19 @@ def user_autenthicated(token: str, db: Session):
     return get_authenticated_user(token, db)
 
 
+async def get_by_id_simple(
+    db: Session,
+    model: Any,
+    id: int,
+):
+    db_object = db.query(model).filter(model.id == id).first()
+
+    if (not db_object):
+        raise HTTPException(status.HTTP_404_NOT_FOUND)
+
+    return db_object
+
+
 async def get_by_id(
     db: Session,
     model: Any,
@@ -77,7 +90,7 @@ async def get_by_id(
 
     db_object = db.query(model).filter(model.id == id).first()
 
-    if db_object:
+    if (db_object):
         if (not await has_authorization_object_single(model, db, db_object, token, model_has_user_key)):
             raise HTTPException(status.HTTP_401_UNAUTHORIZED)
 
