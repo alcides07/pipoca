@@ -1,5 +1,6 @@
 from dependencies.authorization_user import is_admin, is_user
 from fastapi import HTTPException, status
+from models.problemaResposta import ProblemaResposta
 from models.problemaTeste import ProblemaTeste
 from models.user import User
 from models.validador import Validador
@@ -8,6 +9,7 @@ from models.verificador import Verificador
 from models.verificadorTeste import VerificadorTeste
 from orm.common.index import delete_object
 from orm.tag import create_tag
+from schemas.common.pagination import MetadataSchema, PaginationSchema
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 from models.arquivo import Arquivo
@@ -211,3 +213,32 @@ async def update_problema(
     except SQLAlchemyError:
         db.rollback()
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+async def get_respostas_problema(
+    db: Session,
+    id: int,
+    pagination: PaginationSchema,
+):
+
+    db_problema = db.query(Problema).filter(Problema.id == id).first()
+
+    if (not db_problema):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+    query = db.query(ProblemaResposta).filter(
+        ProblemaResposta.problema_id == id)
+
+    db_problema_respostas = query.offset(
+        pagination.offset).limit(pagination.limit)
+
+    total = query.count()
+
+    metadata = MetadataSchema(
+        count=db_problema_respostas.count(),
+        total=total,
+        offset=pagination.offset,
+        limit=pagination.limit,
+    )
+
+    return db_problema_respostas.all(), metadata
