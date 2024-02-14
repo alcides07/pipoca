@@ -8,6 +8,7 @@ from filters.problema import ProblemaFilter, search_fields_problema
 from schemas.arquivo import ArquivoCreate, SecaoEnum
 from schemas.declaracao import DeclaracaoCreate
 from schemas.idioma import IdiomaEnum
+from schemas.problemaResposta import ProblemaRespostaReadFull
 from schemas.problemaTeste import ProblemaTesteCreate, TipoTesteProblemaEnum
 from schemas.validador import ValidadorCreate
 from schemas.validadorTeste import ValidadorTesteCreate, VereditoValidadorTesteEnum
@@ -23,7 +24,7 @@ from schemas.problema import ProblemaCreate, ProblemaReadFull, ProblemaReadSimpl
 from schemas.common.pagination import PaginationSchema
 from dependencies.database import get_db
 from sqlalchemy.orm import Session
-from orm.problema import create_problema, update_problema
+from orm.problema import create_problema, get_respostas_problema, update_problema
 from schemas.common.response import ResponsePaginationSchema, ResponseUnitSchema
 import zipfile
 import tempfile
@@ -62,6 +63,27 @@ async def read(
         filters=filters,
         search_fields=search_fields_problema,
         allow_any=True
+    )
+
+    return ResponsePaginationSchema(
+        data=problemas,
+        metadata=metadata
+    )
+
+
+@router.get("/{id}/respostas/",
+            response_model=ResponsePaginationSchema[ProblemaRespostaReadFull],
+            summary="Lista respostas pertencentes a um problema",
+            )
+async def read_problema_id_respostas(
+    db: Session = Depends(get_db),
+    pagination: PaginationSchema = Depends(),
+    id: int = Path(description=PROBLEMA_ID_DESCRIPTION)
+):
+    problemas, metadata = await get_respostas_problema(
+        db=db,
+        id=id,
+        pagination=pagination,
     )
 
     return ResponsePaginationSchema(
