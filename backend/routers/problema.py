@@ -34,7 +34,7 @@ PROBLEMA_ID_DESCRIPTION = "Identificador do problema"
 
 router = APIRouter(
     prefix="/problemas",
-    tags=["problema"],
+    tags=["problemas"],
     dependencies=[Depends(get_authenticated_user)],
 )
 

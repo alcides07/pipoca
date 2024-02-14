@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 
 
 router = APIRouter(
-    prefix="/tag",
+    prefix="/tags",
     tags=["tags"],
     dependencies=[Depends(get_authenticated_user)],
     deprecated=True

@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 
 router = APIRouter(
     prefix="/validadorTestes",
-    tags=["validadorTeste"],
+    tags=["validadorTestes"],
     dependencies=[Depends(get_authenticated_user)],
     deprecated=True
 )
