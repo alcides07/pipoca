@@ -2,7 +2,7 @@ from routers.auth import oauth2_scheme
 import os
 import json
 from fastapi import APIRouter, Body, Depends, File, HTTPException, Path, Query, UploadFile, status
-from filters.problema import OrderByFieldsProblemaEnum, ProblemaFilter
+from filters.problema import OrderByFieldsProblemaEnum, ProblemaFilter, search_fields_problema
 from schemas.arquivo import ArquivoCreate, SecaoEnum
 from schemas.common.direction_order_by import DirectionOrderByEnum
 from schemas.declaracao import DeclaracaoCreate
@@ -23,7 +23,7 @@ from schemas.problema import ProblemaCreate, ProblemaReadFull, ProblemaReadSimpl
 from schemas.common.pagination import PaginationSchema
 from dependencies.database import get_db
 from sqlalchemy.orm import Session
-from orm.problema import create_problema, get_problemas, get_problemas_me, get_respostas_problema, update_problema
+from orm.problema import create_problema, get_all_problemas, get_respostas_problema, update_problema
 from schemas.common.response import ResponsePaginationSchema, ResponseUnitSchema
 import zipfile
 import tempfile
@@ -56,7 +56,7 @@ async def read(
     )
 ):
 
-    problemas, metadata = await get_problemas(
+    problemas, metadata = await get_all_problemas(
         db=db,
         pagination=pagination,
         token=token,
@@ -110,13 +110,17 @@ async def read_problemas_me(
         description=DIRECTION_ORDER_BY_DESCRIPTION
     )
 ):
-    problemas, metadata = await get_problemas_me(
+    problemas, metadata = await get_all(
         db=db,
+        model=Problema,
         pagination=pagination,
         token=token,
-        filters=filters,
         field_order_by=sort,
-        direction=direction
+        direction=direction,
+        filters=filters,
+        search_fields=search_fields_problema,
+        allow_any=True,
+        me_author=True
     )
 
     return ResponsePaginationSchema(

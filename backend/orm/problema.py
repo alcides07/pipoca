@@ -258,7 +258,7 @@ async def update_problema(
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-async def get_problemas(
+async def get_all_problemas(
     db: Session,
     pagination: PaginationSchema,
     token: str,
@@ -275,31 +275,6 @@ async def get_problemas(
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
 
         filters.privado = False
-
-    db_problemas, metadata = filter_problemas(
-        filters,
-        pagination,
-        query,
-        field_order_by,
-        direction
-    )
-
-    return db_problemas.all(), metadata
-
-
-async def get_problemas_me(
-    db: Session,
-    pagination: PaginationSchema,
-    token: str,
-    filters: ProblemaFilter,
-    field_order_by: OrderByFieldsProblemaEnum,
-    direction: DirectionOrderByEnum,
-):
-    user = await get_authenticated_user(token, db)
-    query = db.query(Problema)
-
-    if (is_user(user)):
-        query = query.filter(Problema.usuario_id == user.id)
 
     db_problemas, metadata = filter_problemas(
         filters,
