@@ -41,7 +41,7 @@ def filter_problemas(
         query = query.filter(search_query)
 
     if (field_order_by):
-        if direction == DirectionOrderByEnum.DESC:
+        if (direction == DirectionOrderByEnum.DESC):
             query = query.order_by(
                 desc(getattr(Problema, field_order_by.value)))
         else:
