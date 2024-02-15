@@ -56,6 +56,41 @@ async def read(
     )
 
 
+@router.get("/user/",
+            response_model=ResponsePaginationSchema[ProblemaRespostaReadSimple],
+            summary="Lista respostas fornecidas à problemas pelo usuário autenticado",
+            )
+async def read_problemas_respostas_me(
+    db: Session = Depends(get_db),
+    pagination: PaginationSchema = Depends(),
+    token: str = Depends(oauth2_scheme),
+    sort: OrderByFieldsProblemaRespostaEnum = Query(
+        default=None,
+        description=FIELDS_ORDER_BY_DESCRIPTION
+    ),
+    direction: DirectionOrderByEnum = Query(
+        default=None,
+        description=DIRECTION_ORDER_BY_DESCRIPTION
+    )
+):
+    problemas, metadata = await get_all(
+        db=db,
+        model=ProblemaResposta,
+        pagination=pagination,
+        token=token,
+        field_order_by=sort,
+        direction=direction,
+        search_fields=search_fields_problema_resposta,
+        allow_any=True,
+        me_author=True
+    )
+
+    return ResponsePaginationSchema(
+        data=problemas,
+        metadata=metadata
+    )
+
+
 @router.get("/{id}/",
             response_model=ResponseUnitSchema[ProblemaRespostaReadFull],
             summary="Lista uma resposta específica fornecida para um problema",
