@@ -2,7 +2,7 @@ import base64
 import os
 from models.administrador import Administrador
 from passlib.context import CryptContext
-from backend.main import app
+from main import app
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 

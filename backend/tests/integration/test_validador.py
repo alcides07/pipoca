@@ -2,7 +2,7 @@ from tests.database import get_db_test
 from tests.helpers.administrador import create_administrador_helper
 from tests.helpers.user import create_user_helper
 from tests.helpers.validador import create_validador_helper, update_full_validador_helper, update_partial_validador_helper
-from backend.main import app
+from main import app
 from fastapi.testclient import TestClient
 from tests.config_test import remove_dependencies, resume_dependencies
 

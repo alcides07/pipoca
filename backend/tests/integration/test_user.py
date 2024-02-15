@@ -3,7 +3,7 @@ import base64
 from tests.database import get_db_test
 from tests.helpers.administrador import create_administrador_helper
 from tests.helpers.user import URL_USER, create_user_helper, login_user_helper
-from backend.main import app
+from main import app
 from fastapi.testclient import TestClient
 from tests.config_test import remove_dependencies, resume_dependencies
 from passlib.context import CryptContext

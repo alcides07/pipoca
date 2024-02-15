@@ -3,7 +3,7 @@ from tests.helpers.administrador import create_administrador_helper
 from tests.helpers.problema import URL_PROBLEMA, create_problema_user_helper
 from tests.helpers.problema import JSON_PROBLEMA
 from tests.helpers.user import create_user_helper
-from backend.main import app
+from main import app
 from fastapi.testclient import TestClient
 from tests.config_test import remove_dependencies, resume_dependencies
 
@@ -251,7 +251,7 @@ def test_read_minhas_respostas_problemas():
     _, token_user, _ = create_user_helper()
 
     response_problema_user = client.get(
-        f"{URL_PROBLEMA_RESPOSTA}/user/",
+        f"{URL_PROBLEMA_RESPOSTA}/users/",
         headers={
             "Authorization": f"Bearer {token_user}",
         },
