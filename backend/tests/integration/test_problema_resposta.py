@@ -97,7 +97,7 @@ def test_read_problema_resposta_unit_privado_nao_sou_autor_mas_respondi_user():
     id_resposta = response_resposta.json().get("data").get("id")
 
     client.patch(
-        f"{URL_PROBLEMA}/{problema_id}",
+        f"{URL_PROBLEMA}/{problema_id}/",
         json={
             "privado": True
         },
