@@ -21,18 +21,17 @@ async def create_problema_teste(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail="Problema não encontrado!")
 
+    user = await get_authenticated_user(token, db)
+    if (db_problema.usuario_id != user.id):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED)
+
     for teste in db_problema.testes:
         if (problema_teste.numero == teste.numero):
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                                 detail="Erro. Já existe um teste com esse número!")
 
     try:
-        user = await get_authenticated_user(db=db, token=token)
-
-        if (db_problema.usuario_id != user.id):
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED)
-
         db_problema_teste = ProblemaTeste(
             **problema_teste.model_dump(exclude=set(["problema"])))
 
@@ -61,18 +60,17 @@ async def update_problema_teste(
     if (not db_problema_teste):
         raise HTTPException(status.HTTP_404_NOT_FOUND)
 
-    user = await get_authenticated_user(db=db, token=token)
-
+    user = await get_authenticated_user(token, db)
     if (db_problema_teste.problema.usuario_id != user.id):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED)
 
-    for teste in db_problema_teste.problema.testes:
-        if (problema_teste.numero == teste.numero and bool(id != teste.id)):
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                                detail="Erro. Já existe um teste com esse número!")
-
     try:
+        for teste in db_problema_teste.problema.testes:
+            if (problema_teste.numero == teste.numero and bool(id != teste.id)):
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                                    detail="Erro. Já existe um teste com esse número!")
+
         for key, value in problema_teste:
             if (value != None and getattr(db_problema_teste, key)):
                 setattr(db_problema_teste, key, value)
@@ -98,8 +96,9 @@ async def get_problema_teste_by_id(
     if (not db_problema_teste):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
+    user = await get_authenticated_user(token, db)
+
     try:
-        user = await get_authenticated_user(token=token, db=db)
 
         if (is_user(user) and db_problema_teste.problema.usuario_id != user.id):  # Não sou o dono
             # O problema é privado ou não é um teste de exemplo

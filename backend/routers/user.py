@@ -106,13 +106,11 @@ async def total_update(
             description="Usuário a ser atualizado por completo"),
         token: str = Depends(oauth2_scheme)
 ):
-    user = await get_authenticated_user(db=db, token=token)
-
     response = await update_user(
         db=db,
         id=id,
         data=data,
-        user=user
+        token=token
     )
 
     return ResponseUnitSchema(
@@ -136,13 +134,11 @@ async def partial_update(
             description="Usuário a ser atualizado parcialmente"),
         token: str = Depends(oauth2_scheme)
 ):
-    user = await get_authenticated_user(db=db, token=token)
-
     response = await update_user(
         db=db,
         id=id,
         data=data,
-        user=user
+        token=token
     )
 
     return ResponseUnitSchema(

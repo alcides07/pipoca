@@ -81,12 +81,10 @@ async def create(
     db: Session = Depends(get_db),
     token: str = Depends(oauth2_scheme)
 ):
-    user = await get_authenticated_user(token=token, db=db)
-
     verificador = await create_verificador(
         db=db,
         verificador=verificador,
-        user=user,
+        token=token,
     )
 
     return ResponseUnitSchema(data=verificador)
@@ -106,13 +104,11 @@ async def parcial_update(
             description="Verificador a ser atualizado parcialmente"),
         token: str = Depends(oauth2_scheme),
 ):
-    user = await get_authenticated_user(token, db)
-
     verificador = await update_verificador(
         db=db,
         id=id,
         verificador=data,
-        user=user
+        token=token
     )
     return ResponseUnitSchema(
         data=verificador
@@ -133,13 +129,11 @@ async def total_update(
             description="Verificador a ser atualizado por completo"),
         token: str = Depends(oauth2_scheme),
 ):
-    user = await get_authenticated_user(token, db)
-
     verificador = await update_verificador(
         db=db,
         id=id,
         verificador=data,
-        user=user
+        token=token
     )
     return ResponseUnitSchema(
         data=verificador
