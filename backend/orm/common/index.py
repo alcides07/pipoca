@@ -1,5 +1,5 @@
 from enum import Enum
-from dependencies.authorization_user import has_authorization_object_single, has_authorization_object_collection, is_admin, is_user
+from dependencies.authorization_user import has_authorization_object_single, is_admin, is_user
 from schemas.common.direction_order_by import DirectionOrderByEnum
 from sqlalchemy import asc, desc, or_
 from sqlalchemy.exc import SQLAlchemyError
@@ -176,8 +176,8 @@ async def update_object(
     model: Any,
     id: int,
     data: Any,
+    model_has_user_key: Any,
     token: str = "",
-    model_has_user_key: Any = None,
 ):
 
     db_object = db.query(model).filter(model.id == id).first()
