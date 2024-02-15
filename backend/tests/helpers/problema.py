@@ -9,10 +9,13 @@ client = TestClient(app)
 URL_PROBLEMA = "/problemas"
 
 
-def create_problema_user_helper():
+def create_problema_user_helper(json_problema: dict = {}):
     remove_dependencies()
 
-    problema = JSON_PROBLEMA.copy()
+    problema = json_problema
+    if (not json_problema):
+        problema = JSON_PROBLEMA.copy()
+
     _, token, _ = create_user_helper()
 
     response = client.post(
@@ -109,10 +112,13 @@ def update_full_problema_fail_incomplete(profile: str = ""):
     return response
 
 
-def create_problema_admin_helper():
+def create_problema_admin_helper(json_problema: dict = {}):
     remove_dependencies()
 
-    problema = JSON_PROBLEMA.copy()
+    problema = json_problema
+    if (not json_problema):
+        problema = JSON_PROBLEMA.copy()
+
     database = next(get_db_test())
     token_admin = create_administrador_helper(database)
 
