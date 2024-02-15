@@ -1,6 +1,10 @@
-from routers.auth import oauth2_scheme
 import os
 import json
+import zipfile
+import tempfile
+import xml.etree.ElementTree as ET
+from constants import DIRECTION_ORDER_BY_DESCRIPTION, FIELDS_ORDER_BY_DESCRIPTION
+from routers.auth import oauth2_scheme
 from fastapi import APIRouter, Body, Depends, File, HTTPException, Path, Query, UploadFile, status
 from filters.problema import OrderByFieldsProblemaEnum, ProblemaFilter, search_fields_problema
 from schemas.arquivo import ArquivoCreate, SecaoEnum
@@ -25,13 +29,8 @@ from dependencies.database import get_db
 from sqlalchemy.orm import Session
 from orm.problema import create_problema, get_all_problemas, get_respostas_problema, update_problema
 from schemas.common.response import ResponsePaginationSchema, ResponseUnitSchema
-import zipfile
-import tempfile
-import xml.etree.ElementTree as ET
 
 PROBLEMA_ID_DESCRIPTION = "Identificador do problema"
-FIELDS_ORDER_BY_DESCRIPTION = "Lista de campos que podem ser ordenados"
-DIRECTION_ORDER_BY_DESCRIPTION = "Direção da ordenação. 'ASC' para ordem crescente e 'DESC' para ordem decrescente."
 
 router = APIRouter(
     prefix="/problemas",
