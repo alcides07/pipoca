@@ -1,13 +1,17 @@
-from dependencies.authorization_user import is_user
-from models.user import User
-from routers.auth import oauth2_scheme
 import os
 import json
-from fastapi import APIRouter, Body, Depends, File, HTTPException, Path, UploadFile, status
-from filters.problema import ProblemaFilter, search_fields_problema
+import zipfile
+import tempfile
+import xml.etree.ElementTree as ET
+from constants import DIRECTION_ORDER_BY_DESCRIPTION, FIELDS_ORDER_BY_DESCRIPTION
+from routers.auth import oauth2_scheme
+from fastapi import APIRouter, Body, Depends, File, HTTPException, Path, Query, UploadFile, status
+from filters.problema import OrderByFieldsProblemaEnum, ProblemaFilter, search_fields_problema
 from schemas.arquivo import ArquivoCreate, SecaoEnum
+from schemas.common.direction_order_by import DirectionOrderByEnum
 from schemas.declaracao import DeclaracaoCreate
 from schemas.idioma import IdiomaEnum
+from schemas.problemaResposta import ProblemaRespostaReadSimple
 from schemas.problemaTeste import ProblemaTesteCreate, TipoTesteProblemaEnum
 from schemas.validador import ValidadorCreate
 from schemas.validadorTeste import ValidadorTesteCreate, VereditoValidadorTesteEnum
@@ -23,18 +27,14 @@ from schemas.problema import ProblemaCreate, ProblemaReadFull, ProblemaReadSimpl
 from schemas.common.pagination import PaginationSchema
 from dependencies.database import get_db
 from sqlalchemy.orm import Session
-from orm.problema import create_problema, update_problema
+from orm.problema import create_problema, get_all_problemas, get_respostas_problema, update_problema
 from schemas.common.response import ResponsePaginationSchema, ResponseUnitSchema
-import zipfile
-import tempfile
-import xml.etree.ElementTree as ET
 
 PROBLEMA_ID_DESCRIPTION = "Identificador do problema"
 
-
 router = APIRouter(
     prefix="/problemas",
-    tags=["problema"],
+    tags=["problemas"],
     dependencies=[Depends(get_authenticated_user)],
 )
 
@@ -44,24 +44,24 @@ async def read(
     db: Session = Depends(get_db),
     pagination: PaginationSchema = Depends(),
     filters: ProblemaFilter = Depends(),
-    token: str = Depends(oauth2_scheme)
+    token: str = Depends(oauth2_scheme),
+    sort: OrderByFieldsProblemaEnum = Query(
+        default=None,
+        description=FIELDS_ORDER_BY_DESCRIPTION
+    ),
+    direction: DirectionOrderByEnum = Query(
+        default=None,
+        description=DIRECTION_ORDER_BY_DESCRIPTION
+    )
 ):
-    user = await get_authenticated_user(token, db)
 
-    if (is_user(user)):
-        if (filters.privado == True):
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
-        else:
-            filters.privado = False
-
-    problemas, metadata = await get_all(
+    problemas, metadata = await get_all_problemas(
         db=db,
-        model=Problema,
         pagination=pagination,
         token=token,
         filters=filters,
-        search_fields=search_fields_problema,
-        allow_any=True
+        field_order_by=sort,
+        direction=direction
     )
 
     return ResponsePaginationSchema(
@@ -70,7 +70,32 @@ async def read(
     )
 
 
-@router.get("/me/",
+@router.get("/{id}/respostas/",
+            response_model=ResponsePaginationSchema[ProblemaRespostaReadSimple],
+            summary="Lista respostas pertencentes a um problema",
+            )
+async def read_problema_id_respostas(
+    db: Session = Depends(get_db),
+    pagination: PaginationSchema = Depends(),
+    id: int = Path(description=PROBLEMA_ID_DESCRIPTION),
+    token: str = Depends(oauth2_scheme),
+):
+    user = await get_authenticated_user(db=db, token=token)
+
+    problemas, metadata = await get_respostas_problema(
+        db=db,
+        id=id,
+        pagination=pagination,
+        user=user
+    )
+
+    return ResponsePaginationSchema(
+        data=problemas,
+        metadata=metadata
+    )
+
+
+@router.get("/user/",
             response_model=ResponsePaginationSchema[ProblemaReadSimple],
             summary="Lista problemas pertencentes ao usuário autenticado",
             )
@@ -78,14 +103,23 @@ async def read_problemas_me(
     db: Session = Depends(get_db),
     pagination: PaginationSchema = Depends(),
     filters: ProblemaFilter = Depends(),
-    token: str = Depends(oauth2_scheme)
+    token: str = Depends(oauth2_scheme),
+    sort: OrderByFieldsProblemaEnum = Query(
+        default=None,
+        description=FIELDS_ORDER_BY_DESCRIPTION
+    ),
+    direction: DirectionOrderByEnum = Query(
+        default=None,
+        description=DIRECTION_ORDER_BY_DESCRIPTION
+    )
 ):
-
     problemas, metadata = await get_all(
         db=db,
         model=Problema,
         pagination=pagination,
         token=token,
+        field_order_by=sort,
+        direction=direction,
         filters=filters,
         search_fields=search_fields_problema,
         allow_any=True,

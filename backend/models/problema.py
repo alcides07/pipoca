@@ -1,4 +1,5 @@
 from datetime import datetime
+from models.problemaResposta import ProblemaResposta
 from models.problemaTeste import ProblemaTeste
 from models.validador import Validador
 from models.verificador import Verificador
@@ -126,6 +127,11 @@ class Problema(Base):
         uselist=False,
         foreign_keys=[usuario_id],
         passive_deletes=True
+    )
+
+    respostas = relationship(
+        ProblemaResposta,
+        back_populates="problema"
     )
 
     __table_args__ = (

@@ -48,15 +48,15 @@ def test_read_arquivo_unit_admin():
 def test_read_arquivos_user():
     remove_dependencies()
 
-    _, token_user, _ = create_user_helper()
+    _, token, _ = create_user_helper()
 
-    response_user = client.get(
-        "/arquivos",
+    response = client.get(
+        URL_ARQUIVO,
         headers={
-            "Authorization": f"Bearer {token_user}",
+            "Authorization": f"Bearer {token}",
         },
     )
-    assert response_user.status_code == 401
+    assert response.status_code == 401
 
     resume_dependencies()
 
@@ -65,15 +65,15 @@ def test_read_arquivos_admin():
     remove_dependencies()
 
     database = next(get_db_test())
-    token_admin = create_administrador_helper(database)
+    token = create_administrador_helper(database)
 
-    response_admin = client.get(
-        "/arquivos",
+    response = client.get(
+        URL_ARQUIVO,
         headers={
-            "Authorization": f"Bearer {token_admin}",
+            "Authorization": f"Bearer {token}",
         },
     )
-    assert response_admin.status_code == 200
+    assert response.status_code == 200
 
     resume_dependencies()
 

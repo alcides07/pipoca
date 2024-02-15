@@ -4,7 +4,7 @@ from utils.errors import errors
 from models.user import User
 from orm.common.index import delete_object, get_by_id, get_all
 from dependencies.authenticated_user import get_authenticated_user
-from schemas.user import UserCreate, UserRead, UserUpdatePartial, UserUpdateTotal
+from schemas.user import UserCreate, UserReadFull, UserUpdatePartial, UserUpdateTotal
 from schemas.common.pagination import PaginationSchema
 from dependencies.database import get_db
 from sqlalchemy.orm import Session
@@ -19,12 +19,12 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 router = APIRouter(
     prefix="/users",
-    tags=["user"],
+    tags=["users"],
 )
 
 
 @router.get("/",
-            response_model=ResponsePaginationSchema[UserRead],
+            response_model=ResponsePaginationSchema[UserReadFull],
             summary="Lista usuários",
             dependencies=[Depends(get_authenticated_user)],
             )
@@ -47,7 +47,7 @@ async def read(
 
 
 @router.get("/{id}/",
-            response_model=ResponseUnitSchema[UserRead],
+            response_model=ResponseUnitSchema[UserReadFull],
             summary="Lista um usuário",
             dependencies=[Depends(get_authenticated_user)],
             responses={
@@ -73,7 +73,7 @@ async def read_id(
 
 
 @router.post("/",
-             response_model=ResponseUnitSchema[UserRead],
+             response_model=ResponseUnitSchema[UserReadFull],
              status_code=201,
              summary="Cadastra um usuário",
              responses={
@@ -92,7 +92,7 @@ def create(
 
 
 @router.put("/{id}/",
-            response_model=ResponseUnitSchema[UserRead],
+            response_model=ResponseUnitSchema[UserReadFull],
             summary="Atualiza um usuário por completo",
             responses={
                 404: errors[404]
@@ -121,7 +121,7 @@ async def total_update(
 
 
 @router.patch("/{id}/",
-              response_model=ResponseUnitSchema[UserRead],
+              response_model=ResponseUnitSchema[UserReadFull],
               summary="Atualiza um usuário parcialmente",
               responses={
                   400: errors[400],

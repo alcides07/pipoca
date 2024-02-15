@@ -15,7 +15,7 @@ from schemas.common.response import ResponsePaginationSchema, ResponseUnitSchema
 
 router = APIRouter(
     prefix="/arquivos",
-    tags=["arquivo"],
+    tags=["arquivos"],
     dependencies=[Depends(get_authenticated_user)],
 )
 
