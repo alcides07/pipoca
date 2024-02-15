@@ -1,6 +1,8 @@
 from typing import Optional
 from pydantic import BaseModel, Field, EmailStr
 
+ID_USER_DESCRIPTION = "Identificador do usuário"
+
 
 class UserBase(BaseModel):
     username: str = Field(
@@ -8,17 +10,27 @@ class UserBase(BaseModel):
         description="Apelido do usuário"
     )
 
+
+class UserBaseFull(UserBase):
     email: EmailStr = Field(description="E-mail do usuário")
 
 
-class UserRead(UserBase):
-    id: int
+class UserReadFull(UserBaseFull):
+    id: int = Field(
+        description=ID_USER_DESCRIPTION
+    )
+
+
+class UserReadSimple(UserBase):
+    id: int = Field(
+        description=ID_USER_DESCRIPTION
+    )
 
     class ConfigDict:
         from_attributes = True
 
 
-class UserCreate(UserBase):
+class UserCreate(UserBaseFull):
     password: str = Field(
         max_length=64,
         description="Senha do usuário"
@@ -30,7 +42,7 @@ class UserCreate(UserBase):
     )
 
 
-class UserUpdateTotal(UserBase):
+class UserUpdateTotal(UserBaseFull):
     pass
 
 

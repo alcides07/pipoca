@@ -1,6 +1,6 @@
 from datetime import datetime
 from pydantic import BaseModel, Field
-from schemas.user import UserRead
+from schemas.user import UserReadSimple
 
 PROBLEMA_RESPOSTA_ID_DESCRIPTION = "Identificador da resposta do problema"
 PROBLEMA_ID_DESCRIPTION = "Identificador do problema associado à resposta"
@@ -43,7 +43,7 @@ class ProblemaRespostaReadFull(ProblemaRespostaBaseFull):
         description=PROBLEMA_RESPOSTA_ID_DESCRIPTION
     )
 
-    usuario: UserRead = Field(
+    usuario: UserReadSimple = Field(
         description="Usuário autor da resposta"
     )
 
