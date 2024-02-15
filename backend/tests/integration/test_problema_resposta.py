@@ -186,6 +186,44 @@ def test_read_problemas_respostas_admin():
     resume_dependencies()
 
 
+def test_read_problemas_respostas_de_autor_by_problema_id_user():
+    remove_dependencies()
+
+    response_problema_criado, token_criador_problema = create_problema_user_helper()
+    problema_id = response_problema_criado.json().get("data").get("id")
+
+    response = client.get(
+        f"{URL_PROBLEMA}/{problema_id}/respostas/",
+        headers={
+            "Authorization": f"Bearer {token_criador_problema}",
+        },
+    )
+
+    assert response.status_code == 200
+
+    resume_dependencies()
+
+
+def test_read_problemas_respostas_de_naoautor_by_problema_id_user():
+    remove_dependencies()
+
+    response_problema_criado, _ = create_problema_user_helper()
+    problema_id = response_problema_criado.json().get("data").get("id")
+
+    _, token_user, _ = create_user_helper()
+
+    response = client.get(
+        f"{URL_PROBLEMA}/{problema_id}/respostas/",
+        headers={
+            "Authorization": f"Bearer {token_user}",
+        },
+    )
+
+    assert response.status_code == 401
+
+    resume_dependencies()
+
+
 def test_create_problema_resposta_em_problema_privado_negado_user():
     remove_dependencies()
 
