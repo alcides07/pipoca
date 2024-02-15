@@ -1,3 +1,4 @@
+from dependencies.authenticated_user import get_authenticated_user
 from dependencies.authorization_user import is_user
 from fastapi import HTTPException, status
 from models.problemaResposta import ProblemaResposta
@@ -43,4 +44,32 @@ async def create_problema_resposta(
 
     except SQLAlchemyError:
         db.rollback()
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+async def get_problema_resposta_by_id(
+    db: Session,
+    id: int,
+    token: str
+):
+    db_problema_resposta = db.query(ProblemaResposta).filter(
+        ProblemaResposta.id == id).first()
+
+    if (not db_problema_resposta):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+    try:
+        user = await get_authenticated_user(token=token, db=db)
+
+        if (is_user(user) and db_problema_resposta.problema.privado == True):
+            if (
+                db_problema_resposta.usuario_id != user.id  # Não sou o autor da resposta
+                and
+                db_problema_resposta.problema.usuario_id != user.id  # Não sou o autor do problema
+            ):
+                raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+
+        return db_problema_resposta
+
+    except SQLAlchemyError:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
