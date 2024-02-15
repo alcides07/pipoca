@@ -64,13 +64,16 @@ async def get_problema_resposta_by_id(
     try:
         user = await get_authenticated_user(token=token, db=db)
 
-        if (is_user(user) and db_problema_resposta.problema.privado == True):
-            if (
-                db_problema_resposta.usuario_id != user.id  # Não sou o autor da resposta
-                and
-                db_problema_resposta.problema.usuario_id != user.id  # Não sou o autor do problema
-            ):
-                raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+        if (
+            is_user(user)
+            and
+            db_problema_resposta.problema.privado == True
+            and
+            db_problema_resposta.usuario_id != user.id  # Não sou o autor da resposta
+            and
+            db_problema_resposta.problema.usuario_id != user.id  # Não sou o autor do problema
+        ):
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
 
         return db_problema_resposta
 
