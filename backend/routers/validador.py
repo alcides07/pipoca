@@ -49,7 +49,7 @@ async def read(
             }
             )
 async def read_id(
-        id: int = Path(description="Identificador do validador"),
+        id: int = Path(description=VALIDADOR_ID_DESCRIPTION),
         db: Session = Depends(get_db),
     token: str = Depends(oauth2_scheme)
 ):
