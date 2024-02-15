@@ -1,14 +1,20 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from orm.problemaResposta import create_problema_resposta
+from constants import DIRECTION_ORDER_BY_DESCRIPTION, FIELDS_ORDER_BY_DESCRIPTION
+from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
+from filters.problemaResposta import OrderByFieldsProblemaRespostaEnum, search_fields_problema_resposta
+from models.problemaResposta import ProblemaResposta
+from orm.problemaResposta import create_problema_resposta, get_problema_resposta_by_id
 from routers.auth import oauth2_scheme
 from dependencies.authenticated_user import get_authenticated_user
 from dependencies.database import get_db
-from orm.common.index import delete_object, get_all, get_by_id
+from orm.common.index import get_all
+from schemas.common.direction_order_by import DirectionOrderByEnum
 from schemas.common.pagination import PaginationSchema
 from schemas.common.response import ResponsePaginationSchema, ResponseUnitSchema
-from schemas.problemaResposta import ProblemaRespostaCreate, ProblemaRespostaReadFull
+from schemas.problemaResposta import ProblemaRespostaCreate, ProblemaRespostaReadFull, ProblemaRespostaReadSimple
 from sqlalchemy.orm import Session
 from utils.errors import errors
+
+PROBLEMA_RESPOSTA_ID_DESCRIPTION = "Identificador da resposta de um problema"
 
 router = APIRouter(
     prefix="/problemaRespostas",
@@ -17,20 +23,63 @@ router = APIRouter(
 )
 
 
-@router.get("/", deprecated=True)
+@router.get("/",
+            response_model=ResponsePaginationSchema[ProblemaRespostaReadSimple],
+            summary="Lista respostas de problemas"
+            )
 async def read(
+    db: Session = Depends(get_db),
+    pagination: PaginationSchema = Depends(),
+    token: str = Depends(oauth2_scheme),
+    sort: OrderByFieldsProblemaRespostaEnum = Query(
+        default=None,
+        description=FIELDS_ORDER_BY_DESCRIPTION
+    ),
+    direction: DirectionOrderByEnum = Query(
+        default=None,
+        description=DIRECTION_ORDER_BY_DESCRIPTION
+    )
 ):
-    raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED)
+    respostas_problema, metadata = await get_all(
+        model=ProblemaResposta,
+        db=db,
+        pagination=pagination,
+        token=token,
+        search_fields=search_fields_problema_resposta,
+        field_order_by=sort,
+        direction=direction
+    )
+
+    return ResponsePaginationSchema(
+        data=respostas_problema,
+        metadata=metadata
+    )
 
 
-@router.get("/{id}/", deprecated=True)
+@router.get("/{id}/",
+            response_model=ResponseUnitSchema[ProblemaRespostaReadFull],
+            summary="Lista uma resposta específica fornecida para um problema",
+            responses={
+                404: errors[404]
+            }
+            )
 async def read_id(
+        id: int = Path(description=PROBLEMA_RESPOSTA_ID_DESCRIPTION),
+        db: Session = Depends(get_db),
+        token: str = Depends(oauth2_scheme)
 ):
-    raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED)
+    problema_resposta = await get_problema_resposta_by_id(
+        db=db,
+        id=id,
+        token=token,
+    )
+    return ResponseUnitSchema(
+        data=problema_resposta
+    )
 
 
 @router.post("/",
-             response_model=ResponseUnitSchema[ProblemaRespostaReadFull],
+             response_model=ResponseUnitSchema[ProblemaRespostaReadSimple],
              status_code=201,
              summary="Cadastra uma resposta para um problema",
              responses={
