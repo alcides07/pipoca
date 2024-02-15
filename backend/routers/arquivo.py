@@ -81,11 +81,9 @@ async def create(
     db: Session = Depends(get_db),
     token: str = Depends(oauth2_scheme)
 ):
-    user = await get_authenticated_user(token=token, db=db)
-
     arquivo = await create_arquivo(
         db=db,
-        user=user,
+        token=token,
         arquivo=arquivo,
     )
 
@@ -106,13 +104,11 @@ async def total_update(
             description="Arquivo a ser atualizado por completo"),
         token: str = Depends(oauth2_scheme),
 ):
-    user = await get_authenticated_user(token, db)
-
     response = await update_arquivo(
         db=db,
         id=id,
         arquivo=arquivo,
-        user=user
+        token=token
     )
     return ResponseUnitSchema(
         data=response
@@ -133,13 +129,11 @@ async def parcial_update(
             description="Arquivo a ser atualizado parcialmente"),
         token: str = Depends(oauth2_scheme),
 ):
-    user = await get_authenticated_user(token, db)
-
     response = await update_arquivo(
         db=db,
         id=id,
         arquivo=data,
-        user=user
+        token=token
     )
     return ResponseUnitSchema(
         data=response

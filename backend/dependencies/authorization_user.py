@@ -9,22 +9,6 @@ def user_autenthicated(token: str, db: Session):
     return get_authenticated_user(token, db)
 
 
-async def has_authorization_object_collection(
-    db: Session,
-    token: str
-):
-    """Verifica se o usuário autenticado é administrador e possui autorização para visualizar todos os objetos de uma coleção
-
-    Args:
-        db (Session): Sessão de banco de dados
-        token (str): Token do usuário autenticado
-    """
-
-    user = await user_autenthicated(token, db)
-    if (is_admin(user)):
-        return True
-
-
 async def has_authorization_object_single(
     model: Any,
     db: Session,

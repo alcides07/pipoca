@@ -182,7 +182,7 @@ JSON_PROBLEMA = {
 
             },
             {
-                "numero": 1,
+                "numero": 2,
                 "entrada": "string",
                 "veredito": "invalid"
             },

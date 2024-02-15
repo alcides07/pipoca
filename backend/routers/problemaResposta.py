@@ -127,12 +127,10 @@ async def create(
     db: Session = Depends(get_db),
     token: str = Depends(oauth2_scheme)
 ):
-    user = await get_authenticated_user(token=token, db=db)
-
     problema_resposta = await create_problema_resposta(
         db=db,
         problema_resposta=problema_resposta,
-        user=user
+        token=token
     )
 
     return ResponseUnitSchema(data=problema_resposta)

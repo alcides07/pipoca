@@ -2,10 +2,8 @@ from dependencies.authenticated_user import get_authenticated_user
 from dependencies.authorization_user import is_admin, is_user
 from fastapi import HTTPException, status
 from filters.problema import OrderByFieldsProblemaEnum, ProblemaFilter, search_fields_problema
-from models.administrador import Administrador
 from models.problemaResposta import ProblemaResposta
 from models.problemaTeste import ProblemaTeste
-from models.user import User
 from models.validador import Validador
 from models.validadorTeste import ValidadorTeste
 from models.verificador import Verificador
@@ -120,7 +118,13 @@ def create_testes(db, teste, db_problema):
     db_problema.testes.append(db_teste)
 
 
-def create_problema(db: Session, problema: ProblemaCreate, user: User):
+async def create_problema(
+    db: Session,
+    problema: ProblemaCreate,
+    token: str
+):
+    user = await get_authenticated_user(token, db)
+
     try:
         db_problema = Problema(
             **problema.model_dump(exclude=set(["tags", "declaracoes", "arquivos", "verificador", "validador", "usuario", "testes"])))
@@ -163,12 +167,13 @@ async def update_problema(
     db: Session,
     id: int,
     problema: ProblemaUpdatePartial | ProblemaCreate,
-    user: User,
+    token: str,
 ):
     db_problema = db.query(Problema).filter(Problema.id == id).first()
     if not db_problema:
         raise HTTPException(status.HTTP_404_NOT_FOUND)
 
+    user = await get_authenticated_user(token, db)
     if (is_user(user) and user.id != db_problema.usuario_id):  # type: ignore
         raise HTTPException(status.HTTP_401_UNAUTHORIZED)
 
@@ -292,30 +297,33 @@ async def get_respostas_problema(
     db: Session,
     id: int,
     pagination: PaginationSchema,
-    user: User | Administrador
+    token: str
 ):
-
     db_problema = db.query(Problema).filter(Problema.id == id).first()
 
     if (not db_problema):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
+    user = await get_authenticated_user(token, db)
     if (is_user(user) and bool(db_problema.usuario_id != user.id)):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
 
-    query = db.query(ProblemaResposta).filter(
-        ProblemaResposta.problema_id == id)
+    try:
+        query = db.query(ProblemaResposta).filter(
+            ProblemaResposta.problema_id == id)
 
-    db_problema_respostas = query.offset(
-        pagination.offset).limit(pagination.limit)
+        db_problema_respostas = query.offset(
+            pagination.offset).limit(pagination.limit)
 
-    total = query.count()
+        total = query.count()
 
-    metadata = MetadataSchema(
-        count=db_problema_respostas.count(),
-        total=total,
-        offset=pagination.offset,
-        limit=pagination.limit,
-    )
+        metadata = MetadataSchema(
+            count=db_problema_respostas.count(),
+            total=total,
+            offset=pagination.offset,
+            limit=pagination.limit,
+        )
+        return db_problema_respostas.all(), metadata
 
-    return db_problema_respostas.all(), metadata
+    except SQLAlchemyError:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)

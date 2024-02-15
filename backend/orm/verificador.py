@@ -1,7 +1,6 @@
+from dependencies.authenticated_user import get_authenticated_user
 from dependencies.authorization_user import is_user
 from fastapi import HTTPException, status
-from models.administrador import Administrador
-from models.user import User
 from models.verificador import Verificador
 from orm.common.index import delete_object
 from schemas.verificador import VerificadorCreateSingle, VerificadorUpdatePartial, VerificadorUpdateTotal
@@ -13,7 +12,7 @@ from models.problema import Problema
 async def create_verificador(
     db: Session,
     verificador: VerificadorCreateSingle,
-    user: User | Administrador
+    token: str
 ):
     db_problema = db.query(Problema).filter(
         Problema.id == verificador.problema_id
@@ -23,10 +22,11 @@ async def create_verificador(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail="Problema não encontrado!")
 
-    try:
-        if (is_user(user) and db_problema.usuario_id != user.id):  # type: ignore
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+    user = await get_authenticated_user(token=token, db=db)
+    if (is_user(user) and db_problema.usuario_id != user.id):  # type: ignore
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
 
+    try:
         db_verificador = Verificador(
             **verificador.model_dump(exclude=set(["problema"])))
 
@@ -57,13 +57,14 @@ async def update_verificador(
     db: Session,
     id: int,
     verificador: VerificadorUpdateTotal | VerificadorUpdatePartial,
-    user: User | Administrador
+    token: str
 ):
     db_verificador = db.query(Verificador).filter(Verificador.id == id).first()
 
     if (not db_verificador):
         raise HTTPException(status.HTTP_404_NOT_FOUND)
 
+    user = await get_authenticated_user(token, db)
     if (is_user(user) and user.id != db_verificador.problema.usuario_id):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED)
 

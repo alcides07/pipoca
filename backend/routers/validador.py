@@ -81,12 +81,10 @@ async def create(
     db: Session = Depends(get_db),
     token: str = Depends(oauth2_scheme)
 ):
-    user = await get_authenticated_user(token=token, db=db)
-
     validador = await create_validador(
         db=db,
         validador=validador,
-        user=user
+        token=token
     )
 
     return ResponseUnitSchema(data=validador)
@@ -106,13 +104,11 @@ async def parcial_update(
             description="Validador a ser atualizado parcialmente"),
         token: str = Depends(oauth2_scheme),
 ):
-    user = await get_authenticated_user(token, db)
-
     validador = await update_validador(
         db=db,
         id=id,
         validador=data,
-        user=user
+        token=token
     )
     return ResponseUnitSchema(
         data=validador
@@ -133,13 +129,11 @@ async def total_update(
             description="Validador a ser atualizado por completo"),
         token: str = Depends(oauth2_scheme),
 ):
-    user = await get_authenticated_user(token, db)
-
     validador = await update_validador(
         db=db,
         id=id,
         validador=data,
-        user=user
+        token=token
     )
     return ResponseUnitSchema(
         data=validador

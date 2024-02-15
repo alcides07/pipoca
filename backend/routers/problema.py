@@ -54,7 +54,6 @@ async def read(
         description=DIRECTION_ORDER_BY_DESCRIPTION
     )
 ):
-
     problemas, metadata = await get_all_problemas(
         db=db,
         pagination=pagination,
@@ -78,15 +77,13 @@ async def read_problema_id_respostas(
     db: Session = Depends(get_db),
     pagination: PaginationSchema = Depends(),
     id: int = Path(description=PROBLEMA_ID_DESCRIPTION),
-    token: str = Depends(oauth2_scheme),
+    token: str = Depends(oauth2_scheme)
 ):
-    user = await get_authenticated_user(db=db, token=token)
-
     problemas, metadata = await get_respostas_problema(
         db=db,
         id=id,
         pagination=pagination,
-        user=user
+        token=token
     )
 
     return ResponsePaginationSchema(
@@ -169,8 +166,11 @@ async def create(
     token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db)
 ):
-    user = await get_authenticated_user(token, db)
-    data = create_problema(db=db, problema=problema, user=user)
+    data = await create_problema(
+        db=db,
+        problema=problema,
+        token=token
+    )
     return ResponseUnitSchema(data=data)
 
 
@@ -469,8 +469,11 @@ async def upload(
                 if filename.startswith("statements/") and filename.endswith("problem-properties.json"):
                     process_declaracoes(zip, filename)
 
-        user = await get_authenticated_user(token, db)
-        data = create_problema(db=db, problema=problema, user=user)
+        data = await create_problema(
+            db=db,
+            problema=problema,
+            token=token
+        )
         return ResponseUnitSchema(data=data)
 
     except HTTPException:
@@ -492,12 +495,11 @@ async def total_update(
             description="Problema a ser atualizado por completo"),
         token: str = Depends(oauth2_scheme),
 ):
-    user = await get_authenticated_user(token, db)
     response = await update_problema(
         db=db,
         id=id,
         problema=data,
-        user=user
+        token=token
     )
     return ResponseUnitSchema(
         data=response
@@ -518,12 +520,11 @@ async def parcial_update(
             description="Problema a ser atualizado parcialmente"),
         token: str = Depends(oauth2_scheme),
 ):
-    user = await get_authenticated_user(token, db)
     response = await update_problema(
         db=db,
         id=id,
         problema=data,
-        user=user
+        token=token
     )
     return ResponseUnitSchema(
         data=response
