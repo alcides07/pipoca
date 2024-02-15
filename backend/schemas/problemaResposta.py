@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Optional
 from pydantic import BaseModel, Field
 from schemas.user import UserReadSimple
 
@@ -53,7 +54,8 @@ class ProblemaRespostaReadSimple(ProblemaRespostaBaseFull):
         description=PROBLEMA_RESPOSTA_ID_DESCRIPTION
     )
 
-    usuario_id: int = Field(
+    usuario_id: Optional[int] = Field(
+        default=None,
         description="Identificador do autor da resposta"
     )
 
