@@ -77,12 +77,16 @@ async def read(
 async def read_problema_id_respostas(
     db: Session = Depends(get_db),
     pagination: PaginationSchema = Depends(),
-    id: int = Path(description=PROBLEMA_ID_DESCRIPTION)
+    id: int = Path(description=PROBLEMA_ID_DESCRIPTION),
+    token: str = Depends(oauth2_scheme),
 ):
+    user = await get_authenticated_user(db=db, token=token)
+
     problemas, metadata = await get_respostas_problema(
         db=db,
         id=id,
         pagination=pagination,
+        user=user
     )
 
     return ResponsePaginationSchema(

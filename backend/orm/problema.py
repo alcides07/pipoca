@@ -2,6 +2,7 @@ from dependencies.authenticated_user import get_authenticated_user
 from dependencies.authorization_user import is_admin, is_user
 from fastapi import HTTPException, status
 from filters.problema import OrderByFieldsProblemaEnum, ProblemaFilter, search_fields_problema
+from models.administrador import Administrador
 from models.problemaResposta import ProblemaResposta
 from models.problemaTeste import ProblemaTeste
 from models.user import User
@@ -291,12 +292,16 @@ async def get_respostas_problema(
     db: Session,
     id: int,
     pagination: PaginationSchema,
+    user: User | Administrador
 ):
 
     db_problema = db.query(Problema).filter(Problema.id == id).first()
 
     if (not db_problema):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+    if (is_user(user) and bool(db_problema.usuario_id != user.id)):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
 
     query = db.query(ProblemaResposta).filter(
         ProblemaResposta.problema_id == id)
