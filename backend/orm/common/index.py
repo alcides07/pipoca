@@ -117,9 +117,8 @@ async def get_all(
 
     query = db.query(model)
 
-    if (me_author == True and hasattr(model, "usuario_id")):
-        if (is_user(user)):
-            query = db.query(model).filter(model.usuario_id == user.id)
+    if (is_user(user) and me_author == True and hasattr(model, "usuario_id")):
+        query = db.query(model).filter(model.usuario_id == user.id)
 
     db_objects, metadata = filter_collection(
         model,
