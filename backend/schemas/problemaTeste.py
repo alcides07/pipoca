@@ -53,9 +53,12 @@ class ProblemaTesteReadSimple(ProblemaTesteBase):
 
 
 class ProblemaTesteCreate(ProblemaTesteBaseFull):
+    pass
+
+
+class ProblemaTesteCreateSingle(ProblemaTesteBaseFull):
     problema_id: int = Field(
         description=PROBLEMA_ID_DESCRIPTION)
-    pass
 
 
 class ProblemaTesteUpdateTotal(ProblemaTesteBaseFull):
