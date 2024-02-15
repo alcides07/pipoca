@@ -224,6 +224,27 @@ def test_read_problemas_respostas_de_naoautor_by_problema_id_user():
     resume_dependencies()
 
 
+def test_read_problemas_respostas_de_naoautor_by_problema_id_admin():
+    remove_dependencies()
+
+    response_problema_criado, _ = create_problema_user_helper()
+    problema_id = response_problema_criado.json().get("data").get("id")
+
+    database = next(get_db_test())
+    token_admin = create_administrador_helper(database)
+
+    response = client.get(
+        f"{URL_PROBLEMA}/{problema_id}/respostas/",
+        headers={
+            "Authorization": f"Bearer {token_admin}",
+        },
+    )
+
+    assert response.status_code == 200
+
+    resume_dependencies()
+
+
 def test_create_problema_resposta_em_problema_privado_negado_user():
     remove_dependencies()
 
