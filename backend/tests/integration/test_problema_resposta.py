@@ -245,6 +245,22 @@ def test_read_problemas_respostas_de_naoautor_by_problema_id_admin():
     resume_dependencies()
 
 
+def test_read_minhas_respostas_problemas():
+    remove_dependencies()
+
+    _, token_user, _ = create_user_helper()
+
+    response_problema_user = client.get(
+        f"{URL_PROBLEMA_RESPOSTA}/user/",
+        headers={
+            "Authorization": f"Bearer {token_user}",
+        },
+    )
+    assert response_problema_user.status_code == 200
+
+    resume_dependencies()
+
+
 def test_create_problema_resposta_em_problema_privado_negado_user():
     remove_dependencies()
 
