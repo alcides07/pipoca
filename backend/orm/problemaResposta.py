@@ -1,5 +1,5 @@
 from dependencies.authenticated_user import get_authenticated_user
-from dependencies.authorization_user import is_user
+from dependencies.authorization_user import is_admin, is_user
 from fastapi import HTTPException, status
 from models.problemaResposta import ProblemaResposta
 from models.administrador import Administrador
@@ -25,16 +25,19 @@ async def create_problema_resposta(
 
     try:
         if (bool(db_problema.privado) == True):
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED, detail="Erro. O problema o qual se está tentando submeter uma resposta é privado!")
+            if (is_user(user) and bool(user.id != db_problema.usuario_id)):
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED, detail="Erro. O problema o qual se está tentando submeter uma resposta é privado!")
 
         db_problema_resposta = ProblemaResposta(
             **problema_resposta.model_dump(exclude=set(["problema", "usuario"])))
 
         db_problema.respostas.append(db_problema_resposta)
 
-        if (is_user(user)):
-            db_problema_resposta.usuario = user
+        db_problema_resposta.usuario = user
+
+        if (is_admin(user)):
+            db_problema_resposta.usuario = None
 
         db.add(db_problema_resposta)
         db.commit()
