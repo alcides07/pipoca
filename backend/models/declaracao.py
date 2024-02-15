@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Enum, ForeignKey, Integer, String
 from database import Base
 from sqlalchemy.orm import relationship
-from schemas.idioma import IdiomaSchema
+from schemas.idioma import IdiomaEnum
 
 
 class Declaracao(Base):
@@ -42,13 +42,19 @@ class Declaracao(Base):
         String(length=80240),
     )
 
-    problema_id = Column(Integer, ForeignKey('problemas.id'))
+    problema_id = Column(
+        Integer,
+        ForeignKey(
+            'problemas.id',
+            name="declaracoes_problema_id_fkey"
+        )
+    )
     problema = relationship(
         "Problema",
         back_populates="declaracoes",
     )
 
     idioma = Column(
-        Enum(IdiomaSchema),
+        Enum(IdiomaEnum),
         nullable=False
     )

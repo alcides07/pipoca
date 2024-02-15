@@ -11,8 +11,9 @@ class VereditoValidadorTesteEnum(Enum):
 
 
 class ValidadorTesteBase(BaseModel):
-    numero: str = Field(
-        max_length=64,
+    numero: int = Field(
+        ge=1,
+        le=1000,
         description="Código de numeração do teste"
     )
 
@@ -21,14 +22,14 @@ class ValidadorTesteBase(BaseModel):
     )
 
 
-class ValidadorTesteWithEntrada(ValidadorTesteBase):
+class ValidadorTesteBaseFull(ValidadorTesteBase):
     entrada: str = Field(
         max_length=250000,
         description="Dados de entrada do teste do validador"
     )
 
 
-class ValidadorTesteReadFull(ValidadorTesteWithEntrada):
+class ValidadorTesteReadFull(ValidadorTesteBaseFull):
     id: int = Field(description=VALIDADOR_TESTE_ID_DESCRIPTION)
     validador_id: int = Field(
         description=VALIDADOR_ID_DESCRIPTION)
@@ -43,5 +44,5 @@ class ValidadorTesteReadSimple(ValidadorTesteBase):
         from_attributes = True
 
 
-class ValidadorTesteCreate(ValidadorTesteWithEntrada):
+class ValidadorTesteCreate(ValidadorTesteBaseFull):
     pass

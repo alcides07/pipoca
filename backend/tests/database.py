@@ -1,3 +1,5 @@
+from sqlalchemy import text
+from database import engine
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
@@ -21,6 +23,11 @@ Base.metadata.create_all(bind=engine)
 
 def get_db_test():
     try:
+        USE_DOCKER = config("USE_DOCKER")
+        if (USE_DOCKER == "0"):
+            with engine.connect() as connection:
+                connection.execute(text('PRAGMA foreign_keys=ON'))
+
         db = TestingSessionLocal()
         yield db
     finally:

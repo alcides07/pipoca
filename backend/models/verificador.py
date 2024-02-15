@@ -30,17 +30,26 @@ class Verificador(Base):
         nullable=False,
     )
 
-    problema_id = Column(Integer, ForeignKey('problemas.id'))
+    problema_id = Column(
+        Integer,
+        ForeignKey(
+            'problemas.id',
+            name="verificadores_problema_id_fkey",
+            ondelete='CASCADE'
+        )
+    )
     problema = relationship(
         "Problema",
         uselist=False,
         foreign_keys=[problema_id],
         post_update=True,
+        passive_deletes=True
     )
 
     testes = relationship(
         VerificadorTeste,
-        back_populates="verificador"
+        back_populates="verificador",
+        passive_deletes=True
     )
 
     __table_args__ = (

@@ -1,5 +1,10 @@
+from dependencies.authenticated_user import get_authenticated_user
+from dependencies.authorization_user import is_admin, is_user
 from fastapi import HTTPException, status
+from filters.problema import OrderByFieldsProblemaEnum, ProblemaFilter, search_fields_problema
 from models.administrador import Administrador
+from models.problemaResposta import ProblemaResposta
+from models.problemaTeste import ProblemaTeste
 from models.user import User
 from models.validador import Validador
 from models.validadorTeste import ValidadorTeste
@@ -7,12 +12,54 @@ from models.verificador import Verificador
 from models.verificadorTeste import VerificadorTeste
 from orm.common.index import delete_object
 from orm.tag import create_tag
-from sqlalchemy.orm import Session
+from schemas.common.direction_order_by import DirectionOrderByEnum
+from schemas.common.pagination import MetadataSchema, PaginationSchema
+from sqlalchemy import asc, desc, or_
+from sqlalchemy.orm import Session, Query
 from sqlalchemy.exc import SQLAlchemyError
 from models.arquivo import Arquivo
 from models.declaracao import Declaracao
 from models.problema import Problema
 from schemas.problema import ProblemaCreate, ProblemaUpdatePartial
+
+
+def filter_problemas(
+    filters: ProblemaFilter,
+    pagination: PaginationSchema,
+    query: Query[Problema],
+    field_order_by: OrderByFieldsProblemaEnum,
+    direction: DirectionOrderByEnum
+):
+    total = query.count()
+
+    for attr, value in filters.__dict__.items():
+        if value != None:
+            query = query.filter(getattr(Problema, attr) == value)
+
+    if (pagination.q):
+        search_query = or_(
+            *[getattr(Problema, field).ilike(f"%{pagination.q}%") for field in search_fields_problema if hasattr(Problema, field)])
+        query = query.filter(search_query)
+
+    if (field_order_by):
+        if (direction == DirectionOrderByEnum.DESC):
+            query = query.order_by(
+                desc(getattr(Problema, field_order_by.value)))
+        else:
+            query = query.order_by(
+                asc(getattr(Problema, field_order_by.value)))
+
+    query = query.offset(pagination.offset).limit(pagination.limit)
+
+    metadata = MetadataSchema(
+        count=query.count(),
+        total=total,
+        offset=pagination.offset,
+        limit=pagination.limit,
+        search_fields=search_fields_problema
+    )
+
+    return query, metadata
 
 
 def create_verificador(db, problema, db_problema):
@@ -67,10 +114,16 @@ def create_tags(db, tag, db_problema):
     db_problema.tags.append(db_tag)
 
 
+def create_testes(db, teste, db_problema):
+    db_teste = ProblemaTeste(**teste.model_dump())
+    db.add(db_teste)
+    db_problema.testes.append(db_teste)
+
+
 def create_problema(db: Session, problema: ProblemaCreate, user: User):
     try:
         db_problema = Problema(
-            **problema.model_dump(exclude=set(["tags", "declaracoes", "arquivos", "verificador", "validador", "usuario"])))
+            **problema.model_dump(exclude=set(["tags", "declaracoes", "arquivos", "verificador", "validador", "usuario", "testes"])))
         db.add(db_problema)
 
         for declaracao in problema.declaracoes:
@@ -82,6 +135,9 @@ def create_problema(db: Session, problema: ProblemaCreate, user: User):
         for tag in problema.tags:
             create_tags(db, tag, db_problema)
 
+        for teste in problema.testes:
+            create_testes(db, teste, db_problema)
+
         create_verificador(db, problema, db_problema)
         create_verificador_testes(db, problema, db_problema)
 
@@ -90,7 +146,7 @@ def create_problema(db: Session, problema: ProblemaCreate, user: User):
 
         db_problema.usuario = user
 
-        if (isinstance(user, Administrador)):
+        if (is_admin(user)):
             db_problema.usuario = None
 
         db.commit()
@@ -113,9 +169,8 @@ async def update_problema(
     if not db_problema:
         raise HTTPException(status.HTTP_404_NOT_FOUND)
 
-    if (not isinstance(user, Administrador)):
-        if (user.id != db_problema.usuario_id):  # type: ignore
-            raise HTTPException(status.HTTP_401_UNAUTHORIZED)
+    if (is_user(user) and user.id != db_problema.usuario_id):  # type: ignore
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED)
 
     try:
         for key, value in problema:
@@ -147,6 +202,17 @@ async def update_problema(
 
                     for arquivo in value:
                         create_arquivos(db, arquivo, db_problema)
+
+                elif (key == "testes"):
+                    testes_ids = db.query(ProblemaTeste.id).filter(
+                        ProblemaTeste.problema_id == db_problema.id).all()
+
+                    for (teste_id, ) in testes_ids:
+                        await delete_object(
+                            db=db,
+                            model=ProblemaTeste,
+                            id=teste_id
+                        )
 
                 elif (key == "verificador"):
                     await delete_object(
@@ -180,14 +246,76 @@ async def update_problema(
 
         db_problema.usuario = user
 
-        if (isinstance(user, Administrador)):
+        if (is_admin(user)):
             db_problema.usuario = None
 
         db.commit()
         db.refresh(db_problema)
 
+        return db_problema
+
     except SQLAlchemyError:
         db.rollback()
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    return db_problema
+
+async def get_all_problemas(
+    db: Session,
+    pagination: PaginationSchema,
+    token: str,
+    filters: ProblemaFilter,
+    field_order_by: OrderByFieldsProblemaEnum,
+    direction: DirectionOrderByEnum,
+):
+
+    user = await get_authenticated_user(token, db)
+    query = db.query(Problema)
+
+    if (is_user(user)):
+        if (filters.privado == True):
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+
+        filters.privado = False
+
+    db_problemas, metadata = filter_problemas(
+        filters,
+        pagination,
+        query,
+        field_order_by,
+        direction
+    )
+
+    return db_problemas.all(), metadata
+
+
+async def get_respostas_problema(
+    db: Session,
+    id: int,
+    pagination: PaginationSchema,
+    user: User | Administrador
+):
+
+    db_problema = db.query(Problema).filter(Problema.id == id).first()
+
+    if (not db_problema):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+    if (is_user(user) and bool(db_problema.usuario_id != user.id)):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+
+    query = db.query(ProblemaResposta).filter(
+        ProblemaResposta.problema_id == id)
+
+    db_problema_respostas = query.offset(
+        pagination.offset).limit(pagination.limit)
+
+    total = query.count()
+
+    metadata = MetadataSchema(
+        count=db_problema_respostas.count(),
+        total=total,
+        offset=pagination.offset,
+        limit=pagination.limit,
+    )
+
+    return db_problema_respostas.all(), metadata

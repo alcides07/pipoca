@@ -1,7 +1,7 @@
 from passlib.context import CryptContext
 from tests.database import get_db_test
 from tests.helpers.administrador import create_administrador_helper
-from tests.helpers.problema import URL_PROBLEMA, create_problema_admin_helper, create_problema_user_helper, update_full_problema_fail_incomplete, update_full_problema_success_helper, update_partial_problema_helper
+from tests.helpers.problema import URL_PROBLEMA, create_problema_admin_helper, create_problema_user_helper, update_full_problema_fail_incomplete, update_full_problema_helper, update_partial_problema_helper
 from tests.helpers.user import create_user_helper
 from backend.main import app
 from fastapi.testclient import TestClient
@@ -54,6 +54,22 @@ def test_read_problemas_user():
 
     response_problema_user = client.get(
         URL_PROBLEMA,
+        headers={
+            "Authorization": f"Bearer {token_user}",
+        },
+    )
+    assert response_problema_user.status_code == 200
+
+    resume_dependencies()
+
+
+def test_read_meus_problemas_user():
+    remove_dependencies()
+
+    _, token_user, _ = create_user_helper()
+
+    response_problema_user = client.get(
+        f"{URL_PROBLEMA}/user/",
         headers={
             "Authorization": f"Bearer {token_user}",
         },
@@ -143,10 +159,10 @@ def test_update_partial_problema_admin():
     resume_dependencies()
 
 
-def test_update_full_problema_success_user():
+def test_update_full_problema_user():
     remove_dependencies()
 
-    response_problema_user, problema = update_full_problema_success_helper()
+    response_problema_user, problema = update_full_problema_helper()
     assert response_problema_user.status_code == 200
 
     response_json = response_problema_user.json().get("data")
@@ -168,10 +184,10 @@ def test_update_full_problema_success_user():
     resume_dependencies()
 
 
-def test_update_full_problema_success_admin():
+def test_update_full_problema_admin():
     remove_dependencies()
 
-    response_problema_user, problema = update_full_problema_success_helper(
+    response_problema_user, problema = update_full_problema_helper(
         "admin")
     assert response_problema_user.status_code == 200
 
