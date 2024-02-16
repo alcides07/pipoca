@@ -40,7 +40,7 @@ class MetadataSchema(BaseModel):
 class PaginationSchema:
     def __init__(
         self,
-        q: Optional[str] = Query(
+        q: str = Query(
             default=None,
             description="Palavras-chave para pesquisa"
         ),
