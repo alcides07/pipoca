@@ -80,6 +80,44 @@ def test_read_validador_unit_admin():
     resume_dependencies()
 
 
+def test_read_testes_validador_permitido_dono():
+    remove_dependencies()
+
+    response_validador, token = create_validador_helper()
+    validador_id = response_validador.json().get("data").get("id")
+
+    response = client.get(
+        f"{URL_VALIDADOR}/{validador_id}/testes/",
+        headers={
+            "Authorization": f"Bearer {token}",
+        },
+    )
+
+    assert response.status_code == 200
+
+    resume_dependencies()
+
+
+def test_read_testes_validador_negado_nao_dono():
+    remove_dependencies()
+
+    response_validador, _ = create_validador_helper()
+    validador_id = response_validador.json().get("data").get("id")
+
+    _, token_user, _ = create_user_helper()
+
+    response = client.get(
+        f"{URL_VALIDADOR}/{validador_id}/testes/",
+        headers={
+            "Authorization": f"Bearer {token_user}",
+        },
+    )
+
+    assert response.status_code == 401
+
+    resume_dependencies()
+
+
 def test_create_validador_user():
     remove_dependencies()
 
