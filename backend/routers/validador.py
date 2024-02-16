@@ -1,4 +1,4 @@
-from orm.validador import create_validador, update_validador
+from orm.validador import create_validador, get_testes_validador, update_validador
 from routers.auth import oauth2_scheme
 from dependencies.authenticated_user import get_authenticated_user
 from dependencies.database import get_db
@@ -10,6 +10,7 @@ from schemas.common.pagination import PaginationSchema
 from schemas.common.response import ResponsePaginationSchema, ResponseUnitSchema
 from schemas.validador import VALIDADOR_ID_DESCRIPTION, ValidadorCreateSingle, ValidadorReadFull, ValidadorReadSimple, ValidadorUpdatePartial, ValidadorUpdateTotal
 from sqlalchemy.orm import Session
+from schemas.validadorTeste import ValidadorTesteReadFull
 from utils.errors import errors
 
 router = APIRouter(
@@ -63,6 +64,32 @@ async def read_id(
 
     return ResponseUnitSchema(
         data=validador
+    )
+
+
+@router.get("/{id}/testes/",
+            response_model=ResponsePaginationSchema[ValidadorTesteReadFull],
+            summary="Lista testes pertencentes a um validador",
+            responses={
+                404: errors[404]
+            }
+            )
+async def read_validador_id_testes(
+        id: int = Path(description=VALIDADOR_ID_DESCRIPTION),
+        db: Session = Depends(get_db),
+        pagination: PaginationSchema = Depends(),
+        token: str = Depends(oauth2_scheme)
+):
+    testes_validador, metadata = await get_testes_validador(
+        db=db,
+        pagination=pagination,
+        id=id,
+        token=token
+    )
+
+    return ResponsePaginationSchema(
+        data=testes_validador,
+        metadata=metadata
     )
 
 
