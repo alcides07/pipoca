@@ -3,7 +3,7 @@ from tests.database import get_db_test
 from tests.helpers.administrador import create_administrador_helper
 from tests.helpers.problema import URL_PROBLEMA, create_problema_admin_helper, create_problema_user_helper, update_full_problema_fail_incomplete, update_full_problema_helper, update_partial_problema_helper
 from tests.helpers.user import create_user_helper
-from backend.main import app
+from main import app
 from fastapi.testclient import TestClient
 from tests.config_test import remove_dependencies, resume_dependencies
 
@@ -69,7 +69,7 @@ def test_read_meus_problemas_user():
     _, token_user, _ = create_user_helper()
 
     response_problema_user = client.get(
-        f"{URL_PROBLEMA}/user/",
+        f"{URL_PROBLEMA}/users/",
         headers={
             "Authorization": f"Bearer {token_user}",
         },

@@ -1,7 +1,7 @@
 from tests.helpers.problema import create_problema_user_helper
 from tests.helpers.problema import JSON_PROBLEMA
 from tests.helpers.user import create_user_helper
-from backend.main import app
+from main import app
 from fastapi.testclient import TestClient
 from tests.config_test import remove_dependencies, resume_dependencies
 
