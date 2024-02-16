@@ -12,12 +12,12 @@ from fastapi import status
 
 def filter_collection(
     model: Any,
-    filters: Any,
     pagination: PaginationSchema,
     query: Query[Any],
-    search_fields: Any,
-    field_order_by: Optional[Enum],
-    direction: Optional[DirectionOrderByEnum],
+    filters: Optional[Any] = None,
+    search_fields: Optional[Any] = None,
+    field_order_by: Optional[Enum] = None,
+    direction: Optional[DirectionOrderByEnum] = None,
 ):
     total = query.count()
 
@@ -26,7 +26,7 @@ def filter_collection(
             if (hasattr(model, attr) and value != None):
                 query = query.filter(getattr(model, attr) == value)
 
-    if (pagination.q):
+    if (pagination and pagination.q and search_fields):
         search_query = or_(
             *[getattr(model, field).ilike(f"%{pagination.q}%") for field in search_fields if hasattr(model, field)])
         query = query.filter(search_query)
@@ -121,13 +121,13 @@ async def get_all(
         query = db.query(model).filter(model.usuario_id == user.id)
 
     db_objects, metadata = filter_collection(
-        model,
-        filters,
-        pagination,
-        query,
-        search_fields,
-        field_order_by,
-        direction
+        model=model,
+        filters=filters,
+        query=query,
+        pagination=pagination,
+        search_fields=search_fields,
+        field_order_by=field_order_by,
+        direction=direction
     )
 
     return db_objects.all(), metadata

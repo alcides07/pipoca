@@ -97,6 +97,124 @@ def test_read_problemas_admin():
     resume_dependencies()
 
 
+def test_read_problemas_respostas_de_autor_by_problema_id_user():
+    remove_dependencies()
+
+    response_problema_criado, token_criador_problema = create_problema_user_helper()
+    problema_id = response_problema_criado.json().get("data").get("id")
+
+    response = client.get(
+        f"{URL_PROBLEMA}/{problema_id}/respostas/",
+        headers={
+            "Authorization": f"Bearer {token_criador_problema}",
+        },
+    )
+
+    assert response.status_code == 200
+
+    resume_dependencies()
+
+
+def test_read_problemas_respostas_de_admin_by_problema_id_user():
+    remove_dependencies()
+
+    response_problema_criado, _ = create_problema_user_helper()
+    problema_id = response_problema_criado.json().get("data").get("id")
+
+    database = next(get_db_test())
+    token_adm = create_administrador_helper(database)
+
+    response = client.get(
+        f"{URL_PROBLEMA}/{problema_id}/respostas/",
+        headers={
+            "Authorization": f"Bearer {token_adm}",
+        },
+    )
+
+    assert response.status_code == 200
+
+    resume_dependencies()
+
+
+def test_read_problemas_respostas_de_naoautor_by_problema_id_user():
+    remove_dependencies()
+
+    response_problema_criado, _ = create_problema_user_helper()
+    problema_id = response_problema_criado.json().get("data").get("id")
+
+    _, token_user, _ = create_user_helper()
+
+    response = client.get(
+        f"{URL_PROBLEMA}/{problema_id}/respostas/",
+        headers={
+            "Authorization": f"Bearer {token_user}",
+        },
+    )
+
+    assert response.status_code == 401
+
+    resume_dependencies()
+
+
+def test_read_problemas_testes_de_autor_by_problema_id_user():
+    remove_dependencies()
+
+    response_problema_criado, token_criador_problema = create_problema_user_helper()
+    problema_id = response_problema_criado.json().get("data").get("id")
+
+    response = client.get(
+        f"{URL_PROBLEMA}/{problema_id}/testes/",
+        headers={
+            "Authorization": f"Bearer {token_criador_problema}",
+        },
+    )
+
+    assert response.status_code == 200
+
+    resume_dependencies()
+
+
+def test_read_problemas_testes_de_naoautor_by_problema_id_user():
+    remove_dependencies()
+
+    response_problema_criado, _ = create_problema_user_helper()
+    problema_id = response_problema_criado.json().get("data").get("id")
+
+    _, token_user, _ = create_user_helper()
+
+    response = client.get(
+        f"{URL_PROBLEMA}/{problema_id}/testes/",
+        headers={
+            "Authorization": f"Bearer {token_user}",
+        },
+    )
+
+    assert response.status_code == 401
+
+    resume_dependencies()
+
+
+def test_read_problemas_testes_de_admin_by_problema_id_user():
+    remove_dependencies()
+
+    response_problema_criado, _ = create_problema_user_helper()
+    problema_id = response_problema_criado.json().get("data").get("id")
+
+    database = next(get_db_test())
+    token_adm = create_administrador_helper(database)
+
+    response = client.get(
+        f"{URL_PROBLEMA}/{problema_id}/testes/",
+        headers={
+            "Authorization": f"Bearer {token_adm}",
+        },
+    )
+
+    assert response.status_code == 200
+
+    resume_dependencies()
+
+
 def test_create_problema_user():
     remove_dependencies()
 

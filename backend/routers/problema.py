@@ -12,7 +12,7 @@ from schemas.common.direction_order_by import DirectionOrderByEnum
 from schemas.declaracao import DeclaracaoCreate
 from schemas.idioma import IdiomaEnum
 from schemas.problemaResposta import ProblemaRespostaReadSimple
-from schemas.problemaTeste import ProblemaTesteCreate, TipoTesteProblemaEnum
+from schemas.problemaTeste import ProblemaTesteCreate, ProblemaTesteReadFull, TipoTesteProblemaEnum
 from schemas.validador import ValidadorCreate
 from schemas.validadorTeste import ValidadorTesteCreate, VereditoValidadorTesteEnum
 from schemas.verificador import VerificadorCreate
@@ -27,7 +27,7 @@ from schemas.problema import ProblemaCreate, ProblemaReadFull, ProblemaReadSimpl
 from schemas.common.pagination import PaginationSchema
 from dependencies.database import get_db
 from sqlalchemy.orm import Session
-from orm.problema import create_problema, get_all_problemas, get_respostas_problema, update_problema
+from orm.problema import create_problema, get_all_problemas, get_respostas_problema, get_testes_problema, update_problema
 from schemas.common.response import ResponsePaginationSchema, ResponseUnitSchema
 
 PROBLEMA_ID_DESCRIPTION = "Identificador do problema"
@@ -69,6 +69,29 @@ async def read(
     )
 
 
+@router.get("/{id}/testes/",
+            response_model=ResponsePaginationSchema[ProblemaTesteReadFull],
+            summary="Lista testes pertencentes a um problema",
+            )
+async def read_problema_id_testes(
+    db: Session = Depends(get_db),
+    pagination: PaginationSchema = Depends(),
+    id: int = Path(description=PROBLEMA_ID_DESCRIPTION),
+    token: str = Depends(oauth2_scheme)
+):
+    testes, metadata = await get_testes_problema(
+        db=db,
+        id=id,
+        pagination=pagination,
+        token=token
+    )
+
+    return ResponsePaginationSchema(
+        data=testes,
+        metadata=metadata
+    )
+
+
 @router.get("/{id}/respostas/",
             response_model=ResponsePaginationSchema[ProblemaRespostaReadSimple],
             summary="Lista respostas pertencentes a um problema",
@@ -79,7 +102,7 @@ async def read_problema_id_respostas(
     id: int = Path(description=PROBLEMA_ID_DESCRIPTION),
     token: str = Depends(oauth2_scheme)
 ):
-    problemas, metadata = await get_respostas_problema(
+    respostas, metadata = await get_respostas_problema(
         db=db,
         id=id,
         pagination=pagination,
@@ -87,7 +110,7 @@ async def read_problema_id_respostas(
     )
 
     return ResponsePaginationSchema(
-        data=problemas,
+        data=respostas,
         metadata=metadata
     )
 
