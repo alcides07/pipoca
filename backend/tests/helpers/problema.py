@@ -3,7 +3,7 @@ from fastapi.testclient import TestClient
 from tests.database import get_db_test
 from tests.helpers.administrador import create_administrador_helper
 from tests.helpers.user import create_user_helper
-from backend.main import app
+from main import app
 
 client = TestClient(app)
 URL_PROBLEMA = "/problemas"
