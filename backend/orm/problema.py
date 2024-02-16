@@ -8,56 +8,16 @@ from models.validador import Validador
 from models.validadorTeste import ValidadorTeste
 from models.verificador import Verificador
 from models.verificadorTeste import VerificadorTeste
-from orm.common.index import delete_object
+from orm.common.index import delete_object, filter_collection
 from orm.tag import create_tag
 from schemas.common.direction_order_by import DirectionOrderByEnum
-from schemas.common.pagination import MetadataSchema, PaginationSchema
-from sqlalchemy import asc, desc, or_
-from sqlalchemy.orm import Session, Query
+from schemas.common.pagination import PaginationSchema
+from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 from models.arquivo import Arquivo
 from models.declaracao import Declaracao
 from models.problema import Problema
 from schemas.problema import ProblemaCreate, ProblemaUpdatePartial
-
-
-def filter_problemas(
-    filters: ProblemaFilter,
-    pagination: PaginationSchema,
-    query: Query[Problema],
-    field_order_by: OrderByFieldsProblemaEnum,
-    direction: DirectionOrderByEnum
-):
-    total = query.count()
-
-    for attr, value in filters.__dict__.items():
-        if value != None:
-            query = query.filter(getattr(Problema, attr) == value)
-
-    if (pagination.q):
-        search_query = or_(
-            *[getattr(Problema, field).ilike(f"%{pagination.q}%") for field in search_fields_problema if hasattr(Problema, field)])
-        query = query.filter(search_query)
-
-    if (field_order_by):
-        if (direction == DirectionOrderByEnum.DESC):
-            query = query.order_by(
-                desc(getattr(Problema, field_order_by.value)))
-        else:
-            query = query.order_by(
-                asc(getattr(Problema, field_order_by.value)))
-
-    query = query.offset(pagination.offset).limit(pagination.limit)
-
-    metadata = MetadataSchema(
-        count=query.count(),
-        total=total,
-        offset=pagination.offset,
-        limit=pagination.limit,
-        search_fields=search_fields_problema
-    )
-
-    return query, metadata
 
 
 def create_verificador(db, problema, db_problema):
@@ -282,12 +242,14 @@ async def get_all_problemas(
 
         filters.privado = False
 
-    db_problemas, metadata = filter_problemas(
-        filters,
-        pagination,
-        query,
-        field_order_by,
-        direction
+    db_problemas, metadata = filter_collection(
+        model=Problema,
+        pagination=pagination,
+        filters=filters,
+        query=query,
+        direction=direction,
+        field_order_by=field_order_by,
+        search_fields=search_fields_problema
     )
 
     return db_problemas.all(), metadata
@@ -312,18 +274,44 @@ async def get_respostas_problema(
         query = db.query(ProblemaResposta).filter(
             ProblemaResposta.problema_id == id)
 
-        db_problema_respostas = query.offset(
-            pagination.offset).limit(pagination.limit)
-
-        total = query.count()
-
-        metadata = MetadataSchema(
-            count=db_problema_respostas.count(),
-            total=total,
-            offset=pagination.offset,
-            limit=pagination.limit,
+        db_problema_respostas, metadata = filter_collection(
+            model=ProblemaResposta,
+            pagination=pagination,
+            query=query
         )
+
         return db_problema_respostas.all(), metadata
+
+    except SQLAlchemyError:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+async def get_testes_problema(
+    db: Session,
+    id: int,
+    pagination: PaginationSchema,
+    token: str
+):
+    db_problema = db.query(Problema).filter(Problema.id == id).first()
+
+    if (not db_problema):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+    user = await get_authenticated_user(token, db)
+    if (is_user(user) and bool(db_problema.usuario_id != user.id)):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+
+    try:
+        query = db.query(ProblemaTeste).filter(
+            ProblemaTeste.problema_id == id)
+
+        db_problema_testes, metadata = filter_collection(
+            model=ProblemaTeste,
+            pagination=pagination,
+            query=query
+        )
+
+        return db_problema_testes.all(), metadata
 
     except SQLAlchemyError:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
