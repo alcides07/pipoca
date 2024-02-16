@@ -6,8 +6,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from fastapi import status
-
-from schemas.validadorTeste import ValidadorTesteCreate, ValidadorTesteUpdatePartial, ValidadorTesteUpdateTotal
+from schemas.validadorTeste import ValidadorTesteCreateSingle, ValidadorTesteUpdatePartial, ValidadorTesteUpdateTotal
 
 
 async def get_validador_teste_by_id(
@@ -35,7 +34,7 @@ async def get_validador_teste_by_id(
 
 async def create_validador_teste(
     db: Session,
-    validador_teste: ValidadorTesteCreate,
+    validador_teste: ValidadorTesteCreateSingle,
     token: str
 ):
     db_validador = db.query(Validador).filter(

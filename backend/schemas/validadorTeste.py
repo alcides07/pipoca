@@ -54,6 +54,10 @@ class ValidadorTesteReadSimple(ValidadorTesteBase):
 
 
 class ValidadorTesteCreate(ValidadorTesteBaseFull):
+    pass
+
+
+class ValidadorTesteCreateSingle(ValidadorTesteBaseFull):
     validador_id: int = Field(
         description=VALIDADOR_ID_DESCRIPTION
     )

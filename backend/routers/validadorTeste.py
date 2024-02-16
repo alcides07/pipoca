@@ -1,6 +1,6 @@
 from models.validadorTeste import ValidadorTeste
 from orm.validadorTeste import create_validador_teste, delete_validador_teste, get_validador_teste_by_id, update_validador_teste
-from schemas.validadorTeste import VALIDADOR_TESTE_ID_DESCRIPTION, ValidadorTesteCreate, ValidadorTesteReadFull, ValidadorTesteReadSimple, ValidadorTesteUpdatePartial, ValidadorTesteUpdateTotal
+from schemas.validadorTeste import VALIDADOR_TESTE_ID_DESCRIPTION, ValidadorTesteCreateSingle, ValidadorTesteReadFull, ValidadorTesteReadSimple, ValidadorTesteUpdatePartial, ValidadorTesteUpdateTotal
 from routers.auth import oauth2_scheme
 from dependencies.authenticated_user import get_authenticated_user
 from dependencies.database import get_db
@@ -74,7 +74,7 @@ async def read_id(
              },
              )
 async def create(
-    validador_teste: ValidadorTesteCreate,
+    validador_teste: ValidadorTesteCreateSingle,
     db: Session = Depends(get_db),
     token: str = Depends(oauth2_scheme)
 ):
