@@ -46,6 +46,30 @@ async def read(
     )
 
 
+@router.get("/me/",
+            response_model=ResponseUnitSchema[UserReadFull],
+            summary="Lista dados do usuário autenticado",
+            dependencies=[Depends(get_authenticated_user)]
+            )
+async def read_me(
+        db: Session = Depends(get_db),
+        token: str = Depends(oauth2_scheme)
+):
+    user_db = await get_authenticated_user(token, db)
+
+    user = await get_by_id(
+        id=user_db.id,
+        model_has_user_key=User,
+        db=db,
+        model=User,
+        token=token
+    )
+
+    return ResponseUnitSchema(
+        data=user
+    )
+
+
 @router.get("/{id}/",
             response_model=ResponseUnitSchema[UserReadFull],
             summary="Lista um usuário",
