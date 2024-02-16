@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Optional
 from pydantic import BaseModel, Field, EmailStr
 
@@ -18,6 +19,10 @@ class UserBaseFull(UserBase):
 class UserReadFull(UserBaseFull):
     id: int = Field(
         description=ID_USER_DESCRIPTION
+    )
+
+    criado_em: datetime = Field(
+        description="Data e horário de criação do usuário"
     )
 
 
