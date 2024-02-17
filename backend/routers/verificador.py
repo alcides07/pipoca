@@ -1,4 +1,4 @@
-from orm.verificador import create_verificador, update_verificador
+from orm.verificador import create_verificador, get_testes_verificador, update_verificador
 from routers.auth import oauth2_scheme
 from dependencies.authenticated_user import get_authenticated_user
 from dependencies.database import get_db
@@ -6,10 +6,12 @@ from fastapi import APIRouter, Body, Depends, Path, Response, status
 from models.problema import Problema
 from models.verificador import Verificador
 from orm.common.index import delete_object, get_all, get_by_id
+from routers.verificadorTeste import VERIFICADOR_TESTE_ID_DESCRIPTION
 from schemas.common.pagination import PaginationSchema
 from schemas.common.response import ResponsePaginationSchema, ResponseUnitSchema
 from schemas.verificador import VERIFICADOR_ID_DESCRIPTION, VerificadorCreateSingle, VerificadorReadFull, VerificadorReadSimple, VerificadorUpdatePartial, VerificadorUpdateTotal
 from sqlalchemy.orm import Session
+from schemas.verificadorTeste import VerificadorTesteReadFull
 from utils.errors import errors
 
 router = APIRouter(
@@ -63,6 +65,32 @@ async def read_id(
 
     return ResponseUnitSchema(
         data=verificador
+    )
+
+
+@router.get("/{id}/testes/",
+            response_model=ResponsePaginationSchema[VerificadorTesteReadFull],
+            summary="Lista testes pertencentes a um verificador",
+            responses={
+                404: errors[404]
+            }
+            )
+async def read_verificador_id_testes(
+        id: int = Path(description=VERIFICADOR_TESTE_ID_DESCRIPTION),
+        db: Session = Depends(get_db),
+        pagination: PaginationSchema = Depends(),
+        token: str = Depends(oauth2_scheme)
+):
+    testes_verificador, metadata = await get_testes_verificador(
+        db=db,
+        pagination=pagination,
+        id=id,
+        token=token
+    )
+
+    return ResponsePaginationSchema(
+        data=testes_verificador,
+        metadata=metadata
     )
 
 
