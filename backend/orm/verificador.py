@@ -25,7 +25,7 @@ async def create_verificador(
                             detail="Problema não encontrado!")
 
     user = await get_authenticated_user(token=token, db=db)
-    if (is_user(user) and db_problema.usuario_id != user.id):  # type: ignore
+    if (is_user(user) and db_problema.usuario_id != user.id):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
 
     try:
