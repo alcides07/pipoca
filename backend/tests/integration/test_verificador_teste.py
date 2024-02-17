@@ -60,7 +60,6 @@ def test_read_verificador_teste_unit_dono_user():
         },
         json=json_verificador_teste
     )
-    print("error: ", response_verificador_teste.json())
     verificador_teste_id = response_verificador_teste.json().get("data").get("id")
 
     response = client.get(
