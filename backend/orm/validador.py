@@ -35,8 +35,9 @@ async def create_validador(
         if (db_problema.validador != None):
             await delete_object(
                 db=db,
+                token=token,
                 model=Validador,
-                id=db_problema.validador_id,  # type: ignore
+                id=db_problema.validador_id,
                 path_has_user_key="Problema"
             )
 
