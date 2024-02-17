@@ -134,7 +134,7 @@ async def update_problema(
         raise HTTPException(status.HTTP_404_NOT_FOUND)
 
     user = await get_authenticated_user(token, db)
-    if (is_user(user) and user.id != db_problema.usuario_id):  # type: ignore
+    if (is_user(user) and user.id != db_problema.usuario_id):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED)
 
     try:

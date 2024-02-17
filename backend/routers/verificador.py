@@ -186,8 +186,7 @@ async def delete(
         model=Verificador,
         id=id,
         token=token,
-        model_has_user_key=Problema,
-        return_true=True
+        model_has_user_key=Problema
     )
 
     if (verificador):

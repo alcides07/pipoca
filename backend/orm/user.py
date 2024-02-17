@@ -46,21 +46,21 @@ async def update_user(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
     user = await get_authenticated_user(db=db, token=token)
-    if (is_user(user) and user_db.id != user.id):  # type: ignore
+    if (is_user(user) and user_db.id != user.id):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
 
     try:
         user_by_username = db.query(User).filter(
             User.username == data.username).first()
 
-        if (user_by_username != None and user_by_username.id != id):  # type: ignore
+        if (user_by_username != None and bool(user_by_username.id != id)):
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                                 detail="Erro. O nome de usuário fornecido está em uso!")
 
         user_by_email = db.query(User).filter(
             User.email == data.email).first()
 
-        if (user_by_email != None and user_by_email.id != id):  # type: ignore
+        if (user_by_email != None and bool(user_by_email.id != id)):
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                                 detail="Erro. O e-mail fornecido está em uso!")
 
