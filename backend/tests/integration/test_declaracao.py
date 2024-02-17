@@ -11,6 +11,8 @@ URL_DECLARACAO = "/declaracoes"
 
 
 def test_read_declaracoes_user():
+    remove_dependencies()
+
     _, token_user, _ = create_user_helper()
 
     response = client.get(
@@ -22,8 +24,12 @@ def test_read_declaracoes_user():
 
     assert response.status_code == 401
 
+    resume_dependencies()
+
 
 def test_read_declaracoes_admin():
+    remove_dependencies()
+
     database = next(get_db_test())
     token_admin = create_administrador_helper(database)
 
@@ -35,6 +41,8 @@ def test_read_declaracoes_admin():
     )
 
     assert response.status_code == 200
+
+    resume_dependencies()
 
 
 def test_read_declaracao_unit_dono_user():
@@ -423,6 +431,8 @@ def test_delete_declaracao_admin():
     )
 
     assert response.status_code == 204
+
+    resume_dependencies()
 
 
 JSON_DECLARACAO = {
