@@ -65,7 +65,7 @@ async def read_me(
 
     user = await get_by_id(
         id=user_db.id,
-        model_has_user_key=User,
+        path_has_user_key="user",
         db=db,
         model=User,
         token=token
@@ -94,7 +94,7 @@ async def read_id(
         model=User,
         id=id,
         token=token,
-        model_has_user_key=User
+        path_has_user_key="user"
     )
 
     return ResponseUnitSchema(
@@ -195,7 +195,7 @@ async def delete(
         model=User,
         id=id,
         token=token,
-        model_has_user_key=User
+        path_has_user_key="user"
     )
     if (user):
         return Response(status_code=status.HTTP_204_NO_CONTENT)

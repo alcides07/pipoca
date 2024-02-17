@@ -147,8 +147,10 @@ async def update_problema(
                     for (declaracao_id,) in declaracoes_ids:
                         await delete_object(
                             db=db,
+                            token=token,
                             model=Declaracao,
-                            id=declaracao_id
+                            id=declaracao_id,
+                            path_has_user_key="problema"
                         )
 
                     for declaracao in value:
@@ -161,8 +163,10 @@ async def update_problema(
                     for (arquivo_id,) in arquivos_ids:
                         await delete_object(
                             db=db,
+                            token=token,
                             model=Arquivo,
-                            id=arquivo_id
+                            id=arquivo_id,
+                            path_has_user_key="problema"
                         )
 
                     for arquivo in value:
@@ -175,15 +179,19 @@ async def update_problema(
                     for (teste_id, ) in testes_ids:
                         await delete_object(
                             db=db,
+                            token=token,
                             model=ProblemaTeste,
-                            id=teste_id
+                            id=teste_id,
+                            path_has_user_key="problema"
                         )
 
                 elif (key == "verificador"):
                     await delete_object(
                         db=db,
+                        token=token,
                         model=Verificador,
-                        id=db_problema.verificador_id  # type: ignore
+                        id=db_problema.verificador_id,
+                        path_has_user_key="problema"
                     )
 
                     create_verificador(db, problema, db_problema)
@@ -191,9 +199,11 @@ async def update_problema(
 
                 elif (key == "validador"):
                     await delete_object(
+                        token=token,
                         db=db,
                         model=Validador,
-                        id=db_problema.validador_id  # type: ignore
+                        id=db_problema.validador_id,
+                        path_has_user_key="problema"
                     )
 
                     create_validador(db, problema, db_problema)

@@ -156,7 +156,7 @@ async def delete(
         model=Declaracao,
         id=id,
         token=token,
-        model_has_user_key=Problema
+        path_has_user_key="problema"
     )
 
     if (declaracao):

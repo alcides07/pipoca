@@ -85,13 +85,19 @@ async def get_by_id(
     model: Any,
     id: int,
     token: str,
-    model_has_user_key: Any,
+    path_has_user_key: str
 ):
 
     db_object = db.query(model).filter(model.id == id).first()
 
     if (db_object):
-        if (not await has_authorization_object_single(model, db, db_object, token, model_has_user_key)):
+        if (not await has_authorization_object_single(
+                db=db,
+                token=token,
+                model=model,
+                db_object=db_object,
+                path_has_user_key=path_has_user_key
+        )):
             raise HTTPException(status.HTTP_401_UNAUTHORIZED)
 
         return db_object
@@ -149,14 +155,20 @@ async def delete_object(
     db: Session,
     model: Any,
     id: int,
-    token: str = "",
-    model_has_user_key: Any = None,
+    token: str,
+    path_has_user_key: str
 ):
     db_object = db.query(model).filter(model.id == id).first()
     if not db_object:
         raise HTTPException(status.HTTP_404_NOT_FOUND)
 
-    if (token and not await has_authorization_object_single(model, db, db_object, token, model_has_user_key)):
+    if (not await has_authorization_object_single(
+        db=db,
+        token=token,
+        db_object=db_object,
+        model=model,
+        path_has_user_key=path_has_user_key
+    )):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED)
 
     try:
@@ -174,15 +186,21 @@ async def update_object(
     model: Any,
     id: int,
     data: Any,
-    model_has_user_key: Any,
-    token: str = "",
+    path_has_user_key: str,
+    token: str
 ):
 
     db_object = db.query(model).filter(model.id == id).first()
     if not db_object:
         raise HTTPException(status.HTTP_404_NOT_FOUND)
 
-    if (token and not await has_authorization_object_single(model, db, db_object, token, model_has_user_key)):
+    if (not await has_authorization_object_single(
+        db=db,
+        token=token,
+        model=db,
+        path_has_user_key=path_has_user_key,
+        db_object=db_object
+    )):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED)
 
     try:

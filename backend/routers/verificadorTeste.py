@@ -1,10 +1,10 @@
 from models.verificadorTeste import VerificadorTeste
-from orm.verificadorTeste import create_verificador_teste, delete_verificador_teste, get_verificador_teste_by_id, update_verificador_teste
+from orm.verificadorTeste import create_verificador_teste, delete_verificador_teste, update_verificador_teste
 from routers.auth import oauth2_scheme
 from dependencies.authenticated_user import get_authenticated_user
 from dependencies.database import get_db
 from fastapi import APIRouter, Body, Depends, Path, Response, status
-from orm.common.index import get_all
+from orm.common.index import get_all, get_by_id
 from schemas.common.pagination import PaginationSchema
 from schemas.common.response import ResponsePaginationSchema, ResponseUnitSchema
 from sqlalchemy.orm import Session
@@ -54,10 +54,12 @@ async def read_id(
         db: Session = Depends(get_db),
         token: str = Depends(oauth2_scheme)
 ):
-    verificador_teste = await get_verificador_teste_by_id(
+    verificador_teste = await get_by_id(
         db=db,
+        model=VerificadorTeste,
         id=id,
-        token=token
+        token=token,
+        path_has_user_key="verificador.problema"
     )
 
     return ResponseUnitSchema(

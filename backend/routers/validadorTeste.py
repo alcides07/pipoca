@@ -1,11 +1,11 @@
 from models.validadorTeste import ValidadorTeste
-from orm.validadorTeste import create_validador_teste, delete_validador_teste, get_validador_teste_by_id, update_validador_teste
+from orm.validadorTeste import create_validador_teste, delete_validador_teste, update_validador_teste
 from schemas.validadorTeste import VALIDADOR_TESTE_ID_DESCRIPTION, ValidadorTesteCreateSingle, ValidadorTesteReadFull, ValidadorTesteReadSimple, ValidadorTesteUpdatePartial, ValidadorTesteUpdateTotal
 from routers.auth import oauth2_scheme
 from dependencies.authenticated_user import get_authenticated_user
 from dependencies.database import get_db
 from fastapi import APIRouter, Body, Depends, Path, Response, status
-from orm.common.index import get_all
+from orm.common.index import get_all, get_by_id
 from schemas.common.pagination import PaginationSchema
 from schemas.common.response import ResponsePaginationSchema, ResponseUnitSchema
 from sqlalchemy.orm import Session
@@ -53,7 +53,9 @@ async def read_id(
         db: Session = Depends(get_db),
         token: str = Depends(oauth2_scheme)
 ):
-    validador_teste = await get_validador_teste_by_id(
+    validador_teste = await get_by_id(
+        model=ValidadorTeste,
+        path_has_user_key="validador.problema",
         db=db,
         id=id,
         token=token
