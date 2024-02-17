@@ -169,7 +169,7 @@ async def read_id(
         model=Problema,
         id=id,
         token=token,
-        model_has_user_key=Problema
+        path_has_user_key="problema"
     )
     return ResponseUnitSchema(
         data=problema

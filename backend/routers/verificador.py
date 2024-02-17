@@ -60,7 +60,7 @@ async def read_id(
         model=Verificador,
         id=id,
         token=token,
-        model_has_user_key=Problema
+        path_has_user_key="problema"
     )
 
     return ResponseUnitSchema(
@@ -186,7 +186,7 @@ async def delete(
         model=Verificador,
         id=id,
         token=token,
-        model_has_user_key=Problema
+        path_has_user_key="problema"
     )
 
     if (verificador):

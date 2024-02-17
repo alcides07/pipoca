@@ -37,7 +37,7 @@ async def create_verificador(
                 db=db,
                 model=Verificador,
                 id=db_problema.verificador_id,  # type: ignore
-                model_has_user_key=Problema
+                path_has_user_key="problema"
             )
 
         db.add(db_verificador)
