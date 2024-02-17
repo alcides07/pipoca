@@ -2,7 +2,9 @@ from dependencies.authenticated_user import get_authenticated_user
 from dependencies.authorization_user import is_user
 from fastapi import HTTPException, status
 from models.verificador import Verificador
-from orm.common.index import delete_object
+from models.verificadorTeste import VerificadorTeste
+from orm.common.index import delete_object, filter_collection
+from schemas.common.pagination import PaginationSchema
 from schemas.verificador import VerificadorCreateSingle, VerificadorUpdatePartial, VerificadorUpdateTotal
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
@@ -50,6 +52,38 @@ async def create_verificador(
 
     except SQLAlchemyError:
         db.rollback()
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+async def get_testes_verificador(
+    db: Session,
+    id: int,
+    pagination: PaginationSchema,
+    token: str
+):
+    db_verificador = db.query(Verificador).filter(Verificador.id == id).first()
+
+    if (not db_verificador):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+    user = await get_authenticated_user(token, db)
+
+    if (is_user(user) and db_verificador.problema.usuario_id != user.id):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+
+    try:
+        query = db.query(VerificadorTeste).filter(
+            VerificadorTeste.verificador_id == id)
+
+        db_verificador_testes, metadata = filter_collection(
+            model=VerificadorTeste,
+            pagination=pagination,
+            query=query
+        )
+
+        return db_verificador_testes.all(), metadata
+
+    except SQLAlchemyError:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
