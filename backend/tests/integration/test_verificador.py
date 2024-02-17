@@ -80,6 +80,44 @@ def test_read_verificador_unit_admin():
     resume_dependencies()
 
 
+def test_read_testes_verificador_permitido_dono():
+    remove_dependencies()
+
+    response_verificador, token = create_verificador_helper()
+    verificador_id = response_verificador.json().get("data").get("id")
+
+    response = client.get(
+        f"{URL_VERIFICADOR}/{verificador_id}/testes/",
+        headers={
+            "Authorization": f"Bearer {token}",
+        },
+    )
+
+    assert response.status_code == 200
+
+    resume_dependencies()
+
+
+def test_read_testes_verificador_negado_nao_dono():
+    remove_dependencies()
+
+    response_verificador, _ = create_verificador_helper()
+    verificador_id = response_verificador.json().get("data").get("id")
+
+    _, token_user, _ = create_user_helper()
+
+    response = client.get(
+        f"{URL_VERIFICADOR}/{verificador_id}/testes/",
+        headers={
+            "Authorization": f"Bearer {token_user}",
+        },
+    )
+
+    assert response.status_code == 401
+
+    resume_dependencies()
+
+
 def test_create_verificador_user():
     remove_dependencies()
 
