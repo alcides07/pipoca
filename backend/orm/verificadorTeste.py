@@ -10,29 +10,6 @@ from fastapi import status
 from schemas.verificadorTeste import VerificadorTesteCreateSingle, VerificadorTesteUpdatePartial, VerificadorTesteUpdateTotal
 
 
-async def get_verificador_teste_by_id(
-    db: Session,
-    id: int,
-    token: str
-):
-    db_verificador_teste = db.query(VerificadorTeste).filter(
-        VerificadorTeste.id == id).first()
-
-    if (not db_verificador_teste):
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
-
-    user = await get_authenticated_user(token, db)
-
-    try:
-        if (is_user(user) and user.id != db_verificador_teste.verificador.problema.usuario_id):
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
-
-        return db_verificador_teste
-
-    except SQLAlchemyError:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
 async def create_verificador_teste(
     db: Session,
     verificador_teste: VerificadorTesteCreateSingle,
