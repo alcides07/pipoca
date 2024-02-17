@@ -48,7 +48,7 @@ async def create_verificador_teste(
 
     user = await get_authenticated_user(token, db)
 
-    if (db_verificador.problema.usuario_id != user.id):
+    if (is_user(user) and db_verificador.problema.usuario_id != user.id):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED)
 
@@ -87,7 +87,7 @@ async def update_verificador_teste(
         raise HTTPException(status.HTTP_404_NOT_FOUND)
 
     user = await get_authenticated_user(token, db)
-    if (db_verificador_teste.verificador.problema.usuario_id != user.id):
+    if (is_user(user) and db_verificador_teste.verificador.problema.usuario_id != user.id):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED
         )
