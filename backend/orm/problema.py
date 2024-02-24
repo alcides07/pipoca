@@ -325,3 +325,26 @@ async def get_testes_problema(
 
     except SQLAlchemyError:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+async def get_problema_by_id(
+    db: Session,
+    id: int,
+    token: str
+):
+    db_problema = db.query(Problema).filter(Problema.id == id).first()
+
+    if (not db_problema):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+    user = await get_authenticated_user(token, db)
+    if (
+        is_user(user)
+        and
+        bool(db_problema.usuario_id != user.id)
+        and
+        bool(db_problema.privado == True)
+    ):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+
+    return db_problema
