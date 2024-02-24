@@ -1,5 +1,5 @@
 from enum import Enum
-from dependencies.authorization_user import has_authorization_object_single, is_admin, is_user
+from dependencies.authorization_user import has_authorization_object_single, is_user
 from schemas.common.direction_order_by import DirectionOrderByEnum
 from sqlalchemy import asc, desc, or_
 from sqlalchemy.exc import SQLAlchemyError
@@ -57,7 +57,7 @@ def get_by_key_value_exists(db: Session, model: Any, key: str, value):
     return True if db_object != None else False
 
 
-def get_by_key_value(db: Session, model: Any, key: str, value):
+def get_by_key_value(db: Session, model: Any, key: str, value: Any):
     db_object = db.query(model).filter(getattr(model, key) == value).first()
     return db_object
 
@@ -108,23 +108,19 @@ async def get_all(
     db: Session,
     model: Any,
     pagination: PaginationSchema,
-    token: str,
+    token: Optional[str] = "",
     field_order_by: Optional[Enum] = None,
     direction: Optional[DirectionOrderByEnum] = None,
     filters: Any = None,
     search_fields: list[str] = [],
-    allow_any: bool = False,
     me_author: bool = False
 ):
-    user = await user_autenthicated(token, db)
-
-    if (allow_any == False and not is_admin(user)):
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED)
-
     query = db.query(model)
 
-    if (is_user(user) and me_author == True and hasattr(model, "usuario_id")):
-        query = db.query(model).filter(model.usuario_id == user.id)
+    if (token):
+        user = await user_autenthicated(token, db)
+        if (is_user(user) and me_author == True and hasattr(model, "usuario_id")):
+            query = db.query(model).filter(model.usuario_id == user.id)
 
     db_objects, metadata = filter_collection(
         model=model,
