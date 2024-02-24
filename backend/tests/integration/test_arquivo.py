@@ -9,7 +9,10 @@ from tests.config_test import remove_dependencies, resume_dependencies
 client = TestClient(app)
 
 
-def test_read_arquivo_unit_user():
+# -------------------------------
+# Testes de leitura (GET)
+# -------------------------------
+def test_read_arquivo_by_id_com_user_criador_do_problema():
     remove_dependencies()
 
     response_arquivo_user, token = create_arquivo_helper()
@@ -27,10 +30,30 @@ def test_read_arquivo_unit_user():
     resume_dependencies()
 
 
-def test_read_arquivo_unit_admin():
+def test_read_arquivo_by_id_com_user_nao_criador_do_problema():
     remove_dependencies()
 
-    response_arquivo_admin, token = create_arquivo_helper("admin")
+    response_arquivo_user, _ = create_arquivo_helper()
+    arquivo_id = response_arquivo_user.json().get("data").get("id")
+
+    _, token, _ = create_user_helper()
+
+    response = client.get(
+        f"{URL_ARQUIVO}/{arquivo_id}/",
+        headers={
+            "Authorization": f"Bearer {token}",
+        },
+    )
+
+    assert response.status_code == 401
+
+    resume_dependencies()
+
+
+def test_read_arquivo_by_id_com_admin():
+    remove_dependencies()
+
+    response_arquivo_admin, token = create_arquivo_helper()
     arquivo_id = response_arquivo_admin.json().get("data").get("id")
 
     response = client.get(
@@ -45,7 +68,7 @@ def test_read_arquivo_unit_admin():
     resume_dependencies()
 
 
-def test_read_arquivos_user():
+def test_read_arquivo_all_com_user():
     remove_dependencies()
 
     _, token, _ = create_user_helper()
@@ -61,7 +84,7 @@ def test_read_arquivos_user():
     resume_dependencies()
 
 
-def test_read_arquivos_admin():
+def test_read_arquivo_all_com_admin():
     remove_dependencies()
 
     database = next(get_db_test())
@@ -78,7 +101,10 @@ def test_read_arquivos_admin():
     resume_dependencies()
 
 
-def test_create_arquivo_user():
+# -------------------------------
+# Testes de escrita (POST)
+# -------------------------------
+def test_create_arquivo_com_user_criador_do_problema():
     remove_dependencies()
 
     response, _ = create_arquivo_helper()
@@ -88,7 +114,7 @@ def test_create_arquivo_user():
     resume_dependencies()
 
 
-def test_create_arquivo_admin():
+def test_create_arquivo_com_admin():
     remove_dependencies()
 
     response, _ = create_arquivo_helper("admin")
@@ -98,7 +124,10 @@ def test_create_arquivo_admin():
     resume_dependencies()
 
 
-def test_update_partial_arquivo_user():
+# -------------------------------
+# Testes de atualização parcial (PATCH)
+# -------------------------------
+def test_update_partial_arquivo_com_user_criador_do_problema():
     remove_dependencies()
 
     response_arquivo_user, arquivo_antigo = update_partial_arquivo_helper()
@@ -112,7 +141,7 @@ def test_update_partial_arquivo_user():
     resume_dependencies()
 
 
-def test_update_partial_arquivo_admin():
+def test_update_partial_arquivo_com_admin():
     remove_dependencies()
 
     response_arquivo_user, arquivo_antigo = update_partial_arquivo_helper(
@@ -127,7 +156,10 @@ def test_update_partial_arquivo_admin():
     resume_dependencies()
 
 
-def test_update_full_arquivo_user():
+# -------------------------------
+# Testes de atualização total (PUT)
+# -------------------------------
+def test_update_full_arquivo_com_user_criador_do_problema():
     remove_dependencies()
 
     response_arquivo_user, arquivo_antigo = update_full_arquivo_helper()
@@ -144,7 +176,7 @@ def test_update_full_arquivo_user():
     resume_dependencies()
 
 
-def test_update_full_arquivo_admin():
+def test_update_full_arquivo_com_admin():
     remove_dependencies()
 
     response_arquivo_user, arquivo_antigo = update_full_arquivo_helper(
@@ -162,7 +194,10 @@ def test_update_full_arquivo_admin():
     resume_dependencies()
 
 
-def test_delete_arquivo_user():
+# -------------------------------
+# Testes de exclusão (DELETE)
+# -------------------------------
+def test_delete_arquivo_com_user_criador_do_problema():
     remove_dependencies()
 
     response_arquivo_user, token = create_arquivo_helper()
@@ -180,16 +215,19 @@ def test_delete_arquivo_user():
     resume_dependencies()
 
 
-def test_delete_arquivo_admin():
+def test_delete_arquivo_com_admin():
     remove_dependencies()
 
-    response_arquivo_admin, token = create_arquivo_helper("admin")
+    response_arquivo_admin, _ = create_arquivo_helper()
     arquivo_id = response_arquivo_admin.json().get("data").get("id")
+
+    database = next(get_db_test())
+    token_admin = create_administrador_helper(database)
 
     response = client.delete(
         f"{URL_ARQUIVO}/{arquivo_id}/",
         headers={
-            "Authorization": f"Bearer {token}",
+            "Authorization": f"Bearer {token_admin}",
         },
     )
 

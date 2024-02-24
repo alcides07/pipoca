@@ -10,7 +10,10 @@ client = TestClient(app)
 URL_DECLARACAO = "/declaracoes"
 
 
-def test_read_declaracoes_user():
+# -------------------------------
+# Testes de leitura (GET)
+# -------------------------------
+def test_read_declaracao_all_com_user_criador_do_problema():
     remove_dependencies()
 
     _, token_user, _ = create_user_helper()
@@ -27,7 +30,7 @@ def test_read_declaracoes_user():
     resume_dependencies()
 
 
-def test_read_declaracoes_admin():
+def test_read_declaracao_all_com_admin():
     remove_dependencies()
 
     database = next(get_db_test())
@@ -45,7 +48,7 @@ def test_read_declaracoes_admin():
     resume_dependencies()
 
 
-def test_read_declaracao_unit_dono_user():
+def test_read_declaracao_by_id_com_user_criador_do_problema():
     remove_dependencies()
 
     response_problema_user, token = create_problema_user_helper()
@@ -75,7 +78,7 @@ def test_read_declaracao_unit_dono_user():
     resume_dependencies()
 
 
-def test_read_declaracao_unit_nao_dono_user():
+def test_read_declaracao_by_id_com_user_nao_criador_do_problema():
     remove_dependencies()
 
     response_problema_user, token = create_problema_user_helper()
@@ -107,7 +110,7 @@ def test_read_declaracao_unit_nao_dono_user():
     resume_dependencies()
 
 
-def test_read_declaracao_unit_admin():
+def test_read_declaracao_by_id_com_admin():
     remove_dependencies()
 
     response_problema_user, token = create_problema_user_helper()
@@ -140,7 +143,10 @@ def test_read_declaracao_unit_admin():
     resume_dependencies()
 
 
-def test_create_declaracao_dono_user():
+# -------------------------------
+# Testes de escrita (POST)
+# -------------------------------
+def test_create_declaracao_com_user_criador_do_problema():
     remove_dependencies()
 
     response_problema_user, token = create_problema_user_helper()
@@ -162,7 +168,7 @@ def test_create_declaracao_dono_user():
     resume_dependencies()
 
 
-def test_create_declaracao_admin():
+def test_create_declaracao_com_admin():
     remove_dependencies()
 
     response_problema_user, token_admin = create_problema_admin_helper()
@@ -184,7 +190,10 @@ def test_create_declaracao_admin():
     resume_dependencies()
 
 
-def test_update_partial_declaracao_dono_user():
+# -------------------------------
+# Testes de atualização parcial (PATCH)
+# -------------------------------
+def test_update_partial_declaracao_com_user_criador_do_problema():
     remove_dependencies()
 
     response_problema_user, token = create_problema_user_helper()
@@ -220,7 +229,7 @@ def test_update_partial_declaracao_dono_user():
     resume_dependencies()
 
 
-def test_update_partial_declaracao_nao_dono_user():
+def test_update_partial_declaracao_com_user_nao_criador_do_problema():
     remove_dependencies()
 
     response_problema_user, token = create_problema_user_helper()
@@ -258,7 +267,10 @@ def test_update_partial_declaracao_nao_dono_user():
     resume_dependencies()
 
 
-def test_update_total_declaracao_dono_user():
+# -------------------------------
+# Testes de atualização total (PUT)
+# -------------------------------
+def test_update_total_declaracao_com_user_criador_do_problema():
     remove_dependencies()
 
     response_problema_user, token = create_problema_user_helper()
@@ -298,7 +310,7 @@ def test_update_total_declaracao_dono_user():
     resume_dependencies()
 
 
-def test_update_total_declaracao_nao_dono_user():
+def test_update_total_declaracao_com_user_nao_criador_do_problema():
     remove_dependencies()
 
     response_problema_user, token = create_problema_user_helper()
@@ -340,7 +352,10 @@ def test_update_total_declaracao_nao_dono_user():
     resume_dependencies()
 
 
-def test_delete_declaracao_dono_user():
+# -------------------------------
+# Testes de exclusão (DELETE)
+# -------------------------------
+def test_delete_declaracao_com_user_criador_do_problema():
     remove_dependencies()
 
     response_problema_user, token = create_problema_user_helper()
@@ -370,7 +385,7 @@ def test_delete_declaracao_dono_user():
     resume_dependencies()
 
 
-def test_delete_declaracao_nao_dono_user():
+def test_delete_declaracao_com_user_nao_criador_do_problema():
     remove_dependencies()
 
     response_problema_user, token = create_problema_user_helper()
@@ -402,7 +417,7 @@ def test_delete_declaracao_nao_dono_user():
     resume_dependencies()
 
 
-def test_delete_declaracao_admin():
+def test_delete_declaracao_com_admin():
     remove_dependencies()
 
     response_problema_user, token = create_problema_user_helper()
