@@ -76,7 +76,7 @@ async def update_verificador_teste(
                                     detail="Erro. Um teste com o mesmo número já foi registrado para este verificador!")
 
         for key, value in verificador_teste:
-            if (value != None and getattr(db_verificador_teste, key)):
+            if (value != None and hasattr(db_verificador_teste, key)):
                 setattr(db_verificador_teste, key, value)
 
         db.commit()

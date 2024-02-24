@@ -106,7 +106,7 @@ async def update_validador(
     try:
 
         for key, value in validador:
-            if (value != None and getattr(db_validador, key)):
+            if (value != None and hasattr(db_validador, key)):
                 setattr(db_validador, key, value)
 
         db.commit()

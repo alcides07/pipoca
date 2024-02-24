@@ -220,7 +220,7 @@ async def update_problema(
                         create_tags(db, tag, db_problema)
 
                 else:
-                    if getattr(db_problema, key):
+                    if hasattr(db_problema, key):
                         setattr(db_problema, key, value)
 
         db_problema.usuario = user

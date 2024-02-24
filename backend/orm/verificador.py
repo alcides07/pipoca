@@ -105,7 +105,7 @@ async def update_verificador(
 
     try:
         for key, value in verificador:
-            if (value != None and getattr(db_verificador, key)):
+            if (value != None and hasattr(db_verificador, key)):
                 setattr(db_verificador, key, value)
 
         db.commit()
