@@ -1,6 +1,7 @@
 from dependencies.authorization_user import is_admin
+from dependencies.is_admin import is_admin_dependencies
 from routers.auth import oauth2_scheme
-from fastapi import APIRouter, Body, Depends, Path, Response, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Path, Response, status
 from utils.errors import errors
 from models.user import User
 from orm.common.index import delete_object, get_by_id, get_all
@@ -27,7 +28,7 @@ router = APIRouter(
 @router.get("/",
             response_model=ResponsePaginationSchema[UserReadFull],
             summary="Lista usuários",
-            dependencies=[Depends(get_authenticated_user)],
+            dependencies=[Depends(is_admin_dependencies)]
             )
 async def read(
         db: Session = Depends(get_db),
@@ -61,7 +62,8 @@ async def read_me(
     user_db = await get_authenticated_user(token, db)
 
     if (is_admin(user_db)):
-        return Response(status_code=status.HTTP_501_NOT_IMPLEMENTED)
+        raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED,
+                            detail="Erro. Funcionalidade não disponível para administradores!")
 
     user = await get_by_id(
         id=user_db.id,

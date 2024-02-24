@@ -1,5 +1,5 @@
+from dependencies.is_admin import is_admin_dependencies
 from orm.problemaTeste import create_problema_teste, get_problema_teste_by_id, update_problema_teste
-from models.problema import Problema
 from schemas.problemaTeste import ProblemaTesteCreateSingle, ProblemaTesteReadFull, ProblemaTesteReadSimple, ProblemaTesteUpdatePartial, ProblemaTesteUpdateTotal
 from fastapi import APIRouter, Body, Depends, Path, Response, status
 from models.problemaTeste import ProblemaTeste
@@ -23,18 +23,17 @@ router = APIRouter(
 
 @router.get("/",
             response_model=ResponsePaginationSchema[ProblemaTesteReadSimple],
-            summary="Lista testes de problemas"
+            summary="Lista testes de problemas",
+            dependencies=[Depends(is_admin_dependencies)]
             )
 async def read(
     db: Session = Depends(get_db),
     pagination: PaginationSchema = Depends(),
-    token: str = Depends(oauth2_scheme),
 ):
     problemas_testes, metadata = await get_all(
         db=db,
         model=ProblemaTeste,
-        pagination=pagination,
-        token=token
+        pagination=pagination
     )
 
     return ResponsePaginationSchema(

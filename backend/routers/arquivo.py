@@ -1,4 +1,4 @@
-from models.problema import Problema
+from dependencies.is_admin import is_admin_dependencies
 from orm.arquivo import create_arquivo, update_arquivo
 from routers.auth import oauth2_scheme
 from fastapi import APIRouter, Body, Depends, Path, status, Response
@@ -23,17 +23,16 @@ router = APIRouter(
 @router.get("/",
             response_model=ResponsePaginationSchema[ArquivoReadSimple],
             summary="Lista arquivos",
+            dependencies=[Depends(is_admin_dependencies)]
             )
 async def read(
         db: Session = Depends(get_db),
         pagination: PaginationSchema = Depends(),
-        token: str = Depends(oauth2_scheme)
 ):
     arquivos, metadata = await get_all(
         db=db,
         model=Arquivo,
         pagination=pagination,
-        token=token,
     )
 
     return ResponsePaginationSchema(

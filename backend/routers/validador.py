@@ -1,3 +1,4 @@
+from dependencies.is_admin import is_admin_dependencies
 from orm.validador import create_validador, get_testes_validador, update_validador
 from routers.auth import oauth2_scheme
 from dependencies.authenticated_user import get_authenticated_user
@@ -23,17 +24,16 @@ router = APIRouter(
 @router.get("/",
             response_model=ResponsePaginationSchema[ValidadorReadSimple],
             summary="Lista validadores",
+            dependencies=[Depends(is_admin_dependencies)]
             )
 async def read(
         db: Session = Depends(get_db),
-        pagination: PaginationSchema = Depends(),
-        token: str = Depends(oauth2_scheme)
+        pagination: PaginationSchema = Depends()
 ):
     validadores, metadata = await get_all(
         db=db,
         model=Validador,
-        pagination=pagination,
-        token=token
+        pagination=pagination
     )
 
     return ResponsePaginationSchema(
