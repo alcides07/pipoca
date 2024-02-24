@@ -67,8 +67,6 @@ async def get_problema_resposta_by_id(
         if (
             is_user(user)
             and
-            db_problema_resposta.problema.privado == True
-            and
             db_problema_resposta.usuario_id != user.id  # Não sou o autor da resposta
             and
             db_problema_resposta.problema.usuario_id != user.id  # Não sou o autor do problema
