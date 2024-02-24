@@ -135,8 +135,8 @@ async def get_all(
     return db_objects.all(), metadata
 
 
-def create_object(db: Session, model: Any, schema: Any):
-    db_object = model(**schema.model_dump())
+def create_object(db: Session, model: Any, data: Any):
+    db_object = model(**data.model_dump())
     try:
         db.add(db_object)
         db.commit()
@@ -166,6 +166,25 @@ async def delete_object(
         path_has_user_key=path_has_user_key
     )):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED)
+
+    try:
+        db.delete(db_object)
+        db.commit()
+        return True
+
+    except SQLAlchemyError:
+        db.rollback()
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+async def delete_simple(
+    db: Session,
+    model: Any,
+    id: int
+):
+    db_object = db.query(model).filter(model.id == id).first()
+    if not db_object:
+        raise HTTPException(status.HTTP_404_NOT_FOUND)
 
     try:
         db.delete(db_object)
