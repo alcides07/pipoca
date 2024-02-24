@@ -4,6 +4,7 @@ from fastapi import HTTPException, status
 from filters.problema import OrderByFieldsProblemaEnum, ProblemaFilter, search_fields_problema
 from models.problemaResposta import ProblemaResposta
 from models.problemaTeste import ProblemaTeste
+from models.tag import Tag
 from models.validador import Validador
 from models.validadorTeste import ValidadorTeste
 from models.verificador import Verificador
@@ -68,7 +69,10 @@ def create_declaracoes(db, declaracao, db_problema):
 
 
 def create_tags(db, tag, db_problema):
-    db_tag = create_tag(db, tag)
+    db_tag = db.query(Tag).filter(Tag.nome == tag).first()
+    if db_tag is None:
+        db_tag = Tag(nome=tag)
+        db.add(db_tag)
     db_problema.tags.append(db_tag)
 
 
