@@ -5,7 +5,7 @@ from schemas.arquivo import ArquivoCreate, ArquivoReadFull, ArquivoReadSimple
 from schemas.problemaTeste import ProblemaTesteCreate, ProblemaTesteReadFull, ProblemaTesteReadSimple
 from schemas.tag import TagRead
 from schemas.declaracao import DeclaracaoCreate, DeclaracaoReadFull, DeclaracaoReadSimple
-from schemas.user import UserReadFull, UserReadSimple
+from schemas.user import UserReadSimple
 from schemas.validador import ValidadorCreate, ValidadorReadFull, ValidadorReadSimple
 from schemas.verificador import VerificadorCreate, VerificadorReadFull, VerificadorReadSimple
 
@@ -95,7 +95,7 @@ class ProblemaReadFull(ProblemaBase):
         description="Identificador do problema"
     )
 
-    usuario: Optional[UserReadFull] = Field(
+    usuario: Optional[UserReadSimple] = Field(
         description="Criador do problema", default=None)
 
     tags: list[TagRead] = Field(
