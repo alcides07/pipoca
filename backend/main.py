@@ -56,7 +56,7 @@ def custom_openapi():
 async def exception_handler(request: Request, exception: HTTPException):
     return JSONResponse(
         status_code=exception.status_code,
-        content={"error": translate(exception.detail).capitalize()}
+        content={"error": translate(exception.detail)}
     )
 
 app.openapi = custom_openapi

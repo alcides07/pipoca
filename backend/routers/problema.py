@@ -39,7 +39,10 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_model=ResponsePaginationSchema[ProblemaReadSimple], summary="Lista problemas")
+@router.get("/",
+            response_model=ResponsePaginationSchema[ProblemaReadSimple],
+            summary="Lista problemas"
+            )
 async def read(
     db: Session = Depends(get_db),
     pagination: PaginationSchema = Depends(),
@@ -142,7 +145,6 @@ async def read_problemas_me(
         direction=direction,
         filters=filters,
         search_fields=search_fields_problema,
-        allow_any=True,
         me_author=True
     )
 

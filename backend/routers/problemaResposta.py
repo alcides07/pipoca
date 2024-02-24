@@ -1,5 +1,6 @@
 from constants import DIRECTION_ORDER_BY_DESCRIPTION, FIELDS_ORDER_BY_DESCRIPTION
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
+from dependencies.is_admin import is_admin_dependencies
 from filters.problemaResposta import OrderByFieldsProblemaRespostaEnum, search_fields_problema_resposta
 from models.problemaResposta import ProblemaResposta
 from orm.problemaResposta import create_problema_resposta, get_problema_resposta_by_id
@@ -25,12 +26,12 @@ router = APIRouter(
 
 @router.get("/",
             response_model=ResponsePaginationSchema[ProblemaRespostaReadSimple],
-            summary="Lista respostas de problemas"
+            summary="Lista respostas de problemas",
+            dependencies=[Depends(is_admin_dependencies)]
             )
 async def read(
     db: Session = Depends(get_db),
     pagination: PaginationSchema = Depends(),
-    token: str = Depends(oauth2_scheme),
     sort: OrderByFieldsProblemaRespostaEnum = Query(
         default=None,
         description=FIELDS_ORDER_BY_DESCRIPTION
@@ -44,7 +45,6 @@ async def read(
         model=ProblemaResposta,
         db=db,
         pagination=pagination,
-        token=token,
         search_fields=search_fields_problema_resposta,
         field_order_by=sort,
         direction=direction
@@ -81,7 +81,6 @@ async def read_problemas_respostas_me(
         field_order_by=sort,
         direction=direction,
         search_fields=search_fields_problema_resposta,
-        allow_any=True,
         me_author=True
     )
 

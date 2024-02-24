@@ -1,3 +1,4 @@
+from dependencies.is_admin import is_admin_dependencies
 from models.declaracao import Declaracao
 from orm.declaracao import create_declaracao, get_declaracao_by_id, update_declaracao
 from routers.auth import oauth2_scheme
@@ -24,17 +25,16 @@ router = APIRouter(
 @router.get("/",
             response_model=ResponsePaginationSchema[DeclaracaoReadSimple],
             summary="Lista declarações de problemas",
+            dependencies=[Depends(is_admin_dependencies)]
             )
 async def read(
         db: Session = Depends(get_db),
-        pagination: PaginationSchema = Depends(),
-        token: str = Depends(oauth2_scheme)
+        pagination: PaginationSchema = Depends()
 ):
     declaracoes, metadata = await get_all(
         db=db,
         model=Declaracao,
         pagination=pagination,
-        token=token
     )
 
     return ResponsePaginationSchema(
