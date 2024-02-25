@@ -16,19 +16,19 @@ from schemas.problemaResposta import ProblemaRespostaReadSimple
 from schemas.problemaTeste import ProblemaTesteCreate, ProblemaTesteReadFull, TipoTesteProblemaEnum
 from schemas.validador import ValidadorCreate, ValidadorReadFull
 from schemas.validadorTeste import ValidadorTesteCreate, VereditoValidadorTesteEnum
-from schemas.verificador import VerificadorCreate
+from schemas.verificador import VerificadorCreate, VerificadorReadFull
 from schemas.verificadorTeste import VereditoVerificadorTesteEnum, VerificadorTesteCreate
 from utils.bytes_to_megabytes import bytes_to_megabytes
 from utils.language_parser import languages_parser
 from utils.errors import errors
 from models.problema import Problema
-from orm.common.index import get_all, get_by_id
+from orm.common.index import get_all
 from dependencies.authenticated_user import get_authenticated_user
 from schemas.problema import ProblemaCreate, ProblemaCreateUpload, ProblemaReadFull, ProblemaReadSimple, ProblemaUpdatePartial, ProblemaUpdateTotal
 from schemas.common.pagination import PaginationSchema
 from dependencies.database import get_db
 from sqlalchemy.orm import Session
-from orm.problema import create_problema, create_problema_upload, get_all_problemas, get_arquivos_problema, get_problema_by_id, get_respostas_problema, get_testes_problema, get_validador_problema, update_problema
+from orm.problema import create_problema, create_problema_upload, get_all_problemas, get_arquivos_problema, get_problema_by_id, get_respostas_problema, get_testes_problema, get_validador_problema, get_verificador_problema, update_problema
 from schemas.common.response import ResponsePaginationSchema, ResponseUnitSchema
 
 PROBLEMA_ID_DESCRIPTION = "Identificador do problema"
@@ -149,6 +149,26 @@ async def read_problema_id_validador(
 
     return ResponseUnitSchema(
         data=validador
+    )
+
+
+@router.get("/{id}/verificadores/",
+            response_model=ResponseUnitSchema[VerificadorReadFull],
+            summary="Lista um verificador pertencente a um problema",
+            )
+async def read_problema_id_verificador(
+    db: Session = Depends(get_db),
+    id: int = Path(description=PROBLEMA_ID_DESCRIPTION),
+    token: str = Depends(oauth2_scheme)
+):
+    verificador = await get_verificador_problema(
+        db=db,
+        id=id,
+        token=token
+    )
+
+    return ResponseUnitSchema(
+        data=verificador
     )
 
 
