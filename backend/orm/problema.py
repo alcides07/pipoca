@@ -341,7 +341,7 @@ async def get_testes_problema(
         and
         bool(db_problema.usuario_id != user.id)
     ):
-        if (filters.exemplo == False):
+        if (bool(db_problema.privado) == True or filters.exemplo == False):
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
 
         filters.exemplo = True
