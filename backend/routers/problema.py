@@ -28,7 +28,7 @@ from schemas.problema import ProblemaCreate, ProblemaCreateUpload, ProblemaReadF
 from schemas.common.pagination import PaginationSchema
 from dependencies.database import get_db
 from sqlalchemy.orm import Session
-from orm.problema import create_problema, create_problema_upload, get_all_problemas, get_arquivos_problema, get_problema_by_id, get_respostas_problema, get_testes_problema, update_problema
+from orm.problema import create_problema, create_problema_upload, get_all_problemas, get_arquivos_problema, get_problema_by_id, get_respostas_problema, get_testes_problema, get_validador_problema, update_problema
 from schemas.common.response import ResponsePaginationSchema, ResponseUnitSchema
 
 PROBLEMA_ID_DESCRIPTION = "Identificador do problema"
@@ -141,12 +141,10 @@ async def read_problema_id_validador(
     id: int = Path(description=PROBLEMA_ID_DESCRIPTION),
     token: str = Depends(oauth2_scheme)
 ):
-    validador = await get_by_id(
-        model=Validador,
+    validador = await get_validador_problema(
         db=db,
         id=id,
-        token=token,
-        path_has_user_key="problema"
+        token=token
     )
 
     return ResponseUnitSchema(
