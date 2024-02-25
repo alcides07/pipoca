@@ -1,3 +1,5 @@
+from typing import Optional
+from sqlalchemy import Column
 from dependencies.authenticated_user import get_authenticated_user
 from dependencies.authorization_user import is_admin, is_user
 from fastapi import HTTPException, status
@@ -10,7 +12,6 @@ from models.validadorTeste import ValidadorTeste
 from models.verificador import Verificador
 from models.verificadorTeste import VerificadorTeste
 from orm.common.index import filter_collection
-from orm.tag import create_tag
 from schemas.common.direction_order_by import DirectionOrderByEnum
 from schemas.common.pagination import PaginationSchema
 from sqlalchemy.orm import Session
@@ -19,6 +20,30 @@ from models.arquivo import Arquivo
 from models.declaracao import Declaracao
 from models.problema import Problema
 from schemas.problema import ProblemaCreate, ProblemaCreateUpload, ProblemaUpdatePartial, ProblemaUpdateTotal
+
+
+def get_unique_nome_problema(
+    db: Session,
+    nome_problema: str,
+    problema_id: Optional[Column[int]] = None
+):
+    db_problema = db.query(Problema).filter(
+        Problema.nome == nome_problema).first()
+
+    if (db_problema and bool(db_problema.id != problema_id)):
+        i = 1
+        while (True):
+            new_name = db_problema.nome + f"-copy-{i}"
+
+            db_new_problema = db.query(Problema).filter(
+                Problema.nome == new_name).first()
+
+            if (not db_new_problema):
+                return new_name
+
+            i += 1
+
+    return None
 
 
 def create_verificador(db, problema, db_problema):
@@ -94,6 +119,11 @@ async def create_problema_upload(
             **problema.model_dump(exclude=set(["tags", "declaracoes", "arquivos", "verificador", "validador", "usuario", "testes"])))
         db.add(db_problema)
 
+        new_name_problema = get_unique_nome_problema(
+            db=db, nome_problema=problema.nome)
+        if (bool(new_name_problema)):
+            db_problema.nome = new_name_problema
+
         for declaracao in problema.declaracoes:
             create_declaracoes(db, declaracao, db_problema)
 
@@ -137,8 +167,13 @@ async def create_problema(
     try:
         db_problema = Problema(
             **problema.model_dump(exclude=set(["tags", "declaracoes", "arquivos", "verificador", "validador", "usuario", "testes"])))
-        db.add(db_problema)
 
+        new_name_problema = get_unique_nome_problema(
+            db=db, nome_problema=problema.nome)
+        if (bool(new_name_problema)):
+            db_problema.nome = new_name_problema
+
+        db.add(db_problema)
         db_problema.usuario = user
 
         if (is_admin(user)):
@@ -169,12 +204,17 @@ async def update_problema(
         raise HTTPException(status.HTTP_401_UNAUTHORIZED)
 
     try:
+        if (problema.nome):
+            new_name_problema = get_unique_nome_problema(
+                db=db, nome_problema=problema.nome, problema_id=db_problema.id)
+            if (bool(new_name_problema)):
+                problema.nome = new_name_problema
+
         for key, value in problema:
             if (value != None and hasattr(db_problema, key)):
                 setattr(db_problema, key, value)
 
         db_problema.usuario = user
-
         if (is_admin(user)):
             db_problema.usuario = None
 
