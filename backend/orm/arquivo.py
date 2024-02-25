@@ -57,7 +57,7 @@ async def update_arquivo(
 
     try:
         for key, value in arquivo:
-            if (value != None and getattr(db_arquivo, key)):
+            if (value != None and hasattr(db_arquivo, key)):
                 setattr(db_arquivo, key, value)
 
         db.commit()

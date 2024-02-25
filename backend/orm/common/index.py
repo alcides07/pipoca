@@ -135,8 +135,8 @@ async def get_all(
     return db_objects.all(), metadata
 
 
-def create_object(db: Session, model: Any, schema: Any):
-    db_object = model(**schema.model_dump())
+def create_object(db: Session, model: Any, data: Any):
+    db_object = model(**data.model_dump())
     try:
         db.add(db_object)
         db.commit()
@@ -177,6 +177,25 @@ async def delete_object(
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+async def delete_object_simple(
+    db: Session,
+    model: Any,
+    id: int
+):
+    db_object = db.query(model).filter(model.id == id).first()
+    if not db_object:
+        raise HTTPException(status.HTTP_404_NOT_FOUND)
+
+    try:
+        db.delete(db_object)
+        db.commit()
+        return True
+
+    except SQLAlchemyError:
+        db.rollback()
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
 async def update_object(
     db: Session,
     model: Any,
@@ -204,6 +223,31 @@ async def update_object(
             for key, value in data.model_dump().items():
                 if hasattr(db_object, key):
                     setattr(db_object, key, value)
+        db.commit()
+        db.refresh(db_object)
+
+        return db_object
+
+    except SQLAlchemyError:
+        db.rollback()
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+async def update_object_simple(
+    db: Session,
+    id: int,
+    model: Any,
+    data: Any
+):
+    db_object = db.query(model).filter(model.id == id).first()
+    if not db_object:
+        raise HTTPException(status.HTTP_404_NOT_FOUND)
+
+    try:
+        for key, value in data.model_dump().items():
+            if (value != None and hasattr(db_object, key)):
+                setattr(db_object, key, value)
+
         db.commit()
         db.refresh(db_object)
 

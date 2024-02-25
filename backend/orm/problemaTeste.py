@@ -72,7 +72,7 @@ async def update_problema_teste(
                                     detail="Erro. Um teste com o mesmo número já foi registrado para este problema!")
 
         for key, value in problema_teste:
-            if (value != None and getattr(db_problema_teste, key)):
+            if (value != None and hasattr(db_problema_teste, key)):
                 setattr(db_problema_teste, key, value)
 
         db.commit()

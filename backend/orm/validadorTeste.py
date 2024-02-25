@@ -74,7 +74,7 @@ async def update_validador_teste(
                                     detail="Erro. Um teste com o mesmo número já foi registrado para este validador!")
 
         for key, value in validador_teste:
-            if (value != None and getattr(db_validador_teste, key)):
+            if (value != None and hasattr(db_validador_teste, key)):
                 setattr(db_validador_teste, key, value)
 
         db.commit()
