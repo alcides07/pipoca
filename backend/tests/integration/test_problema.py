@@ -1,7 +1,7 @@
 from passlib.context import CryptContext
 from tests.database import get_db_test
 from tests.helpers.administrador import create_administrador_helper
-from tests.helpers.problema import URL_PROBLEMA, create_problema_admin_helper, create_problema_user_helper, update_full_problema_fail_incomplete, update_full_problema_helper, update_partial_problema_helper
+from tests.helpers.problema import JSON_PROBLEMA, URL_PROBLEMA, create_problema_admin_helper, create_problema_user_helper, update_full_problema_fail_incomplete, update_full_problema_helper, update_partial_problema_helper
 from tests.helpers.user import create_user_helper
 from main import app
 from fastapi.testclient import TestClient
@@ -288,10 +288,13 @@ def test_read_problemas_testes_de_autor_by_problema_id_user():
     resume_dependencies()
 
 
-def test_read_problemas_testes_de_naoautor_by_problema_id_user():
+def test_read_problemas_testes_de_nao_autor_by_problema_id_privado_user():
     remove_dependencies()
 
-    response_problema_criado, _ = create_problema_user_helper()
+    json_problema = JSON_PROBLEMA.copy()
+    json_problema["privado"] = True
+
+    response_problema_criado, _ = create_problema_user_helper(json_problema)
     problema_id = response_problema_criado.json().get("data").get("id")
 
     _, token_user, _ = create_user_helper()
@@ -304,6 +307,77 @@ def test_read_problemas_testes_de_naoautor_by_problema_id_user():
     )
 
     assert response.status_code == 401
+
+    resume_dependencies()
+
+
+def test_read_problemas_testes_nao_exemplos_de_nao_autor_by_problema_id_publico_user():
+    remove_dependencies()
+
+    json_problema = JSON_PROBLEMA.copy()
+    json_problema["privado"] = False
+
+    response_problema_criado, _ = create_problema_user_helper(json_problema)
+    problema_id = response_problema_criado.json().get("data").get("id")
+
+    _, token_user, _ = create_user_helper()
+
+    response = client.get(
+        f"{URL_PROBLEMA}/{problema_id}/testes/",
+        headers={
+            "Authorization": f"Bearer {token_user}",
+        },
+        params={"exemplo": False}
+    )
+
+    assert response.status_code == 401
+
+    resume_dependencies()
+
+
+def test_read_problemas_testes_exemplos_de_nao_autor_by_problema_id_publico_user():
+    remove_dependencies()
+
+    json_problema = JSON_PROBLEMA.copy()
+    json_problema["privado"] = False
+
+    response_problema_criado, _ = create_problema_user_helper(json_problema)
+    problema_id = response_problema_criado.json().get("data").get("id")
+
+    _, token_user, _ = create_user_helper()
+
+    response = client.get(
+        f"{URL_PROBLEMA}/{problema_id}/testes/",
+        headers={
+            "Authorization": f"Bearer {token_user}",
+        },
+        params={"exemplo": True}
+    )
+
+    assert response.status_code == 200
+
+    resume_dependencies()
+
+
+def test_read_problemas_testes_de_nao_autor_by_problema_id_publico_user():
+    remove_dependencies()
+
+    json_problema = JSON_PROBLEMA.copy()
+    json_problema["privado"] = False
+
+    response_problema_criado, _ = create_problema_user_helper(json_problema)
+    problema_id = response_problema_criado.json().get("data").get("id")
+
+    _, token_user, _ = create_user_helper()
+
+    response = client.get(
+        f"{URL_PROBLEMA}/{problema_id}/testes/",
+        headers={
+            "Authorization": f"Bearer {token_user}",
+        },
+    )
+
+    assert response.status_code == 200
 
     resume_dependencies()
 

@@ -4,6 +4,7 @@ from dependencies.authenticated_user import get_authenticated_user
 from dependencies.authorization_user import is_admin, is_user
 from fastapi import HTTPException, status
 from filters.problema import OrderByFieldsProblemaEnum, ProblemaFilter, search_fields_problema
+from filters.problemaTeste import ProblemaTesteFilter
 from models.problemaResposta import ProblemaResposta
 from models.problemaTeste import ProblemaTeste
 from models.tag import Tag
@@ -325,6 +326,7 @@ async def get_testes_problema(
     db: Session,
     id: int,
     pagination: PaginationSchema,
+    filters: ProblemaTesteFilter,
     token: str
 ):
     db_problema = db.query(Problema).filter(Problema.id == id).first()
@@ -333,8 +335,16 @@ async def get_testes_problema(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
     user = await get_authenticated_user(token, db)
-    if (is_user(user) and bool(db_problema.usuario_id != user.id)):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+
+    if (
+        is_user(user)
+        and
+        bool(db_problema.usuario_id != user.id)
+    ):
+        if (bool(db_problema.privado) == True or filters.exemplo == False):
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+
+        filters.exemplo = True
 
     try:
         query = db.query(ProblemaTeste).filter(
@@ -343,6 +353,7 @@ async def get_testes_problema(
         db_problema_testes, metadata = filter_collection(
             model=ProblemaTeste,
             pagination=pagination,
+            filters=filters,
             query=query
         )
 
