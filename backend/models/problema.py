@@ -23,6 +23,7 @@ class Problema(Base):
     nome = Column(
         String(length=64),
         index=True,
+        unique=True,
         nullable=False,
     )
 
