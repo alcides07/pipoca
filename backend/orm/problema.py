@@ -290,6 +290,37 @@ async def get_respostas_problema(
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+async def get_arquivos_problema(
+    db: Session,
+    id: int,
+    pagination: PaginationSchema,
+    token: str
+):
+    db_problema = db.query(Problema).filter(Problema.id == id).first()
+
+    if (not db_problema):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+    user = await get_authenticated_user(token, db)
+    if (is_user(user) and bool(db_problema.usuario_id != user.id)):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+
+    try:
+        query = db.query(Arquivo).filter(
+            Arquivo.problema_id == id)
+
+        db_problema_arquivos, metadata = filter_collection(
+            model=Arquivo,
+            pagination=pagination,
+            query=query
+        )
+
+        return db_problema_arquivos.all(), metadata
+
+    except SQLAlchemyError:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
 async def get_testes_problema(
     db: Session,
     id: int,

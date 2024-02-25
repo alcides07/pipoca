@@ -7,7 +7,7 @@ from constants import DIRECTION_ORDER_BY_DESCRIPTION, FIELDS_ORDER_BY_DESCRIPTIO
 from routers.auth import oauth2_scheme
 from fastapi import APIRouter, Body, Depends, File, HTTPException, Path, Query, UploadFile, status
 from filters.problema import OrderByFieldsProblemaEnum, ProblemaFilter, search_fields_problema
-from schemas.arquivo import ArquivoCreate, SecaoEnum
+from schemas.arquivo import ArquivoCreate, ArquivoReadFull, SecaoEnum
 from schemas.common.direction_order_by import DirectionOrderByEnum
 from schemas.declaracao import DeclaracaoCreate
 from schemas.idioma import IdiomaEnum
@@ -27,7 +27,7 @@ from schemas.problema import ProblemaCreate, ProblemaCreateUpload, ProblemaReadF
 from schemas.common.pagination import PaginationSchema
 from dependencies.database import get_db
 from sqlalchemy.orm import Session
-from orm.problema import create_problema, create_problema_upload, get_all_problemas, get_problema_by_id, get_respostas_problema, get_testes_problema, update_problema
+from orm.problema import create_problema, create_problema_upload, get_all_problemas, get_arquivos_problema, get_problema_by_id, get_respostas_problema, get_testes_problema, update_problema
 from schemas.common.response import ResponsePaginationSchema, ResponseUnitSchema
 
 PROBLEMA_ID_DESCRIPTION = "Identificador do problema"
@@ -64,6 +64,42 @@ async def read(
         filters=filters,
         field_order_by=sort,
         direction=direction
+    )
+
+    return ResponsePaginationSchema(
+        data=problemas,
+        metadata=metadata
+    )
+
+
+@router.get("/users/",
+            response_model=ResponsePaginationSchema[ProblemaReadSimple],
+            summary="Lista problemas pertencentes ao usuário autenticado",
+            )
+async def read_problemas_me(
+    db: Session = Depends(get_db),
+    pagination: PaginationSchema = Depends(),
+    filters: ProblemaFilter = Depends(),
+    token: str = Depends(oauth2_scheme),
+    sort: OrderByFieldsProblemaEnum = Query(
+        default=None,
+        description=FIELDS_ORDER_BY_DESCRIPTION
+    ),
+    direction: DirectionOrderByEnum = Query(
+        default=None,
+        description=DIRECTION_ORDER_BY_DESCRIPTION
+    )
+):
+    problemas, metadata = await get_all(
+        db=db,
+        model=Problema,
+        pagination=pagination,
+        token=token,
+        field_order_by=sort,
+        direction=direction,
+        filters=filters,
+        search_fields=search_fields_problema,
+        me_author=True
     )
 
     return ResponsePaginationSchema(
@@ -118,38 +154,25 @@ async def read_problema_id_respostas(
     )
 
 
-@router.get("/users/",
-            response_model=ResponsePaginationSchema[ProblemaReadSimple],
-            summary="Lista problemas pertencentes ao usuário autenticado",
+@router.get("/{id}/arquivos/",
+            response_model=ResponsePaginationSchema[ArquivoReadFull],
+            summary="Lista arquivos pertencentes a um problema",
             )
-async def read_problemas_me(
+async def read_problema_id_arquivos(
     db: Session = Depends(get_db),
     pagination: PaginationSchema = Depends(),
-    filters: ProblemaFilter = Depends(),
-    token: str = Depends(oauth2_scheme),
-    sort: OrderByFieldsProblemaEnum = Query(
-        default=None,
-        description=FIELDS_ORDER_BY_DESCRIPTION
-    ),
-    direction: DirectionOrderByEnum = Query(
-        default=None,
-        description=DIRECTION_ORDER_BY_DESCRIPTION
-    )
+    id: int = Path(description=PROBLEMA_ID_DESCRIPTION),
+    token: str = Depends(oauth2_scheme)
 ):
-    problemas, metadata = await get_all(
+    arquivos, metadata = await get_arquivos_problema(
         db=db,
-        model=Problema,
+        id=id,
         pagination=pagination,
-        token=token,
-        field_order_by=sort,
-        direction=direction,
-        filters=filters,
-        search_fields=search_fields_problema,
-        me_author=True
+        token=token
     )
 
     return ResponsePaginationSchema(
-        data=problemas,
+        data=arquivos,
         metadata=metadata
     )
 

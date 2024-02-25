@@ -111,24 +111,6 @@ class ProblemaReadFull(ProblemaBase):
         description=DECLARACAO_DESCRIPTION
     )
 
-    arquivos: list[ArquivoReadFull] = Field(
-        description=ARQUIVOS_DESCRIPTION
-    )
-
-    testes: list[ProblemaTesteReadFull] = Field(
-        description=TESTES_DESCRIPTION
-    )
-
-    verificador: Optional[VerificadorReadFull] = Field(
-        default=None,
-        description=VERIFICADOR_DESCRIPTION
-    )
-
-    validador: Optional[ValidadorReadFull] = Field(
-        default=None,
-        description=VALIDADOR_DESCRIPTION
-    )
-
     class ConfigDict:
         from_attributes = True
 
