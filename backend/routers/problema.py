@@ -4,6 +4,7 @@ import zipfile
 import tempfile
 import xml.etree.ElementTree as ET
 from constants import DIRECTION_ORDER_BY_DESCRIPTION, FIELDS_ORDER_BY_DESCRIPTION
+from filters.problemaTeste import ProblemaTesteFilter
 from models.validador import Validador
 from routers.auth import oauth2_scheme
 from fastapi import APIRouter, Body, Depends, File, HTTPException, Path, Query, UploadFile, status
@@ -116,6 +117,7 @@ async def read_problemas_me(
 async def read_problema_id_testes(
     db: Session = Depends(get_db),
     pagination: PaginationSchema = Depends(),
+    filters: ProblemaTesteFilter = Depends(),
     id: int = Path(description=PROBLEMA_ID_DESCRIPTION),
     token: str = Depends(oauth2_scheme)
 ):
@@ -123,6 +125,7 @@ async def read_problema_id_testes(
         db=db,
         id=id,
         pagination=pagination,
+        filters=filters,
         token=token
     )
 
