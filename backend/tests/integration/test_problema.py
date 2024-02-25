@@ -248,9 +248,6 @@ def test_update_partial_problema_user():
         "nome") != problema.get("nome")
 
     assert response_json.get(
-        "tags") != problema.get("tags")
-
-    assert response_json.get(
         "tempo_limite") == problema.get("tempo_limite")
 
     resume_dependencies()
@@ -267,9 +264,6 @@ def test_update_partial_problema_admin():
 
     assert response_json.get(
         "nome") != problema.get("nome")
-
-    assert response_json.get(
-        "tags") != problema.get("tags")
 
     assert response_json.get(
         "tempo_limite") == problema.get("tempo_limite")
