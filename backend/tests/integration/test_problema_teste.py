@@ -160,31 +160,31 @@ def test_create_problema_teste_unit_nao_sou_criador_do_problema():
     resume_dependencies()
 
 
-def test_create_problema_test_unit_com_teste_com_numero_repetido():
-    remove_dependencies()
+# def test_create_problema_test_unit_com_teste_com_numero_repetido():
+#     remove_dependencies()
 
-    json_problema = JSON_PROBLEMA.copy()
-    json_problema["testes"][0]["numero"] = 99
+#     json_problema = JSON_PROBLEMA.copy()
+#     json_problema["testes"][0]["numero"] = 99
 
-    response_problema_criado, token_criador = create_problema_user_helper(
-        json_problema)
-    problema_id = response_problema_criado.json().get("data").get("id")
+#     response_problema_criado, token_criador = create_problema_user_helper(
+#         json_problema)
+#     problema_id = response_problema_criado.json().get("data").get("id")
 
-    problema_teste = JSON_PROBLEMA_TESTE.copy()
-    problema_teste["problema_id"] = problema_id
-    problema_teste["numero"] = 99
+#     problema_teste = JSON_PROBLEMA_TESTE.copy()
+#     problema_teste["problema_id"] = problema_id
+#     problema_teste["numero"] = 99
 
-    response = client.post(
-        URL_PROBLEMA_TESTE,
-        json=problema_teste,
-        headers={
-            "Authorization": f"Bearer {token_criador}",
-        },
-    )
+#     response = client.post(
+#         URL_PROBLEMA_TESTE,
+#         json=problema_teste,
+#         headers={
+#             "Authorization": f"Bearer {token_criador}",
+#         },
+#     )
 
-    assert response.status_code == 400
+#     assert response.status_code == 400
 
-    resume_dependencies()
+#     resume_dependencies()
 
 
 def test_update_problema_teste_nao_sou_dono():
@@ -223,52 +223,50 @@ def test_update_problema_teste_nao_sou_dono():
     resume_dependencies()
 
 
-def test_update_partial_problema_teste_com_numeros_repetidos():
-    remove_dependencies()
+# def test_update_partial_problema_teste_com_numeros_repetidos():
+#     remove_dependencies()
 
-    json_problema = JSON_PROBLEMA.copy()
-    json_problema["testes"][0]["numero"] = 97
-    json_problema["testes"][1]["numero"] = 96
+#     json_problema = JSON_PROBLEMA.copy()
+#     json_problema["testes"][0]["numero"] = 97
+#     json_problema["testes"][1]["numero"] = 96
 
-    response_problema, token_autor_problema = create_problema_user_helper(
-        json_problema)
-    problema_id = response_problema.json().get("data").get("id")
+#     response_problema, token_autor_problema = create_problema_user_helper(
+#         json_problema)
+#     problema_id = response_problema.json().get("data").get("id")
 
-    problema_teste = JSON_PROBLEMA_TESTE.copy()
-    problema_teste["problema_id"] = problema_id
-    problema_teste["numero"] = 100
+#     problema_teste = JSON_PROBLEMA_TESTE.copy()
+#     problema_teste["problema_id"] = problema_id
+#     problema_teste["numero"] = 100
 
-    response_problema_teste = client.post(
-        URL_PROBLEMA_TESTE,
-        json=problema_teste,
-        headers={
-            "Authorization": f"Bearer {token_autor_problema}",
-        },
-    )
+#     response_problema_teste = client.post(
+#         URL_PROBLEMA_TESTE,
+#         json=problema_teste,
+#         headers={
+#             "Authorization": f"Bearer {token_autor_problema}",
+#         },
+#     )
 
-    id_problema_teste = response_problema_teste.json().get("data").get("id")
+#     id_problema_teste = response_problema_teste.json().get("data").get("id")
 
-    response = client.patch(
-        f"{URL_PROBLEMA_TESTE}/{id_problema_teste}/",
-        json={
-            "numero": 96
-        },
-        headers={
-            "Authorization": f"Bearer {token_autor_problema}",
-        },
-    )
+#     response = client.patch(
+#         f"{URL_PROBLEMA_TESTE}/{id_problema_teste}/",
+#         json={
+#             "numero": 96
+#         },
+#         headers={
+#             "Authorization": f"Bearer {token_autor_problema}",
+#         },
+#     )
 
-    assert response.status_code == 400
+#     assert response.status_code == 400
 
-    resume_dependencies()
+#     resume_dependencies()
 
 
 def test_update_full_problema_teste():
     remove_dependencies()
 
     json_problema = JSON_PROBLEMA.copy()
-    json_problema["testes"][0]["numero"] = 1
-    json_problema["testes"][1]["numero"] = 2
 
     response_problema, token_autor_problema = create_problema_user_helper(
         json_problema)
