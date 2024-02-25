@@ -4,6 +4,7 @@ import zipfile
 import tempfile
 import xml.etree.ElementTree as ET
 from constants import DIRECTION_ORDER_BY_DESCRIPTION, FIELDS_ORDER_BY_DESCRIPTION
+from models.validador import Validador
 from routers.auth import oauth2_scheme
 from fastapi import APIRouter, Body, Depends, File, HTTPException, Path, Query, UploadFile, status
 from filters.problema import OrderByFieldsProblemaEnum, ProblemaFilter, search_fields_problema
@@ -13,7 +14,7 @@ from schemas.declaracao import DeclaracaoCreate
 from schemas.idioma import IdiomaEnum
 from schemas.problemaResposta import ProblemaRespostaReadSimple
 from schemas.problemaTeste import ProblemaTesteCreate, ProblemaTesteReadFull, TipoTesteProblemaEnum
-from schemas.validador import ValidadorCreate
+from schemas.validador import ValidadorCreate, ValidadorReadFull
 from schemas.validadorTeste import ValidadorTesteCreate, VereditoValidadorTesteEnum
 from schemas.verificador import VerificadorCreate
 from schemas.verificadorTeste import VereditoVerificadorTesteEnum, VerificadorTesteCreate
@@ -21,13 +22,13 @@ from utils.bytes_to_megabytes import bytes_to_megabytes
 from utils.language_parser import languages_parser
 from utils.errors import errors
 from models.problema import Problema
-from orm.common.index import get_all
+from orm.common.index import get_all, get_by_id
 from dependencies.authenticated_user import get_authenticated_user
 from schemas.problema import ProblemaCreate, ProblemaCreateUpload, ProblemaReadFull, ProblemaReadSimple, ProblemaUpdatePartial, ProblemaUpdateTotal
 from schemas.common.pagination import PaginationSchema
 from dependencies.database import get_db
 from sqlalchemy.orm import Session
-from orm.problema import create_problema, create_problema_upload, get_all_problemas, get_arquivos_problema, get_problema_by_id, get_respostas_problema, get_testes_problema, update_problema
+from orm.problema import create_problema, create_problema_upload, get_all_problemas, get_arquivos_problema, get_problema_by_id, get_respostas_problema, get_testes_problema, get_validador_problema, update_problema
 from schemas.common.response import ResponsePaginationSchema, ResponseUnitSchema
 
 PROBLEMA_ID_DESCRIPTION = "Identificador do problema"
@@ -128,6 +129,26 @@ async def read_problema_id_testes(
     return ResponsePaginationSchema(
         data=testes,
         metadata=metadata
+    )
+
+
+@router.get("/{id}/validadores/",
+            response_model=ResponseUnitSchema[ValidadorReadFull],
+            summary="Lista um validador pertencente a um problema",
+            )
+async def read_problema_id_validador(
+    db: Session = Depends(get_db),
+    id: int = Path(description=PROBLEMA_ID_DESCRIPTION),
+    token: str = Depends(oauth2_scheme)
+):
+    validador = await get_validador_problema(
+        db=db,
+        id=id,
+        token=token
+    )
+
+    return ResponseUnitSchema(
+        data=validador
     )
 
 
