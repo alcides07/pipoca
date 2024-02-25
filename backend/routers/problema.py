@@ -23,11 +23,11 @@ from utils.errors import errors
 from models.problema import Problema
 from orm.common.index import get_all
 from dependencies.authenticated_user import get_authenticated_user
-from schemas.problema import ProblemaCreate, ProblemaReadFull, ProblemaReadSimple, ProblemaUpdatePartial
+from schemas.problema import ProblemaCreate, ProblemaCreateUpload, ProblemaReadFull, ProblemaReadSimple, ProblemaUpdatePartial, ProblemaUpdateTotal
 from schemas.common.pagination import PaginationSchema
 from dependencies.database import get_db
 from sqlalchemy.orm import Session
-from orm.problema import create_problema, get_all_problemas, get_problema_by_id, get_respostas_problema, get_testes_problema, update_problema
+from orm.problema import create_problema, create_problema_upload, get_all_problemas, get_problema_by_id, get_respostas_problema, get_testes_problema, update_problema
 from schemas.common.response import ResponsePaginationSchema, ResponseUnitSchema
 
 PROBLEMA_ID_DESCRIPTION = "Identificador do problema"
@@ -221,7 +221,7 @@ async def upload(
     temp_file.write(pacote.file.read())
     temp_file.seek(0)
 
-    problema = ProblemaCreate(
+    problema = ProblemaCreateUpload(
         nome="",
         nome_arquivo_entrada="",
         nome_arquivo_saida="",
@@ -492,7 +492,7 @@ async def upload(
                 if filename.startswith("statements/") and filename.endswith("problem-properties.json"):
                     process_declaracoes(zip, filename)
 
-        data = await create_problema(
+        data = await create_problema_upload(
             db=db,
             problema=problema,
             token=token
@@ -514,7 +514,7 @@ async def upload(
 async def total_update(
         id: int = Path(description=PROBLEMA_ID_DESCRIPTION),
         db: Session = Depends(get_db),
-        data: ProblemaCreate = Body(
+        data: ProblemaUpdateTotal = Body(
             description="Problema a ser atualizado por completo"),
         token: str = Depends(oauth2_scheme),
 ):
