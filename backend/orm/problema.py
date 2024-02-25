@@ -8,7 +8,7 @@ from models.validador import Validador
 from models.validadorTeste import ValidadorTeste
 from models.verificador import Verificador
 from models.verificadorTeste import VerificadorTeste
-from orm.common.index import delete_object, filter_collection
+from orm.common.index import filter_collection
 from orm.tag import create_tag
 from schemas.common.direction_order_by import DirectionOrderByEnum
 from schemas.common.pagination import PaginationSchema
@@ -17,7 +17,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from models.arquivo import Arquivo
 from models.declaracao import Declaracao
 from models.problema import Problema
-from schemas.problema import ProblemaCreate, ProblemaUpdatePartial
+from schemas.problema import ProblemaCreate, ProblemaCreateUpload, ProblemaUpdatePartial, ProblemaUpdateTotal
 
 
 def create_verificador(db, problema, db_problema):
@@ -78,9 +78,9 @@ def create_testes(db, teste, db_problema):
     db_problema.testes.append(db_teste)
 
 
-async def create_problema(
+async def create_problema_upload(
     db: Session,
-    problema: ProblemaCreate,
+    problema: ProblemaCreateUpload,
     token: str
 ):
     user = await get_authenticated_user(token, db)
@@ -123,10 +123,37 @@ async def create_problema(
     return db_problema
 
 
+async def create_problema(
+    db: Session,
+    problema: ProblemaCreate,
+    token: str
+):
+    user = await get_authenticated_user(token, db)
+
+    try:
+        db_problema = Problema(
+            **problema.model_dump(exclude=set(["tags", "declaracoes", "arquivos", "verificador", "validador", "usuario", "testes"])))
+        db.add(db_problema)
+
+        db_problema.usuario = user
+
+        if (is_admin(user)):
+            db_problema.usuario = None
+
+        db.commit()
+        db.refresh(db_problema)
+
+    except SQLAlchemyError:
+        db.rollback()
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    return db_problema
+
+
 async def update_problema(
     db: Session,
     id: int,
-    problema: ProblemaUpdatePartial | ProblemaCreate,
+    problema: ProblemaUpdatePartial | ProblemaUpdateTotal,
     token: str,
 ):
     db_problema = db.query(Problema).filter(Problema.id == id).first()
@@ -139,85 +166,8 @@ async def update_problema(
 
     try:
         for key, value in problema:
-            if (value != None):
-                if (key == "declaracoes"):
-                    declaracoes_ids = db.query(Declaracao.id).filter(
-                        Declaracao.problema_id == db_problema.id).all()
-
-                    for (declaracao_id,) in declaracoes_ids:
-                        await delete_object(
-                            db=db,
-                            token=token,
-                            model=Declaracao,
-                            id=declaracao_id,
-                            path_has_user_key="problema"
-                        )
-
-                    for declaracao in value:
-                        create_declaracoes(db, declaracao, db_problema)
-
-                elif (key == "arquivos"):
-                    arquivos_ids = db.query(Arquivo.id).filter(
-                        Arquivo.problema_id == db_problema.id).all()
-
-                    for (arquivo_id,) in arquivos_ids:
-                        await delete_object(
-                            db=db,
-                            token=token,
-                            model=Arquivo,
-                            id=arquivo_id,
-                            path_has_user_key="problema"
-                        )
-
-                    for arquivo in value:
-                        create_arquivos(db, arquivo, db_problema)
-
-                elif (key == "testes"):
-                    testes_ids = db.query(ProblemaTeste.id).filter(
-                        ProblemaTeste.problema_id == db_problema.id).all()
-
-                    for (teste_id, ) in testes_ids:
-                        await delete_object(
-                            db=db,
-                            token=token,
-                            model=ProblemaTeste,
-                            id=teste_id,
-                            path_has_user_key="problema"
-                        )
-
-                elif (key == "verificador"):
-                    await delete_object(
-                        db=db,
-                        token=token,
-                        model=Verificador,
-                        id=db_problema.verificador_id,
-                        path_has_user_key="problema"
-                    )
-
-                    create_verificador(db, problema, db_problema)
-                    create_verificador_testes(db, problema, db_problema)
-
-                elif (key == "validador"):
-                    await delete_object(
-                        token=token,
-                        db=db,
-                        model=Validador,
-                        id=db_problema.validador_id,
-                        path_has_user_key="problema"
-                    )
-
-                    create_validador(db, problema, db_problema)
-                    create_validador_testes(db, problema, db_problema)
-
-                elif (key == "tags"):
-                    db_problema.tags = []
-
-                    for tag in value:
-                        create_tags(db, tag, db_problema)
-
-                else:
-                    if getattr(db_problema, key):
-                        setattr(db_problema, key, value)
+            if (value != None and hasattr(db_problema, key)):
+                setattr(db_problema, key, value)
 
         db_problema.usuario = user
 
