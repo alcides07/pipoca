@@ -225,6 +225,20 @@ def test_create_problema_user():
     resume_dependencies()
 
 
+def test_create_problema_user_nome_repetido():
+    remove_dependencies()
+
+    response_problema_original_user, _ = create_problema_user_helper()
+    response_problema_repetido_user, _ = create_problema_user_helper()
+
+    nome_problema_original = response_problema_original_user.json().get("data").get("nome")
+    nome_problema_repetido = response_problema_repetido_user.json().get("data").get("nome")
+
+    assert nome_problema_original != nome_problema_repetido
+
+    resume_dependencies()
+
+
 def test_create_problema_admin():
     remove_dependencies()
 
