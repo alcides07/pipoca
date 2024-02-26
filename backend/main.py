@@ -8,6 +8,7 @@ from database import engine, Base
 from fastapi.openapi.utils import get_openapi
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
 
 
 Base.metadata.create_all(bind=engine)
@@ -22,6 +23,14 @@ app = FastAPI(docs_url=None,
                   RequestValidationError: validation_exception_handler
               }  # type: ignore
               )
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"]
+)
 
 for router in routes:
     app.include_router(router)
