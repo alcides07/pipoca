@@ -1,5 +1,7 @@
+from dependencies.authorization_user import is_admin
+from dependencies.is_admin import is_admin_dependencies
 from routers.auth import oauth2_scheme
-from fastapi import APIRouter, Body, Depends, Path, Response, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Path, Response, status
 from utils.errors import errors
 from models.user import User
 from orm.common.index import delete_object, get_by_id, get_all
@@ -26,7 +28,7 @@ router = APIRouter(
 @router.get("/",
             response_model=ResponsePaginationSchema[UserReadFull],
             summary="Lista usuários",
-            dependencies=[Depends(get_authenticated_user)],
+            dependencies=[Depends(is_admin_dependencies)]
             )
 async def read(
         db: Session = Depends(get_db),
@@ -43,6 +45,36 @@ async def read(
     return ResponsePaginationSchema(
         data=users,
         metadata=metadata
+    )
+
+
+@router.get("/me/",
+            response_model=ResponseUnitSchema[UserReadFull],
+            summary="Lista dados do usuário autenticado",
+            dependencies=[Depends(get_authenticated_user)],
+            responses={
+                501: {"501": 501}
+            })
+async def read_me(
+        db: Session = Depends(get_db),
+        token: str = Depends(oauth2_scheme)
+):
+    user_db = await get_authenticated_user(token, db)
+
+    if (is_admin(user_db)):
+        raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED,
+                            detail="Erro. Funcionalidade não disponível para administradores!")
+
+    user = await get_by_id(
+        id=user_db.id,
+        path_has_user_key="user",
+        db=db,
+        model=User,
+        token=token
+    )
+
+    return ResponseUnitSchema(
+        data=user
     )
 
 
@@ -64,7 +96,7 @@ async def read_id(
         model=User,
         id=id,
         token=token,
-        model_has_user_key=User
+        path_has_user_key="user"
     )
 
     return ResponseUnitSchema(
@@ -106,13 +138,11 @@ async def total_update(
             description="Usuário a ser atualizado por completo"),
         token: str = Depends(oauth2_scheme)
 ):
-    user = await get_authenticated_user(db=db, token=token)
-
     response = await update_user(
         db=db,
         id=id,
         data=data,
-        user=user
+        token=token
     )
 
     return ResponseUnitSchema(
@@ -136,13 +166,11 @@ async def partial_update(
             description="Usuário a ser atualizado parcialmente"),
         token: str = Depends(oauth2_scheme)
 ):
-    user = await get_authenticated_user(db=db, token=token)
-
     response = await update_user(
         db=db,
         id=id,
         data=data,
-        user=user
+        token=token
     )
 
     return ResponseUnitSchema(
@@ -169,7 +197,7 @@ async def delete(
         model=User,
         id=id,
         token=token,
-        model_has_user_key=User
+        path_has_user_key="user"
     )
     if (user):
         return Response(status_code=status.HTTP_204_NO_CONTENT)

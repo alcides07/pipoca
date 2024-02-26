@@ -4,30 +4,32 @@ import zipfile
 import tempfile
 import xml.etree.ElementTree as ET
 from constants import DIRECTION_ORDER_BY_DESCRIPTION, FIELDS_ORDER_BY_DESCRIPTION
+from filters.problemaTeste import ProblemaTesteFilter
+from models.validador import Validador
 from routers.auth import oauth2_scheme
 from fastapi import APIRouter, Body, Depends, File, HTTPException, Path, Query, UploadFile, status
 from filters.problema import OrderByFieldsProblemaEnum, ProblemaFilter, search_fields_problema
-from schemas.arquivo import ArquivoCreate, SecaoEnum
+from schemas.arquivo import ArquivoCreate, ArquivoReadFull, SecaoEnum
 from schemas.common.direction_order_by import DirectionOrderByEnum
 from schemas.declaracao import DeclaracaoCreate
 from schemas.idioma import IdiomaEnum
 from schemas.problemaResposta import ProblemaRespostaReadSimple
-from schemas.problemaTeste import ProblemaTesteCreate, TipoTesteProblemaEnum
-from schemas.validador import ValidadorCreate
+from schemas.problemaTeste import ProblemaTesteCreate, ProblemaTesteReadFull, TipoTesteProblemaEnum
+from schemas.validador import ValidadorCreate, ValidadorReadFull
 from schemas.validadorTeste import ValidadorTesteCreate, VereditoValidadorTesteEnum
-from schemas.verificador import VerificadorCreate
+from schemas.verificador import VerificadorCreate, VerificadorReadFull
 from schemas.verificadorTeste import VereditoVerificadorTesteEnum, VerificadorTesteCreate
 from utils.bytes_to_megabytes import bytes_to_megabytes
 from utils.language_parser import languages_parser
 from utils.errors import errors
 from models.problema import Problema
-from orm.common.index import get_all, get_by_id
+from orm.common.index import get_all
 from dependencies.authenticated_user import get_authenticated_user
-from schemas.problema import ProblemaCreate, ProblemaReadFull, ProblemaReadSimple, ProblemaUpdatePartial
+from schemas.problema import ProblemaCreate, ProblemaCreateUpload, ProblemaReadFull, ProblemaReadSimple, ProblemaUpdatePartial, ProblemaUpdateTotal
 from schemas.common.pagination import PaginationSchema
 from dependencies.database import get_db
 from sqlalchemy.orm import Session
-from orm.problema import create_problema, get_all_problemas, get_respostas_problema, update_problema
+from orm.problema import create_problema, create_problema_upload, get_all_problemas, get_arquivos_problema, get_problema_by_id, get_respostas_problema, get_testes_problema, get_validador_problema, get_verificador_problema, update_problema
 from schemas.common.response import ResponsePaginationSchema, ResponseUnitSchema
 
 PROBLEMA_ID_DESCRIPTION = "Identificador do problema"
@@ -39,7 +41,10 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_model=ResponsePaginationSchema[ProblemaReadSimple], summary="Lista problemas")
+@router.get("/",
+            response_model=ResponsePaginationSchema[ProblemaReadSimple],
+            summary="Lista problemas"
+            )
 async def read(
     db: Session = Depends(get_db),
     pagination: PaginationSchema = Depends(),
@@ -54,7 +59,6 @@ async def read(
         description=DIRECTION_ORDER_BY_DESCRIPTION
     )
 ):
-
     problemas, metadata = await get_all_problemas(
         db=db,
         pagination=pagination,
@@ -70,32 +74,7 @@ async def read(
     )
 
 
-@router.get("/{id}/respostas/",
-            response_model=ResponsePaginationSchema[ProblemaRespostaReadSimple],
-            summary="Lista respostas pertencentes a um problema",
-            )
-async def read_problema_id_respostas(
-    db: Session = Depends(get_db),
-    pagination: PaginationSchema = Depends(),
-    id: int = Path(description=PROBLEMA_ID_DESCRIPTION),
-    token: str = Depends(oauth2_scheme),
-):
-    user = await get_authenticated_user(db=db, token=token)
-
-    problemas, metadata = await get_respostas_problema(
-        db=db,
-        id=id,
-        pagination=pagination,
-        user=user
-    )
-
-    return ResponsePaginationSchema(
-        data=problemas,
-        metadata=metadata
-    )
-
-
-@router.get("/user/",
+@router.get("/users/",
             response_model=ResponsePaginationSchema[ProblemaReadSimple],
             summary="Lista problemas pertencentes ao usuário autenticado",
             )
@@ -122,12 +101,122 @@ async def read_problemas_me(
         direction=direction,
         filters=filters,
         search_fields=search_fields_problema,
-        allow_any=True,
         me_author=True
     )
 
     return ResponsePaginationSchema(
         data=problemas,
+        metadata=metadata
+    )
+
+
+@router.get("/{id}/testes/",
+            response_model=ResponsePaginationSchema[ProblemaTesteReadFull],
+            summary="Lista testes pertencentes a um problema",
+            )
+async def read_problema_id_testes(
+    db: Session = Depends(get_db),
+    pagination: PaginationSchema = Depends(),
+    filters: ProblemaTesteFilter = Depends(),
+    id: int = Path(description=PROBLEMA_ID_DESCRIPTION),
+    token: str = Depends(oauth2_scheme)
+):
+    testes, metadata = await get_testes_problema(
+        db=db,
+        id=id,
+        pagination=pagination,
+        filters=filters,
+        token=token
+    )
+
+    return ResponsePaginationSchema(
+        data=testes,
+        metadata=metadata
+    )
+
+
+@router.get("/{id}/validadores/",
+            response_model=ResponseUnitSchema[ValidadorReadFull],
+            summary="Lista um validador pertencente a um problema",
+            )
+async def read_problema_id_validador(
+    db: Session = Depends(get_db),
+    id: int = Path(description=PROBLEMA_ID_DESCRIPTION),
+    token: str = Depends(oauth2_scheme)
+):
+    validador = await get_validador_problema(
+        db=db,
+        id=id,
+        token=token
+    )
+
+    return ResponseUnitSchema(
+        data=validador
+    )
+
+
+@router.get("/{id}/verificadores/",
+            response_model=ResponseUnitSchema[VerificadorReadFull],
+            summary="Lista um verificador pertencente a um problema",
+            )
+async def read_problema_id_verificador(
+    db: Session = Depends(get_db),
+    id: int = Path(description=PROBLEMA_ID_DESCRIPTION),
+    token: str = Depends(oauth2_scheme)
+):
+    verificador = await get_verificador_problema(
+        db=db,
+        id=id,
+        token=token
+    )
+
+    return ResponseUnitSchema(
+        data=verificador
+    )
+
+
+@router.get("/{id}/respostas/",
+            response_model=ResponsePaginationSchema[ProblemaRespostaReadSimple],
+            summary="Lista respostas pertencentes a um problema",
+            )
+async def read_problema_id_respostas(
+    db: Session = Depends(get_db),
+    pagination: PaginationSchema = Depends(),
+    id: int = Path(description=PROBLEMA_ID_DESCRIPTION),
+    token: str = Depends(oauth2_scheme)
+):
+    respostas, metadata = await get_respostas_problema(
+        db=db,
+        id=id,
+        pagination=pagination,
+        token=token
+    )
+
+    return ResponsePaginationSchema(
+        data=respostas,
+        metadata=metadata
+    )
+
+
+@router.get("/{id}/arquivos/",
+            response_model=ResponsePaginationSchema[ArquivoReadFull],
+            summary="Lista arquivos pertencentes a um problema",
+            )
+async def read_problema_id_arquivos(
+    db: Session = Depends(get_db),
+    pagination: PaginationSchema = Depends(),
+    id: int = Path(description=PROBLEMA_ID_DESCRIPTION),
+    token: str = Depends(oauth2_scheme)
+):
+    arquivos, metadata = await get_arquivos_problema(
+        db=db,
+        id=id,
+        pagination=pagination,
+        token=token
+    )
+
+    return ResponsePaginationSchema(
+        data=arquivos,
         metadata=metadata
     )
 
@@ -144,12 +233,10 @@ async def read_id(
         db: Session = Depends(get_db),
         token: str = Depends(oauth2_scheme)
 ):
-    problema = await get_by_id(
+    problema = await get_problema_by_id(
         db=db,
-        model=Problema,
         id=id,
-        token=token,
-        model_has_user_key=Problema
+        token=token
     )
     return ResponseUnitSchema(
         data=problema
@@ -169,8 +256,11 @@ async def create(
     token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db)
 ):
-    user = await get_authenticated_user(token, db)
-    data = create_problema(db=db, problema=problema, user=user)
+    data = await create_problema(
+        db=db,
+        problema=problema,
+        token=token
+    )
     return ResponseUnitSchema(data=data)
 
 
@@ -198,7 +288,7 @@ async def upload(
     temp_file.write(pacote.file.read())
     temp_file.seek(0)
 
-    problema = ProblemaCreate(
+    problema = ProblemaCreateUpload(
         nome="",
         nome_arquivo_entrada="",
         nome_arquivo_saida="",
@@ -469,8 +559,11 @@ async def upload(
                 if filename.startswith("statements/") and filename.endswith("problem-properties.json"):
                     process_declaracoes(zip, filename)
 
-        user = await get_authenticated_user(token, db)
-        data = create_problema(db=db, problema=problema, user=user)
+        data = await create_problema_upload(
+            db=db,
+            problema=problema,
+            token=token
+        )
         return ResponseUnitSchema(data=data)
 
     except HTTPException:
@@ -488,16 +581,15 @@ async def upload(
 async def total_update(
         id: int = Path(description=PROBLEMA_ID_DESCRIPTION),
         db: Session = Depends(get_db),
-        data: ProblemaCreate = Body(
+        data: ProblemaUpdateTotal = Body(
             description="Problema a ser atualizado por completo"),
         token: str = Depends(oauth2_scheme),
 ):
-    user = await get_authenticated_user(token, db)
     response = await update_problema(
         db=db,
         id=id,
         problema=data,
-        user=user
+        token=token
     )
     return ResponseUnitSchema(
         data=response
@@ -518,12 +610,11 @@ async def parcial_update(
             description="Problema a ser atualizado parcialmente"),
         token: str = Depends(oauth2_scheme),
 ):
-    user = await get_authenticated_user(token, db)
     response = await update_problema(
         db=db,
         id=id,
         problema=data,
-        user=user
+        token=token
     )
     return ResponseUnitSchema(
         data=response

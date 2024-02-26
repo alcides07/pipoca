@@ -2,7 +2,7 @@ from tests.database import get_db_test
 from tests.helpers.administrador import create_administrador_helper
 from tests.helpers.user import create_user_helper
 from tests.helpers.verificador import create_verificador_helper, update_full_verificador_helper, update_partial_verificador_helper
-from backend.main import app
+from main import app
 from fastapi.testclient import TestClient
 from tests.config_test import remove_dependencies, resume_dependencies
 
@@ -76,6 +76,44 @@ def test_read_verificador_unit_admin():
     )
 
     assert response.status_code == 200
+
+    resume_dependencies()
+
+
+def test_read_testes_verificador_permitido_dono():
+    remove_dependencies()
+
+    response_verificador, token = create_verificador_helper()
+    verificador_id = response_verificador.json().get("data").get("id")
+
+    response = client.get(
+        f"{URL_VERIFICADOR}/{verificador_id}/testes/",
+        headers={
+            "Authorization": f"Bearer {token}",
+        },
+    )
+
+    assert response.status_code == 200
+
+    resume_dependencies()
+
+
+def test_read_testes_verificador_negado_nao_dono():
+    remove_dependencies()
+
+    response_verificador, _ = create_verificador_helper()
+    verificador_id = response_verificador.json().get("data").get("id")
+
+    _, token_user, _ = create_user_helper()
+
+    response = client.get(
+        f"{URL_VERIFICADOR}/{verificador_id}/testes/",
+        headers={
+            "Authorization": f"Bearer {token_user}",
+        },
+    )
+
+    assert response.status_code == 401
 
     resume_dependencies()
 

@@ -1,4 +1,5 @@
-from orm.validador import create_validador, update_validador
+from dependencies.is_admin import is_admin_dependencies
+from orm.validador import create_validador, get_testes_validador, update_validador
 from routers.auth import oauth2_scheme
 from dependencies.authenticated_user import get_authenticated_user
 from dependencies.database import get_db
@@ -10,6 +11,7 @@ from schemas.common.pagination import PaginationSchema
 from schemas.common.response import ResponsePaginationSchema, ResponseUnitSchema
 from schemas.validador import VALIDADOR_ID_DESCRIPTION, ValidadorCreateSingle, ValidadorReadFull, ValidadorReadSimple, ValidadorUpdatePartial, ValidadorUpdateTotal
 from sqlalchemy.orm import Session
+from schemas.validadorTeste import ValidadorTesteReadFull
 from utils.errors import errors
 
 router = APIRouter(
@@ -22,17 +24,16 @@ router = APIRouter(
 @router.get("/",
             response_model=ResponsePaginationSchema[ValidadorReadSimple],
             summary="Lista validadores",
+            dependencies=[Depends(is_admin_dependencies)]
             )
 async def read(
         db: Session = Depends(get_db),
-        pagination: PaginationSchema = Depends(),
-        token: str = Depends(oauth2_scheme)
+        pagination: PaginationSchema = Depends()
 ):
     validadores, metadata = await get_all(
         db=db,
         model=Validador,
-        pagination=pagination,
-        token=token
+        pagination=pagination
     )
 
     return ResponsePaginationSchema(
@@ -49,7 +50,7 @@ async def read(
             }
             )
 async def read_id(
-        id: int = Path(description="Identificador do validador"),
+        id: int = Path(description=VALIDADOR_ID_DESCRIPTION),
         db: Session = Depends(get_db),
     token: str = Depends(oauth2_scheme)
 ):
@@ -58,11 +59,37 @@ async def read_id(
         model=Validador,
         id=id,
         token=token,
-        model_has_user_key=Problema
+        path_has_user_key="problema"
     )
 
     return ResponseUnitSchema(
         data=validador
+    )
+
+
+@router.get("/{id}/testes/",
+            response_model=ResponsePaginationSchema[ValidadorTesteReadFull],
+            summary="Lista testes pertencentes a um validador",
+            responses={
+                404: errors[404]
+            }
+            )
+async def read_validador_id_testes(
+        id: int = Path(description=VALIDADOR_ID_DESCRIPTION),
+        db: Session = Depends(get_db),
+        pagination: PaginationSchema = Depends(),
+        token: str = Depends(oauth2_scheme)
+):
+    testes_validador, metadata = await get_testes_validador(
+        db=db,
+        pagination=pagination,
+        id=id,
+        token=token
+    )
+
+    return ResponsePaginationSchema(
+        data=testes_validador,
+        metadata=metadata
     )
 
 
@@ -81,12 +108,10 @@ async def create(
     db: Session = Depends(get_db),
     token: str = Depends(oauth2_scheme)
 ):
-    user = await get_authenticated_user(token=token, db=db)
-
     validador = await create_validador(
         db=db,
         validador=validador,
-        user=user
+        token=token
     )
 
     return ResponseUnitSchema(data=validador)
@@ -106,13 +131,11 @@ async def parcial_update(
             description="Validador a ser atualizado parcialmente"),
         token: str = Depends(oauth2_scheme),
 ):
-    user = await get_authenticated_user(token, db)
-
     validador = await update_validador(
         db=db,
         id=id,
         validador=data,
-        user=user
+        token=token
     )
     return ResponseUnitSchema(
         data=validador
@@ -133,13 +156,11 @@ async def total_update(
             description="Validador a ser atualizado por completo"),
         token: str = Depends(oauth2_scheme),
 ):
-    user = await get_authenticated_user(token, db)
-
     validador = await update_validador(
         db=db,
         id=id,
         validador=data,
-        user=user
+        token=token
     )
     return ResponseUnitSchema(
         data=validador
@@ -164,8 +185,7 @@ async def delete(
         model=Validador,
         id=id,
         token=token,
-        model_has_user_key=Problema,
-        return_true=True
+        path_has_user_key="problema"
     )
 
     if (validador):

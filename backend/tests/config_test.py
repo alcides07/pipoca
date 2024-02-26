@@ -1,4 +1,4 @@
-from backend.main import app
+from main import app
 from dependencies.authenticated_user import get_authenticated_user
 from dependencies.database import get_db
 from tests.database import get_db_test

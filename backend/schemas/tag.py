@@ -1,3 +1,4 @@
+from typing import Optional
 from pydantic import BaseModel, Field
 
 
@@ -13,4 +14,7 @@ class TagRead(TagBase):
 
 
 class TagCreate(TagBase):
-    pass
+    problema_id: Optional[int] = Field(
+        default=None,
+        description="Problema a ser associado com a tag"
+    )

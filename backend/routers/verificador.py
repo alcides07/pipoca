@@ -1,4 +1,5 @@
-from orm.verificador import create_verificador, update_verificador
+from dependencies.is_admin import is_admin_dependencies
+from orm.verificador import create_verificador, get_testes_verificador, update_verificador
 from routers.auth import oauth2_scheme
 from dependencies.authenticated_user import get_authenticated_user
 from dependencies.database import get_db
@@ -6,10 +7,12 @@ from fastapi import APIRouter, Body, Depends, Path, Response, status
 from models.problema import Problema
 from models.verificador import Verificador
 from orm.common.index import delete_object, get_all, get_by_id
+from routers.verificadorTeste import VERIFICADOR_TESTE_ID_DESCRIPTION
 from schemas.common.pagination import PaginationSchema
 from schemas.common.response import ResponsePaginationSchema, ResponseUnitSchema
 from schemas.verificador import VERIFICADOR_ID_DESCRIPTION, VerificadorCreateSingle, VerificadorReadFull, VerificadorReadSimple, VerificadorUpdatePartial, VerificadorUpdateTotal
 from sqlalchemy.orm import Session
+from schemas.verificadorTeste import VerificadorTesteReadFull
 from utils.errors import errors
 
 router = APIRouter(
@@ -22,17 +25,16 @@ router = APIRouter(
 @router.get("/",
             response_model=ResponsePaginationSchema[VerificadorReadSimple],
             summary="Lista verificadores",
+            dependencies=[Depends(is_admin_dependencies)]
             )
 async def read(
         db: Session = Depends(get_db),
-        pagination: PaginationSchema = Depends(),
-        token: str = Depends(oauth2_scheme)
+        pagination: PaginationSchema = Depends()
 ):
     verificadores, metadata = await get_all(
         db=db,
         model=Verificador,
-        pagination=pagination,
-        token=token
+        pagination=pagination
     )
 
     return ResponsePaginationSchema(
@@ -58,11 +60,37 @@ async def read_id(
         model=Verificador,
         id=id,
         token=token,
-        model_has_user_key=Problema
+        path_has_user_key="problema"
     )
 
     return ResponseUnitSchema(
         data=verificador
+    )
+
+
+@router.get("/{id}/testes/",
+            response_model=ResponsePaginationSchema[VerificadorTesteReadFull],
+            summary="Lista testes pertencentes a um verificador",
+            responses={
+                404: errors[404]
+            }
+            )
+async def read_verificador_id_testes(
+        id: int = Path(description=VERIFICADOR_TESTE_ID_DESCRIPTION),
+        db: Session = Depends(get_db),
+        pagination: PaginationSchema = Depends(),
+        token: str = Depends(oauth2_scheme)
+):
+    testes_verificador, metadata = await get_testes_verificador(
+        db=db,
+        pagination=pagination,
+        id=id,
+        token=token
+    )
+
+    return ResponsePaginationSchema(
+        data=testes_verificador,
+        metadata=metadata
     )
 
 
@@ -81,12 +109,10 @@ async def create(
     db: Session = Depends(get_db),
     token: str = Depends(oauth2_scheme)
 ):
-    user = await get_authenticated_user(token=token, db=db)
-
     verificador = await create_verificador(
         db=db,
         verificador=verificador,
-        user=user,
+        token=token,
     )
 
     return ResponseUnitSchema(data=verificador)
@@ -106,13 +132,11 @@ async def parcial_update(
             description="Verificador a ser atualizado parcialmente"),
         token: str = Depends(oauth2_scheme),
 ):
-    user = await get_authenticated_user(token, db)
-
     verificador = await update_verificador(
         db=db,
         id=id,
         verificador=data,
-        user=user
+        token=token
     )
     return ResponseUnitSchema(
         data=verificador
@@ -133,13 +157,11 @@ async def total_update(
             description="Verificador a ser atualizado por completo"),
         token: str = Depends(oauth2_scheme),
 ):
-    user = await get_authenticated_user(token, db)
-
     verificador = await update_verificador(
         db=db,
         id=id,
         verificador=data,
-        user=user
+        token=token
     )
     return ResponseUnitSchema(
         data=verificador
@@ -164,8 +186,7 @@ async def delete(
         model=Verificador,
         id=id,
         token=token,
-        model_has_user_key=Problema,
-        return_true=True
+        path_has_user_key="problema"
     )
 
     if (verificador):

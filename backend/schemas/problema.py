@@ -5,7 +5,7 @@ from schemas.arquivo import ArquivoCreate, ArquivoReadFull, ArquivoReadSimple
 from schemas.problemaTeste import ProblemaTesteCreate, ProblemaTesteReadFull, ProblemaTesteReadSimple
 from schemas.tag import TagRead
 from schemas.declaracao import DeclaracaoCreate, DeclaracaoReadFull, DeclaracaoReadSimple
-from schemas.user import UserReadFull, UserReadSimple
+from schemas.user import UserReadSimple
 from schemas.validador import ValidadorCreate, ValidadorReadFull, ValidadorReadSimple
 from schemas.verificador import VerificadorCreate, VerificadorReadFull, VerificadorReadSimple
 
@@ -78,7 +78,8 @@ class ProblemaReadSimple(ProblemaBase):
         description=VERIFICADOR_DESCRIPTION
     )
 
-    validador: ValidadorReadSimple = Field(
+    validador: Optional[ValidadorReadSimple] = Field(
+        default=None,
         description=VALIDADOR_DESCRIPTION
     )
 
@@ -95,7 +96,7 @@ class ProblemaReadFull(ProblemaBase):
         description="Identificador do problema"
     )
 
-    usuario: Optional[UserReadFull] = Field(
+    usuario: Optional[UserReadSimple] = Field(
         description="Criador do problema", default=None)
 
     tags: list[TagRead] = Field(
@@ -110,29 +111,15 @@ class ProblemaReadFull(ProblemaBase):
         description=DECLARACAO_DESCRIPTION
     )
 
-    arquivos: list[ArquivoReadFull] = Field(
-        description=ARQUIVOS_DESCRIPTION
-    )
-
-    testes: list[ProblemaTesteReadFull] = Field(
-        description=TESTES_DESCRIPTION
-    )
-
-    verificador: Optional[VerificadorReadFull] = Field(
-        default=None,
-        description=VERIFICADOR_DESCRIPTION
-    )
-
-    validador: ValidadorReadFull = Field(
-        description=VALIDADOR_DESCRIPTION
-    )
-
     class ConfigDict:
         from_attributes = True
 
 
 class ProblemaCreate(ProblemaBase):
+    pass
 
+
+class ProblemaCreateUpload(ProblemaBase):
     tags: list[str] = Field(
         default=None,
         description="Palavras-chave utilizadas como etiquetas"
@@ -157,6 +144,10 @@ class ProblemaCreate(ProblemaBase):
     validador: ValidadorCreate = Field(
         description=VALIDADOR_DESCRIPTION
     )
+
+
+class ProblemaUpdateTotal(ProblemaBase):
+    pass
 
 
 class ProblemaUpdatePartial(BaseModel):
@@ -190,34 +181,4 @@ class ProblemaUpdatePartial(BaseModel):
         ge=4,
         le=1024,
         description="Memória limite do problema (em megabytes)"
-    )
-
-    tags: Optional[list[str]] = Field(
-        default=None,
-        description="Palavras-chave utilizadas como etiquetas"
-    )
-
-    declaracoes: Optional[list[DeclaracaoCreate]] = Field(
-        default=None,
-        description=DECLARACAO_DESCRIPTION
-    )
-
-    arquivos: Optional[list[ArquivoCreate]] = Field(
-        default=None,
-        description=ARQUIVOS_DESCRIPTION
-    )
-
-    testes: Optional[list[ProblemaTesteCreate]] = Field(
-        default=None,
-        description=TESTES_DESCRIPTION
-    )
-
-    verificador: Optional[VerificadorCreate] = Field(
-        default=None,
-        description=VERIFICADOR_DESCRIPTION
-    )
-
-    validador: Optional[ValidadorCreate] = Field(
-        default=None,
-        description=VALIDADOR_DESCRIPTION
     )
