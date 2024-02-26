@@ -1,7 +1,7 @@
 import base64
 import os
 from passlib.context import CryptContext
-from backend.main import app
+from main import app
 from fastapi.testclient import TestClient
 
 client = TestClient(app)

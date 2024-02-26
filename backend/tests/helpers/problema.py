@@ -3,7 +3,7 @@ from fastapi.testclient import TestClient
 from tests.database import get_db_test
 from tests.helpers.administrador import create_administrador_helper
 from tests.helpers.user import create_user_helper
-from backend.main import app
+from main import app
 
 client = TestClient(app)
 URL_PROBLEMA = "/problemas"
@@ -139,69 +139,5 @@ JSON_PROBLEMA = {
     "nome_arquivo_entrada": "string",
     "nome_arquivo_saida": "string",
     "tempo_limite": 250,
-    "memoria_limite": 600,
-    "declaracoes": [
-                {
-                    "titulo": "string",
-                    "contextualizacao": "string",
-                    "formatacao_entrada": "string",
-                    "formatacao_saida": "string",
-                    "observacao": "string",
-                    "tutorial": "string",
-                    "idioma": "Africâner"
-                }
-    ],
-    "arquivos": [
-        {
-            "nome": "string",
-                    "corpo": "string",
-                    "secao": "recursos"
-        }
-    ],
-    "verificador": {
-        "nome": "string",
-                "linguagem": "string",
-                "corpo": "string",
-        "testes": [
-            {
-                "numero": 1,
-                "entrada": "string",
-                "veredito": "ok"
-            }
-        ]
-    },
-    "validador": {
-        "nome": "string",
-                "linguagem": "string",
-                "corpo": "string",
-        "testes": [
-            {
-                "numero": 1,
-                "entrada": "string",
-                "veredito": "valid"
-
-            },
-            {
-                "numero": 1,
-                "entrada": "string",
-                "veredito": "invalid"
-            },
-        ]
-    },
-    "tags": ["1", "2"],
-    "testes": [
-        {
-            "numero": 1,
-            "tipo": "manual",
-            "exemplo": True,
-            "entrada": "string",
-            "descricao": "string"
-        },
-        {
-            "numero": 2,
-            "tipo": "gerado",
-            "exemplo": False,
-            "entrada": "string"
-        }
-    ],
+    "memoria_limite": 600
 }

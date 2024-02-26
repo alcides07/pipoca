@@ -1,5 +1,5 @@
+from dependencies.authenticated_user import get_authenticated_user
 from dependencies.authorization_user import is_user
-from models.administrador import Administrador
 from sqlalchemy.exc import SQLAlchemyError
 from fastapi import HTTPException, status
 from orm.common.index import get_by_key_value_exists
@@ -38,32 +38,32 @@ async def update_user(
     db: Session,
     id: int,
     data: UserUpdateTotal | UserUpdatePartial,
-    user: User | Administrador
+    token: str
 ):
-
     user_db = db.query(User).filter(User.id == id).first()
 
     if (not user_db):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
-    if (is_user(user) and user_db.id != user.id):  # type: ignore
+    user = await get_authenticated_user(db=db, token=token)
+    if (is_user(user) and user_db.id != user.id):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
 
-    user_by_username = db.query(User).filter(
-        User.username == data.username).first()
-
-    if (user_by_username != None and user_by_username.id != id):  # type: ignore
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                            detail="Erro. O nome de usuário fornecido está em uso!")
-
-    user_by_email = db.query(User).filter(
-        User.email == data.email).first()
-
-    if (user_by_email != None and user_by_email.id != id):  # type: ignore
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                            detail="Erro. O e-mail fornecido está em uso!")
-
     try:
+        user_by_username = db.query(User).filter(
+            User.username == data.username).first()
+
+        if (user_by_username != None and bool(user_by_username.id != id)):
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                                detail="Erro. O nome de usuário fornecido está em uso!")
+
+        user_by_email = db.query(User).filter(
+            User.email == data.email).first()
+
+        if (user_by_email != None and bool(user_by_email.id != id)):
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                                detail="Erro. O e-mail fornecido está em uso!")
+
         for key, value in data:
             if (value != None and hasattr(user_db, key)):
                 setattr(user_db, key, value)

@@ -41,16 +41,56 @@ class ProblemaTesteBaseFull(ProblemaTesteBase):
 
 
 class ProblemaTesteReadFull(ProblemaTesteBaseFull):
-    id: int = Field(description=TESTE_ID_DESCRIPTION)
     problema_id: int = Field(
         description=PROBLEMA_ID_DESCRIPTION)
+    id: int = Field(description=TESTE_ID_DESCRIPTION)
 
 
 class ProblemaTesteReadSimple(ProblemaTesteBase):
-    id: int = Field(description=TESTE_ID_DESCRIPTION)
     problema_id: int = Field(
         description=PROBLEMA_ID_DESCRIPTION)
+    id: int = Field(description=TESTE_ID_DESCRIPTION)
 
 
 class ProblemaTesteCreate(ProblemaTesteBaseFull):
     pass
+
+
+class ProblemaTesteCreateSingle(ProblemaTesteBaseFull):
+    problema_id: int = Field(
+        description=PROBLEMA_ID_DESCRIPTION)
+
+
+class ProblemaTesteUpdateTotal(ProblemaTesteBaseFull):
+    pass
+
+
+class ProblemaTesteUpdatePartial(BaseModel):
+    numero: Optional[int] = Field(
+        default=None,
+        ge=1,
+        le=1000,
+        description="Código de numeração do teste"
+    )
+
+    tipo: Optional[TipoTesteProblemaEnum] = Field(
+        default=None,
+        description="Tipo do teste"
+    )
+
+    exemplo: Optional[bool] = Field(
+        default=None,
+        description="Define se o teste será ou não exibido na declaração do problema"
+    )
+
+    entrada: Optional[str] = Field(
+        default=None,
+        max_length=250000,
+        description="Dados de entrada do teste"
+    )
+
+    descricao: Optional[str] = Field(
+        default=None,
+        max_length=250000,
+        description="Descrição do teste"
+    )

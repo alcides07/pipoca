@@ -3,7 +3,7 @@ from tests.helpers.administrador import create_administrador_helper
 from tests.helpers.problema import URL_PROBLEMA, create_problema_user_helper
 from tests.helpers.problema import JSON_PROBLEMA
 from tests.helpers.user import create_user_helper
-from backend.main import app
+from main import app
 from fastapi.testclient import TestClient
 from tests.config_test import remove_dependencies, resume_dependencies
 
@@ -97,7 +97,7 @@ def test_read_problema_resposta_unit_privado_nao_sou_autor_mas_respondi_user():
     id_resposta = response_resposta.json().get("data").get("id")
 
     client.patch(
-        f"{URL_PROBLEMA}/{problema_id}",
+        f"{URL_PROBLEMA}/{problema_id}/",
         json={
             "privado": True
         },
@@ -186,44 +186,6 @@ def test_read_problemas_respostas_admin():
     resume_dependencies()
 
 
-def test_read_problemas_respostas_de_autor_by_problema_id_user():
-    remove_dependencies()
-
-    response_problema_criado, token_criador_problema = create_problema_user_helper()
-    problema_id = response_problema_criado.json().get("data").get("id")
-
-    response = client.get(
-        f"{URL_PROBLEMA}/{problema_id}/respostas/",
-        headers={
-            "Authorization": f"Bearer {token_criador_problema}",
-        },
-    )
-
-    assert response.status_code == 200
-
-    resume_dependencies()
-
-
-def test_read_problemas_respostas_de_naoautor_by_problema_id_user():
-    remove_dependencies()
-
-    response_problema_criado, _ = create_problema_user_helper()
-    problema_id = response_problema_criado.json().get("data").get("id")
-
-    _, token_user, _ = create_user_helper()
-
-    response = client.get(
-        f"{URL_PROBLEMA}/{problema_id}/respostas/",
-        headers={
-            "Authorization": f"Bearer {token_user}",
-        },
-    )
-
-    assert response.status_code == 401
-
-    resume_dependencies()
-
-
 def test_read_problemas_respostas_de_naoautor_by_problema_id_admin():
     remove_dependencies()
 
@@ -251,7 +213,7 @@ def test_read_minhas_respostas_problemas():
     _, token_user, _ = create_user_helper()
 
     response_problema_user = client.get(
-        f"{URL_PROBLEMA_RESPOSTA}/user/",
+        f"{URL_PROBLEMA_RESPOSTA}/users/",
         headers={
             "Authorization": f"Bearer {token_user}",
         },

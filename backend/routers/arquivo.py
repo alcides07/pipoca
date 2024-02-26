@@ -1,4 +1,4 @@
-from models.problema import Problema
+from dependencies.is_admin import is_admin_dependencies
 from orm.arquivo import create_arquivo, update_arquivo
 from routers.auth import oauth2_scheme
 from fastapi import APIRouter, Body, Depends, Path, status, Response
@@ -23,17 +23,16 @@ router = APIRouter(
 @router.get("/",
             response_model=ResponsePaginationSchema[ArquivoReadSimple],
             summary="Lista arquivos",
+            dependencies=[Depends(is_admin_dependencies)]
             )
 async def read(
         db: Session = Depends(get_db),
         pagination: PaginationSchema = Depends(),
-        token: str = Depends(oauth2_scheme)
 ):
     arquivos, metadata = await get_all(
         db=db,
         model=Arquivo,
         pagination=pagination,
-        token=token,
     )
 
     return ResponsePaginationSchema(
@@ -59,7 +58,7 @@ async def read_id(
         model=Arquivo,
         id=id,
         token=token,
-        model_has_user_key=Problema
+        path_has_user_key="problema"
     )
 
     return ResponseUnitSchema(
@@ -81,11 +80,9 @@ async def create(
     db: Session = Depends(get_db),
     token: str = Depends(oauth2_scheme)
 ):
-    user = await get_authenticated_user(token=token, db=db)
-
     arquivo = await create_arquivo(
         db=db,
-        user=user,
+        token=token,
         arquivo=arquivo,
     )
 
@@ -106,13 +103,11 @@ async def total_update(
             description="Arquivo a ser atualizado por completo"),
         token: str = Depends(oauth2_scheme),
 ):
-    user = await get_authenticated_user(token, db)
-
     response = await update_arquivo(
         db=db,
         id=id,
         arquivo=arquivo,
-        user=user
+        token=token
     )
     return ResponseUnitSchema(
         data=response
@@ -133,13 +128,11 @@ async def parcial_update(
             description="Arquivo a ser atualizado parcialmente"),
         token: str = Depends(oauth2_scheme),
 ):
-    user = await get_authenticated_user(token, db)
-
     response = await update_arquivo(
         db=db,
         id=id,
         arquivo=data,
-        user=user
+        token=token
     )
     return ResponseUnitSchema(
         data=response
@@ -164,8 +157,7 @@ async def delete(
         model=Arquivo,
         id=id,
         token=token,
-        model_has_user_key=Problema,
-        return_true=True
+        path_has_user_key="problema"
     )
 
     if (arquivo):

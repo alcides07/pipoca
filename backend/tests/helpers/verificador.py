@@ -1,7 +1,7 @@
 from tests.config_test import remove_dependencies
 from fastapi.testclient import TestClient
 from tests.helpers.problema import create_problema_admin_helper, create_problema_user_helper
-from backend.main import app
+from main import app
 
 client = TestClient(app)
 URL_VERIFICADOR = "/verificadores"
