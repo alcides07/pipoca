@@ -21,6 +21,7 @@ from models.arquivo import Arquivo
 from models.declaracao import Declaracao
 from models.problema import Problema
 from schemas.problema import ProblemaCreate, ProblemaCreateUpload, ProblemaUpdatePartial, ProblemaUpdateTotal
+from models.relationships.problema_tag import problema_tag_relationship
 
 
 def get_unique_nome_problema(
@@ -358,6 +359,44 @@ async def get_testes_problema(
         )
 
         return db_problema_testes.all(), metadata
+
+    except SQLAlchemyError:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+async def get_tags_problema(
+    db: Session,
+    id: int,
+    pagination: PaginationSchema,
+    token: str
+):
+    db_problema = db.query(Problema).filter(Problema.id == id).first()
+
+    if (not db_problema):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+    user = await get_authenticated_user(token, db)
+
+    if (
+        is_user(user)
+        and
+        bool(db_problema.usuario_id != user.id)
+        and
+        bool(db_problema.privado) == True
+    ):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+
+    try:
+        query = db.query(Tag).join(problema_tag_relationship).filter(
+            problema_tag_relationship.c.problema_id == db_problema.id)
+
+        db_problema_tags, metadata = filter_collection(
+            model=ProblemaTeste,
+            pagination=pagination,
+            query=query
+        )
+
+        return db_problema_tags.all(), metadata
 
     except SQLAlchemyError:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
