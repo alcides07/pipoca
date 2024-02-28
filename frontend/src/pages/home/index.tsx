@@ -3,6 +3,7 @@ import problemaService from "../../service/api/problemaService";
 import { iDataProblema } from "../../interfaces/iProblema";
 import { DataTable } from "../../components/table";
 import { problemaColumns } from "@/components/table/columns/problemaColumns";
+import Header from "@/components/header";
 
 function Home() {
   const [problemas, setProblemas] = useState<iDataProblema[]>([]);
@@ -18,14 +19,21 @@ function Home() {
     });
   }
 
+  const header = [
+    { nome: "Problemas", link: "#" },
+    { nome: "Turmas", link: "#" },
+    { nome: "Torneios", link: "#" },
+  ];
+
   return (
     <>
+      <Header options={header} />
       {problemas && problemas.length > 0 ? (
-        <div className="w-10/12 ml-12 ">
+        <div className="mx-[8em]">
           <DataTable columns={problemaColumns} data={problemas} />
         </div>
       ) : (
-        <div>
+        <div className="font-bold flex justify-center items-center">
           <p>Não há problemas cadastrados</p>
         </div>
       )}

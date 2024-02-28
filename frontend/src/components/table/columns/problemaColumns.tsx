@@ -1,6 +1,6 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { iDataProblema } from "../../../interfaces/iProblema";
-import { ArrowUpDown, MoreHorizontal } from "lucide-react";
+import { ArrowUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export const problemaColumns: ColumnDef<iDataProblema>[] = [
