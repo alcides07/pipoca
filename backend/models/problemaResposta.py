@@ -62,6 +62,12 @@ class ProblemaResposta(Base):
             name="problema_respostas_usuario_id_fkey"
         )
     )
+
+    veredito = Column(
+        String(),
+        nullable=False
+    )
+
     usuario = relationship(
         "User",
         uselist=False,
