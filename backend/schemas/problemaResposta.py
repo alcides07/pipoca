@@ -13,17 +13,6 @@ class ProblemaRespostaBase(BaseModel):
         description="Resposta fornecida para o problema"
     )
 
-    tempo: int = Field(
-        ge=0,
-        description="Tempo de execução do código de resposta"
-
-    )
-
-    memoria: int = Field(
-        ge=0,
-        description="Memória utilizada durante a execução do código de resposta"
-    )
-
     linguagem: str = Field(
         description="Linguagem de programação em que a resposta está escrita"
     )
@@ -38,6 +27,10 @@ class ProblemaRespostaBaseFull(ProblemaRespostaBase):
         description="Data e horário em que a resposta foi submetida"
     )
 
+    veredito: str = Field(
+        description="Veredíto da submissão da resposta"
+    )
+
 
 class ProblemaRespostaReadFull(ProblemaRespostaBaseFull):
     id: int = Field(
@@ -46,6 +39,16 @@ class ProblemaRespostaReadFull(ProblemaRespostaBaseFull):
 
     usuario: UserReadSimple = Field(
         description="Usuário autor da resposta"
+    )
+
+    tempo: int = Field(
+        ge=0,
+        description="Tempo de execução do código de resposta"
+    )
+
+    memoria: int = Field(
+        ge=0,
+        description="Memória utilizada durante a execução do código de resposta"
     )
 
 
