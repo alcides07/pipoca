@@ -1,11 +1,11 @@
 FILENAME_RUN = "Main"
-
+INPUT_FILENAME = "input.txt"
 
 commands = {
     ".py": {
         "image": "python:3",
         "run": ["/bin/bash", "-c",
-                f"python {FILENAME_RUN}.py"],
+                f"python {FILENAME_RUN}.py < {INPUT_FILENAME}"],
     },
 
     ".java": {

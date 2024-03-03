@@ -10,18 +10,26 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 from models.problema import Problema
 from docker.errors import DockerException
-from languages_run import FILENAME_RUN, commands
+from languages_run import FILENAME_RUN, INPUT_FILENAME, commands
 
 
-async def execute_user_code(resposta: str, linguagem: str):
+async def execute_user_code(
+    resposta: str,
+        linguagem: str,
+        db_problema: Problema
+):
     client = docker.from_env()
-
     image = commands[linguagem]["image"]
     command = commands[linguagem]["run"]
 
     with tempfile.TemporaryDirectory() as temp_dir:
+        inp = "5\n8"
+
         with open(os.path.join(temp_dir, f"{FILENAME_RUN}{linguagem}"), "w") as file:
             file.write(resposta)
+
+        with open(os.path.join(temp_dir, INPUT_FILENAME), "w") as file:
+            file.write(inp)
 
         try:
             client.images.pull(image)
@@ -80,7 +88,8 @@ async def create_problema_resposta(
     try:
         stdout_logs, stderr_logs = await execute_user_code(
             resposta=problema_resposta.resposta,
-            linguagem=problema_resposta.linguagem
+            linguagem=problema_resposta.linguagem,
+            db_problema=db_problema
         )
 
         veredito = "ok"
