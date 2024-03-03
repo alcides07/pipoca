@@ -1,3 +1,6 @@
+import docker
+import os
+import tempfile
 from dependencies.authenticated_user import get_authenticated_user
 from dependencies.authorization_user import is_admin, is_user
 from fastapi import HTTPException, status
@@ -6,6 +9,53 @@ from schemas.problemaResposta import ProblemaRespostaCreate
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 from models.problema import Problema
+from docker.errors import DockerException
+from languages_run import FILENAME_RUN, commands
+
+
+async def execute_user_code(resposta: str, linguagem: str):
+    client = docker.from_env()
+
+    image = commands[linguagem]["image"]
+    command = commands[linguagem]["run"]
+
+    with tempfile.TemporaryDirectory() as temp_dir:
+        with open(os.path.join(temp_dir, f"{FILENAME_RUN}{linguagem}"), "w") as file:
+            file.write(resposta)
+
+        try:
+            client.images.pull(image)
+            volumes = {temp_dir: {'bind': '/user/submission/', 'mode': 'rw'}}
+
+            container = client.containers.run(
+                image,
+                command,
+                detach=True,
+                volumes=volumes,
+                working_dir='/user/submission/'
+            )
+
+            container.wait()
+
+            stdout_logs = container.logs(stdout=True, stderr=False)
+            stderr_logs = container.logs(stdout=False, stderr=True)
+
+            stdout_logs_decode = stdout_logs.decode()
+            stderr_logs_decode = stderr_logs.decode()
+
+            container.stop()
+            container.remove()
+
+            if (stderr_logs_decode == ""):
+                print("saida: ", stdout_logs_decode)
+                print("executa testes aqui")
+
+            return stdout_logs_decode, stderr_logs_decode
+
+        except DockerException:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 async def create_problema_resposta(
@@ -28,12 +78,28 @@ async def create_problema_resposta(
                 status_code=status.HTTP_401_UNAUTHORIZED, detail="Erro. O problema o qual se está tentando submeter uma resposta é privado!")
 
     try:
+        stdout_logs, stderr_logs = await execute_user_code(
+            resposta=problema_resposta.resposta,
+            linguagem=problema_resposta.linguagem
+        )
+
+        veredito = "ok"
+
+        if (stderr_logs != ""):
+            print("erro: ", stderr_logs)
+            veredito = stderr_logs
+
         db_problema_resposta = ProblemaResposta(
             **problema_resposta.model_dump(exclude=set(["problema", "usuario"])))
 
         db_problema.respostas.append(db_problema_resposta)
 
         db_problema_resposta.usuario = user
+        db_problema_resposta.veredito = veredito
+
+        # Código temporário
+        db_problema_resposta.tempo = 250
+        db_problema_resposta.memoria = 250
 
         if (is_admin(user)):
             db_problema_resposta.usuario = None
