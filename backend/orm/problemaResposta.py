@@ -1,10 +1,12 @@
 import docker
 import os
 import tempfile
+from typing import List, Tuple
 from dependencies.authenticated_user import get_authenticated_user
 from dependencies.authorization_user import is_admin, is_user
 from fastapi import HTTPException, status
 from models.problemaResposta import ProblemaResposta
+from schemas.arquivo import SecaoEnum
 from schemas.problemaResposta import ProblemaRespostaCreate
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
@@ -13,57 +15,169 @@ from docker.errors import DockerException
 from languages_run import FILENAME_RUN, INPUT_FILENAME, commands
 
 
-async def execute_user_code(
-    resposta: str,
-        linguagem: str,
+def get_arquivo_solucao(
         db_problema: Problema
 ):
+    for arquivo in db_problema.arquivos:
+        if (arquivo.secao == SecaoEnum.SOLUCAO and arquivo.status == "main"):
+            linguagem = os.path.splitext(arquivo.nome)[1]
+            return arquivo, linguagem
+    return None
+
+
+def compare_solucao_e_submissao(
+        output_codigo_solucao: list[Tuple[str, str]],
+        output_codigo_user: list[Tuple[str, str]]
+):
+    pass
+
+
+def execute_arquivo_solucao(db_problema: Problema, arquivo_solucao: Tuple):
+    arquivo = arquivo_solucao[0]
+    linguagem = arquivo_solucao[1]
+    codigo = arquivo.corpo
+    output_testes: List[Tuple[str, str]] = []
+
     client = docker.from_env()
     image = commands[linguagem]["image"]
     command = commands[linguagem]["run"]
 
     with tempfile.TemporaryDirectory() as temp_dir:
-        inp = "5\n8"
+        for teste in db_problema.testes:
 
-        with open(os.path.join(temp_dir, f"{FILENAME_RUN}{linguagem}"), "w") as file:
-            file.write(resposta)
+            with open(os.path.join(temp_dir, f"{FILENAME_RUN}{linguagem}"), "w") as file:
+                file.write(codigo)
 
-        with open(os.path.join(temp_dir, INPUT_FILENAME), "w") as file:
-            file.write(inp)
+            with open(os.path.join(temp_dir, INPUT_FILENAME), "w") as file:
+                file.write(teste.entrada)
+            try:
+                client.images.pull(image)
+                volumes = {temp_dir: {
+                    'bind': '/arquivo/testes/', 'mode': 'rw'}}
 
-        try:
-            client.images.pull(image)
-            volumes = {temp_dir: {'bind': '/user/submission/', 'mode': 'rw'}}
+                container = client.containers.run(
+                    image,
+                    command,
+                    detach=True,
+                    volumes=volumes,
+                    working_dir='/arquivo/testes/'
+                )
 
-            container = client.containers.run(
-                image,
-                command,
-                detach=True,
-                volumes=volumes,
-                working_dir='/user/submission/'
-            )
+                container.wait()  # type: ignore
 
-            container.wait()
+                stdout_logs = container.logs(  # type: ignore
+                    stdout=True, stderr=False)
+                stderr_logs = container.logs(  # type: ignore
+                    stdout=False, stderr=True)
 
-            stdout_logs = container.logs(stdout=True, stderr=False)
-            stderr_logs = container.logs(stdout=False, stderr=True)
+                stdout_logs_decode = stdout_logs.decode()
+                stderr_logs_decode = stderr_logs.decode()
 
-            stdout_logs_decode = stdout_logs.decode()
-            stderr_logs_decode = stderr_logs.decode()
+                output_testes.append((stdout_logs_decode, stderr_logs_decode))
 
-            container.stop()
-            container.remove()
+                container.stop()  # type: ignore
+                container.remove()  # type: ignore
 
-            if (stderr_logs_decode == ""):
-                print("saida: ", stdout_logs_decode)
-                print("executa testes aqui")
+                if (stderr_logs_decode != ""):
+                    print("err testes arquivo 1: ", stderr_logs_decode)
+                    break
 
-            return stdout_logs_decode, stderr_logs_decode
+            except DockerException as e:
+                print("err testes arquivo: ", e)
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
 
-        except DockerException:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+        return output_testes
+
+
+def execute_user_code(
+    problema_resposta: ProblemaRespostaCreate,
+    db_problema: Problema
+):
+    codigo_user = problema_resposta.resposta
+    codigo_user_linguagem = problema_resposta.linguagem
+    client = docker.from_env()
+    image = commands[codigo_user_linguagem]["image"]
+    command = commands[codigo_user_linguagem]["run"]
+    output_testes_user: List[Tuple[str, str]] = []
+
+    with tempfile.TemporaryDirectory() as temp_dir:
+        for teste in db_problema.testes:
+
+            with open(os.path.join(temp_dir, f"{FILENAME_RUN}{codigo_user_linguagem}"), "w") as file:
+                file.write(codigo_user)
+
+            with open(os.path.join(temp_dir, INPUT_FILENAME), "w") as file:
+                file.write(teste.entrada)
+
+            try:
+                client.images.pull(image)
+                volumes = {temp_dir: {
+                    'bind': '/user/submission/', 'mode': 'rw'}}
+
+                container = client.containers.run(
+                    image,
+                    command,
+                    detach=True,
+                    volumes=volumes,
+                    working_dir='/user/submission/'
+                )
+
+                container.wait()  # type: ignore
+
+                stdout_logs = container.logs(  # type: ignore
+                    stdout=True, stderr=False)
+                stderr_logs = container.logs(  # type: ignore
+                    stdout=False, stderr=True)
+
+                stdout_logs_decode = stdout_logs.decode()
+                stderr_logs_decode = stderr_logs.decode()
+
+                output_testes_user.append(
+                    (stdout_logs_decode, stderr_logs_decode))
+
+                container.stop()  # type: ignore
+                container.remove()  # type: ignore
+
+                if (stderr_logs_decode != ""):
+                    print("err testes user 1: ", stderr_logs_decode)
+                    break
+
+            except DockerException as e:
+                print("err testes user: ", e)
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+
+        return output_testes_user
+
+
+def execute_processo_resolucao(
+    problema_resposta: ProblemaRespostaCreate,
+    db_problema: Problema
+):
+    arquivo_solucao = get_arquivo_solucao(db_problema)
+    if (arquivo_solucao):
+        output_codigo_solucao = execute_arquivo_solucao(
+            db_problema, arquivo_solucao)
+
+        output_codigo_user = execute_user_code(
+            problema_resposta,
+            db_problema
+        )
+
+        print("Output arquivo solução: ", output_codigo_solucao)
+        print("")
+        print("Output testes user: ", output_codigo_user)
+        compare_solucao_e_submissao(
+            output_codigo_solucao,
+            output_codigo_user
+        )
+        return output_codigo_user, output_codigo_solucao
+
+    print("nao achei o arquivo solucao")
+    raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 async def create_problema_resposta(
@@ -86,17 +200,10 @@ async def create_problema_resposta(
                 status_code=status.HTTP_401_UNAUTHORIZED, detail="Erro. O problema o qual se está tentando submeter uma resposta é privado!")
 
     try:
-        stdout_logs, stderr_logs = await execute_user_code(
-            resposta=problema_resposta.resposta,
-            linguagem=problema_resposta.linguagem,
+        execute_processo_resolucao(
+            problema_resposta=problema_resposta,
             db_problema=db_problema
         )
-
-        veredito = "ok"
-
-        if (stderr_logs != ""):
-            print("erro: ", stderr_logs)
-            veredito = stderr_logs
 
         db_problema_resposta = ProblemaResposta(
             **problema_resposta.model_dump(exclude=set(["problema", "usuario"])))
@@ -104,7 +211,7 @@ async def create_problema_resposta(
         db_problema.respostas.append(db_problema_resposta)
 
         db_problema_resposta.usuario = user
-        db_problema_resposta.veredito = veredito
+        db_problema_resposta.veredito = "ok"
 
         # Código temporário
         db_problema_resposta.tempo = 250
@@ -119,7 +226,8 @@ async def create_problema_resposta(
 
         return db_problema_resposta
 
-    except SQLAlchemyError:
+    except SQLAlchemyError as e:
+        print("aq SQL:", e)
         db.rollback()
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
