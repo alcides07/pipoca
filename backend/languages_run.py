@@ -12,7 +12,7 @@ commands = {
         "image": "openjdk:11",
         "run": [
             "/bin/bash", "-c",
-            f"javac {FILENAME_RUN}.java && java {FILENAME_RUN}"
+            f"javac {FILENAME_RUN}.java && java {FILENAME_RUN} < {INPUT_FILENAME}"
         ]
     },
 
@@ -21,6 +21,14 @@ commands = {
         "run": [
             "/bin/bash", "-c",
             f"ruby {FILENAME_RUN}.rb"
+        ]
+    },
+
+    ".cpp": {
+        "image": "gcc",
+        "run": [
+            "/bin/bash", "-c",
+            f"g++ -o {FILENAME_RUN} {FILENAME_RUN}.cpp && ./{FILENAME_RUN} < {INPUT_FILENAME}"
         ]
     }
 }
