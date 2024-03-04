@@ -22,4 +22,4 @@ def overridden_swagger():
 def overridden_redoc():
     return get_redoc_html(openapi_url="/openapi.json",
                           title="API PIPOCA",
-                          redoc_favicon_url="https://images.emojiterra.com/twitter/v14.0/512px/1f37f.png")
+                          redoc_favicon_url="https://cdn-icons-png.flaticon.com/512/1522/1522352.png")
