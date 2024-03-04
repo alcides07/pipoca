@@ -40,9 +40,9 @@ def custom_openapi():
     if app.openapi_schema:
         return app.openapi_schema
     openapi_schema = get_openapi(
-        title="API Juiz Online",
+        title="API do sistema PIPOCA",
         version="0.0.1",
-        description="API em desenvolvimento",
+        description="API em desenvolvimento da Plataforma Interativa de Programação On-line em Competições Acadêmicas (PIPOCA)",
         routes=app.routes,
     )
     openapi_schema["info"]["x-logo"] = {
