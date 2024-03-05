@@ -29,7 +29,19 @@ def compare_solucao_e_submissao(
         output_codigo_solucao: list[Tuple[str, str]],
         output_codigo_user: list[Tuple[str, str]]
 ):
-    pass
+    i = 0
+    veredito = ""
+
+    for codigo_user in output_codigo_user:
+        if (codigo_user[0] == output_codigo_solucao[i][0]):
+            veredito += "ok\n"
+
+        else:
+            veredito += "wrong-answer\n"
+
+        i += 1
+
+    return veredito
 
 
 def execute_arquivo_solucao(db_problema: Problema, arquivo_solucao: Tuple):
@@ -79,11 +91,11 @@ def execute_arquivo_solucao(db_problema: Problema, arquivo_solucao: Tuple):
                 container.remove()  # type: ignore
 
                 if (stderr_logs_decode != ""):
-                    print("err testes arquivo 1: ", stderr_logs_decode)
-                    break
+                    raise HTTPException(
+                        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+                    )
 
-            except DockerException as e:
-                print("err testes arquivo: ", e)
+            except DockerException:
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
                 )
@@ -92,8 +104,8 @@ def execute_arquivo_solucao(db_problema: Problema, arquivo_solucao: Tuple):
 
 
 def execute_user_code(
-    problema_resposta: ProblemaRespostaCreate,
-    db_problema: Problema
+    db_problema: Problema,
+    problema_resposta: ProblemaRespostaCreate
 ):
     codigo_user = problema_resposta.resposta
     codigo_user_linguagem = problema_resposta.linguagem
@@ -103,7 +115,7 @@ def execute_user_code(
     output_testes_user: List[Tuple[str, str]] = []
 
     with tempfile.TemporaryDirectory() as temp_dir:
-        for teste in db_problema.testes:
+        for i, teste in enumerate(db_problema.testes):
 
             with open(os.path.join(temp_dir, f"{FILENAME_RUN}{codigo_user_linguagem}"), "w") as file:
                 file.write(codigo_user)
@@ -141,11 +153,9 @@ def execute_user_code(
                 container.remove()  # type: ignore
 
                 if (stderr_logs_decode != ""):
-                    print("err testes user 1: ", stderr_logs_decode)
-                    break
+                    return "error", f"Runtime error no teste {i+1}"
 
-            except DockerException as e:
-                print("err testes user: ", e)
+            except DockerException:
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
                 )
@@ -160,23 +170,28 @@ def execute_processo_resolucao(
     arquivo_solucao = get_arquivo_solucao(db_problema)
     if (arquivo_solucao):
         output_codigo_solucao = execute_arquivo_solucao(
-            db_problema, arquivo_solucao)
+            db_problema,
+            arquivo_solucao
+        )
 
         output_codigo_user = execute_user_code(
-            problema_resposta,
-            db_problema
+            db_problema,
+            problema_resposta
         )
 
         print("Output arquivo solução: ", output_codigo_solucao)
         print("")
         print("Output testes user: ", output_codigo_user)
-        compare_solucao_e_submissao(
+
+        if (isinstance(output_codigo_user, tuple) and output_codigo_user[0] == 'error'):
+            return output_codigo_user
+
+        veredito = compare_solucao_e_submissao(
             output_codigo_solucao,
             output_codigo_user
         )
-        return output_codigo_user, output_codigo_solucao
+        return veredito
 
-    print("nao achei o arquivo solucao")
     raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
@@ -200,7 +215,7 @@ async def create_problema_resposta(
                 status_code=status.HTTP_401_UNAUTHORIZED, detail="Erro. O problema o qual se está tentando submeter uma resposta é privado!")
 
     try:
-        execute_processo_resolucao(
+        veredito = execute_processo_resolucao(
             problema_resposta=problema_resposta,
             db_problema=db_problema
         )
@@ -211,11 +226,15 @@ async def create_problema_resposta(
         db_problema.respostas.append(db_problema_resposta)
 
         db_problema_resposta.usuario = user
-        db_problema_resposta.veredito = "ok"
 
-        # Código temporário
+        db_problema_resposta.veredito = veredito  # type: ignore
+        if (isinstance(veredito, tuple) and veredito[0] == 'error'):
+            db_problema_resposta.veredito = veredito[1]  # type: ignore
+
+        # Bloco temporário
         db_problema_resposta.tempo = 250
         db_problema_resposta.memoria = 250
+        #
 
         if (is_admin(user)):
             db_problema_resposta.usuario = None
@@ -226,8 +245,7 @@ async def create_problema_resposta(
 
         return db_problema_resposta
 
-    except SQLAlchemyError as e:
-        print("aq SQL:", e)
+    except SQLAlchemyError:
         db.rollback()
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
