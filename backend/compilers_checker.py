@@ -1,14 +1,14 @@
-FILENAME_RUN = "Main"
-INPUT_TEST_FILENAME = "input.txt"
-OUTPUT_JUDGE_FILENAME = "output_judge.txt"
-OUTPUT_USER_FILENAME = "output_user.txt"
+from constants import FILENAME_RUN, INPUT_TEST_FILENAME, OUTPUT_JUDGE_FILENAME, OUTPUT_USER_FILENAME
 
-commands = {
-    ".py": {
+
+commands_checker = {
+    "python.3": {
         "image": "python:3",
         "extension": ".py",
-        "run": ["/bin/bash", "-c",
-                f"python {FILENAME_RUN}.py < {INPUT_TEST_FILENAME}"],
+        "run": [
+            "/bin/bash", "-c",
+            f"python3 {FILENAME_RUN}.py && ./{FILENAME_RUN} {INPUT_TEST_FILENAME} {OUTPUT_USER_FILENAME} {OUTPUT_JUDGE_FILENAME}"
+        ],
     },
 
     ".java": {
@@ -16,7 +16,7 @@ commands = {
         "extension": ".java",
         "run": [
             "/bin/bash", "-c",
-            f"javac {FILENAME_RUN}.java && java {FILENAME_RUN} < {INPUT_TEST_FILENAME}"
+            f"javac {FILENAME_RUN}.java && java {FILENAME_RUN} && ./{FILENAME_RUN} {INPUT_TEST_FILENAME} {OUTPUT_USER_FILENAME} {OUTPUT_JUDGE_FILENAME}"
         ]
     },
 
@@ -25,16 +25,7 @@ commands = {
         "extension": ".rb",
         "run": [
             "/bin/bash", "-c",
-            f"ruby {FILENAME_RUN}.rb"
-        ]
-    },
-
-    ".cpp": {
-        "image": "gcc",
-        "extension": ".cpp",
-        "run": [
-            "/bin/bash", "-c",
-            f"g++ -o {FILENAME_RUN} {FILENAME_RUN}.cpp && ./{FILENAME_RUN} < {INPUT_TEST_FILENAME}"
+            f"ruby {FILENAME_RUN}.rb && ./{FILENAME_RUN} {INPUT_TEST_FILENAME} {OUTPUT_USER_FILENAME} {OUTPUT_JUDGE_FILENAME}"
         ]
     },
 
