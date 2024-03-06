@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import Optional
 from pydantic import BaseModel, Field
+from schemas.common.compilers import CompilersEnum
 from schemas.user import UserReadSimple
 
 PROBLEMA_RESPOSTA_ID_DESCRIPTION = "Identificador da resposta do problema"
@@ -13,7 +14,7 @@ class ProblemaRespostaBase(BaseModel):
         description="Resposta fornecida para o problema"
     )
 
-    linguagem: str = Field(
+    linguagem: CompilersEnum = Field(
         description="Linguagem de programação em que a resposta está escrita"
     )
 
