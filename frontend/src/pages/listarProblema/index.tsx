@@ -5,7 +5,7 @@ import { DataTable } from "../../components/table";
 import { problemaColumns } from "@/components/table/columns/problemaColumns";
 import Header from "@/components/header";
 
-function Home() {
+function ListarProblema() {
   const [problemas, setProblemas] = useState<iDataProblema[]>([]);
 
   useEffect(() => {
@@ -19,17 +19,13 @@ function Home() {
     });
   }
 
-  const header = [
-    { nome: "Problemas", link: "#" },
-    { nome: "Turmas", link: "#" },
-    { nome: "Torneios", link: "#" },
-  ];
-
   return (
-    <>
-      <Header options={header} />
+    <div className="px-28">
+      <div className="py-4">
+        <p className="text-2xl font-bold">Problemas</p>
+      </div>
       {problemas && problemas.length > 0 ? (
-        <div className="mx-[8em]">
+        <div>
           <DataTable columns={problemaColumns} data={problemas} />
         </div>
       ) : (
@@ -37,8 +33,8 @@ function Home() {
           <p>Não há problemas cadastrados</p>
         </div>
       )}
-    </>
+    </div>
   );
 }
 
-export default Home;
+export default ListarProblema;
