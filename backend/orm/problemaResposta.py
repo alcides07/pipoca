@@ -1,7 +1,10 @@
 import docker
 import os
 import tempfile
+import requests
+import shutil
 from typing import List, Tuple
+from constants import FILENAME_RUN, INPUT_TEST_FILENAME, OUTPUT_JUDGE_FILENAME, OUTPUT_USER_FILENAME, URL_TEST_LIB
 from dependencies.authenticated_user import get_authenticated_user
 from dependencies.authorization_user import is_admin, is_user
 from fastapi import HTTPException, status
@@ -12,7 +15,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 from models.problema import Problema
 from docker.errors import DockerException
-from languages_run import FILENAME_RUN, INPUT_FILENAME, commands
+from compilers_checker import commands_checker
+from compilers_standard import commands_standard
 
 
 def get_arquivo_solucao(
@@ -26,33 +30,85 @@ def get_arquivo_solucao(
 
 
 def compare_solucao_e_submissao(
-        output_codigo_solucao: list[Tuple[str, str]],
-        output_codigo_user: list[Tuple[str, str]]
+        db_problema: Problema,
+        output_codigo_solucao: list[str],
+        output_codigo_user: list[str]
 ):
-    i = 0
-    veredito = ""
+    codigo_verificador = db_problema.verificador.corpo
+    linguagem_verificador: str = db_problema.verificador.linguagem
+    extension_verificador: str = commands_checker[linguagem_verificador]["extension"]
 
-    for codigo_user in output_codigo_user:
-        if (codigo_user[0] == output_codigo_solucao[i][0]):
-            veredito += "ok\n"
+    client = docker.from_env()
+    image = commands_checker[linguagem_verificador]["image"]
+    command = commands_checker[linguagem_verificador]["run"]
 
-        else:
-            veredito += "wrong-answer\n"
+    with tempfile.TemporaryDirectory() as temp_dir:
+        with open(os.path.join(temp_dir, 'testlib.h'), 'wb') as file:
+            response = requests.get(URL_TEST_LIB, stream=True)
+            response.raise_for_status()
+            response.raw.decode_content = True
+            shutil.copyfileobj(response.raw, file)
 
-        i += 1
+        for i, teste in enumerate(db_problema.testes):
+            with open(os.path.join(temp_dir, f"{FILENAME_RUN}{extension_verificador}"), "w") as file:
+                file.write(codigo_verificador)
 
-    return veredito
+            with open(os.path.join(temp_dir, INPUT_TEST_FILENAME), "w") as file:
+                file.write(teste.entrada)
+
+            with open(os.path.join(temp_dir, OUTPUT_JUDGE_FILENAME), "w") as file:
+                file.write(output_codigo_solucao[i])
+
+            with open(os.path.join(temp_dir, OUTPUT_USER_FILENAME), "w") as file:
+                file.write(output_codigo_user[i])
+
+            try:
+                client.images.pull(image)
+                volumes = {temp_dir: {
+                    'bind': '/checker/testes/', 'mode': 'rw'}}
+
+                container = client.containers.run(
+                    image,
+                    command,
+                    detach=True,
+                    volumes=volumes,
+                    working_dir='/checker/testes/'
+                )
+
+                container.wait()  # type: ignore
+
+                stdout_logs = container.logs(  # type: ignore
+                    stdout=True, stderr=False)
+                stderr_logs = container.logs(  # type: ignore
+                    stdout=False, stderr=True)
+
+                stdout_logs_decode = stdout_logs.decode()
+                stderr_logs_decode = stderr_logs.decode()
+
+                print("sdout checker: ", stdout_logs_decode)
+                print("stderr checker: ", stderr_logs_decode)
+                print()
+
+                container.stop()  # type: ignore
+                container.remove()  # type: ignore
+
+            except DockerException:
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+
+    return "ok guys"
 
 
 def execute_arquivo_solucao(db_problema: Problema, arquivo_solucao: Tuple):
     arquivo = arquivo_solucao[0]
     linguagem = arquivo_solucao[1]
     codigo = arquivo.corpo
-    output_testes: List[Tuple[str, str]] = []
+    output_codigo_solucao: List[str] = []
 
     client = docker.from_env()
-    image = commands[linguagem]["image"]
-    command = commands[linguagem]["run"]
+    image = commands_standard[linguagem]["image"]
+    command = commands_standard[linguagem]["run"]
 
     with tempfile.TemporaryDirectory() as temp_dir:
         for teste in db_problema.testes:
@@ -60,8 +116,9 @@ def execute_arquivo_solucao(db_problema: Problema, arquivo_solucao: Tuple):
             with open(os.path.join(temp_dir, f"{FILENAME_RUN}{linguagem}"), "w") as file:
                 file.write(codigo)
 
-            with open(os.path.join(temp_dir, INPUT_FILENAME), "w") as file:
+            with open(os.path.join(temp_dir, INPUT_TEST_FILENAME), "w") as file:
                 file.write(teste.entrada)
+
             try:
                 client.images.pull(image)
                 volumes = {temp_dir: {
@@ -85,7 +142,7 @@ def execute_arquivo_solucao(db_problema: Problema, arquivo_solucao: Tuple):
                 stdout_logs_decode = stdout_logs.decode()
                 stderr_logs_decode = stderr_logs.decode()
 
-                output_testes.append((stdout_logs_decode, stderr_logs_decode))
+                output_codigo_solucao.append(stdout_logs_decode)
 
                 container.stop()  # type: ignore
                 container.remove()  # type: ignore
@@ -100,7 +157,7 @@ def execute_arquivo_solucao(db_problema: Problema, arquivo_solucao: Tuple):
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
                 )
 
-        return output_testes
+        return output_codigo_solucao
 
 
 def execute_user_code(
@@ -109,18 +166,22 @@ def execute_user_code(
 ):
     codigo_user = problema_resposta.resposta
     codigo_user_linguagem = problema_resposta.linguagem
+
     client = docker.from_env()
-    image = commands[codigo_user_linguagem]["image"]
-    command = commands[codigo_user_linguagem]["run"]
-    output_testes_user: List[Tuple[str, str]] = []
+    image = commands_standard[codigo_user_linguagem.value]["image"]
+    command = commands_standard[codigo_user_linguagem.value]["run"]
+    output_codigo_user: List[str] = []
 
     with tempfile.TemporaryDirectory() as temp_dir:
         for i, teste in enumerate(db_problema.testes):
 
+            print("file: ", FILENAME_RUN)
+            print("codigo_user_linguagem: ", codigo_user_linguagem)
+
             with open(os.path.join(temp_dir, f"{FILENAME_RUN}{codigo_user_linguagem}"), "w") as file:
                 file.write(codigo_user)
 
-            with open(os.path.join(temp_dir, INPUT_FILENAME), "w") as file:
+            with open(os.path.join(temp_dir, INPUT_TEST_FILENAME), "w") as file:
                 file.write(teste.entrada)
 
             try:
@@ -146,21 +207,21 @@ def execute_user_code(
                 stdout_logs_decode = stdout_logs.decode()
                 stderr_logs_decode = stderr_logs.decode()
 
-                output_testes_user.append(
-                    (stdout_logs_decode, stderr_logs_decode))
+                output_codigo_user.append(stdout_logs_decode)
 
                 container.stop()  # type: ignore
                 container.remove()  # type: ignore
 
                 if (stderr_logs_decode != ""):
-                    return "error", f"Runtime error no teste {i+1}"
+                    print("erro? ", stderr_logs_decode)
+                    return f"Erro em tempo de execução no teste {i+1}"
 
             except DockerException:
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
                 )
 
-        return output_testes_user
+        return output_codigo_user
 
 
 def execute_processo_resolucao(
@@ -179,14 +240,11 @@ def execute_processo_resolucao(
             problema_resposta
         )
 
-        print("Output arquivo solução: ", output_codigo_solucao)
-        print("")
-        print("Output testes user: ", output_codigo_user)
-
-        if (isinstance(output_codigo_user, tuple) and output_codigo_user[0] == 'error'):
+        if (isinstance(output_codigo_user, str)):
             return output_codigo_user
 
         veredito = compare_solucao_e_submissao(
+            db_problema,
             output_codigo_solucao,
             output_codigo_user
         )
