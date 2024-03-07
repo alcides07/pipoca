@@ -19,7 +19,7 @@ commands = {
         "extension": ".java",
         "run_test": [
             "/bin/bash", "-c",
-            f"javac {FILENAME_RUN}.java < {INPUT_TEST_FILENAME}"
+            f"javac {FILENAME_RUN}.java && java {FILENAME_RUN} < {INPUT_TEST_FILENAME}"
         ],
         "run_checker": [
             "/bin/bash", "-c",
