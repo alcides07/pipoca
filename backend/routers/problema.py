@@ -9,6 +9,7 @@ from routers.auth import oauth2_scheme
 from fastapi import APIRouter, Body, Depends, File, HTTPException, Path, Query, UploadFile, status
 from filters.problema import OrderByFieldsProblemaEnum, ProblemaFilter, search_fields_problema
 from schemas.arquivo import ArquivoCreate, ArquivoReadFull, SecaoEnum
+from schemas.common.compilers import CompilersEnum
 from schemas.common.direction_order_by import DirectionOrderByEnum
 from schemas.declaracao import DeclaracaoCreate
 from schemas.idioma import IdiomaEnum
@@ -339,9 +340,9 @@ async def upload(
         declaracoes=[],
         arquivos=[],
         verificador=VerificadorCreate(
-            nome="", linguagem="", corpo="", testes=[]),
+            nome="", linguagem=CompilersEnum.PYTHON_3, corpo="", testes=[]),
         validador=ValidadorCreate(
-            nome="", linguagem="", corpo="", testes=[]),
+            nome="", linguagem=CompilersEnum.PYTHON_3, corpo="", testes=[]),
         privado=privado,
         testes=[]
     )
@@ -367,14 +368,14 @@ async def upload(
 
             if source != None:
                 path = source.get("path")
+                linguagem = source.get("type")
 
             if (path != None):
                 with zip.open(path) as file:
                     nome = file.name.split("/")[-1]
                     corpo = file.read().decode()
-
                     arquivo = ArquivoCreate(
-                        nome=nome, corpo=corpo, secao=SecaoEnum.SOLUCAO, status=status)
+                        nome=nome, corpo=corpo, linguagem=CompilersEnum(linguagem), secao=SecaoEnum.SOLUCAO, status=status)
 
                     problema.arquivos.append(arquivo)
 
@@ -403,7 +404,7 @@ async def upload(
                     corpo = file.read().decode()
 
                     verificador = VerificadorCreate(
-                        nome=nome, corpo=corpo, linguagem=linguagem or "", testes=[])
+                        nome=nome, corpo=corpo, linguagem=CompilersEnum(linguagem), testes=[])
 
                     problema.verificador = verificador
 
@@ -419,7 +420,7 @@ async def upload(
                 corpo = file.read().decode()
 
                 validador = ValidadorCreate(
-                    nome=nome, corpo=corpo, linguagem=linguagem or "", testes=[])
+                    nome=nome, corpo=corpo, linguagem=CompilersEnum(linguagem), testes=[])
 
                 problema.validador = validador
 
