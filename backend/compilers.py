@@ -14,7 +14,7 @@ commands = {
         ],
     },
 
-    ".java11": {
+    "java11": {
         "image": "openjdk:11",
         "extension": ".java",
         "run_test": [
