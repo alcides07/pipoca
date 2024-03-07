@@ -27,7 +27,7 @@ commands = {
         ]
     },
 
-    ".rb": {
+    "ruby.3": {
         "image": "ruby:3",
         "extension": ".rb",
         "run_test": [
