@@ -14,12 +14,12 @@ async def redirect():
 @router.get("/docs", include_in_schema=False)
 def overridden_swagger():
     return get_swagger_ui_html(openapi_url="/openapi.json",
-                               title="API Juiz Online",
-                               swagger_favicon_url="https://images.emojiterra.com/twitter/v13.1/512px/1f341.png")
+                               title="API PIPOCA",
+                               swagger_favicon_url="https://cdn-icons-png.flaticon.com/512/1522/1522352.png")
 
 
 @router.get("/redoc", include_in_schema=False)
 def overridden_redoc():
     return get_redoc_html(openapi_url="/openapi.json",
-                          title="API Juiz Online",
-                          redoc_favicon_url="https://images.emojiterra.com/twitter/v13.1/512px/1f341.png")
+                          title="API PIPOCA",
+                          redoc_favicon_url="https://cdn-icons-png.flaticon.com/512/1522/1522352.png")
