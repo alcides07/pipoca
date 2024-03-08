@@ -28,8 +28,20 @@ class ProblemaRespostaBaseFull(ProblemaRespostaBase):
         description="Data e horário em que a resposta foi submetida"
     )
 
-    veredito: str = Field(
-        description="Veredíto da submissão da resposta"
+    veredito: list[str] = Field(
+        description="Veredítos da submissão da resposta"
+    )
+
+    erro: bool = Field(
+        description="Indica se ocorreu erro em tempo de execução do código do usuário"
+    )
+
+    saida_usuario: list[str] = Field(
+        description="Resultados da execução do código do usuário"
+    )
+
+    saida_esperada: list[str] = Field(
+        description="Resultados esperados para a resposta do problema"
     )
 
 
