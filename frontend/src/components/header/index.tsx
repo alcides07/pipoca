@@ -26,7 +26,7 @@ export default function Header({ options }: HeaderProps) {
               <NavigationMenuList className="gap-6">
                 {options &&
                   options.map((option) => (
-                    <NavigationMenuItem>
+                    <NavigationMenuItem key={option.nome}>
                       <Link
                         to={option.link}
                         className={`

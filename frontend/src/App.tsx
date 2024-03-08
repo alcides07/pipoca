@@ -15,7 +15,7 @@ function App() {
   return (
     <>
       <BrowserRouter>
-        {/* <Header options={linksHeader} /> */}
+        <Header options={linksHeader} />
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/problemas" element={<ListarProblema />} />
