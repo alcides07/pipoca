@@ -39,6 +39,7 @@ def execute_checker(
     codigo_verificador = db_problema.verificador.corpo
     linguagem_verificador: str = db_problema.verificador.linguagem
     extension_verificador: str = commands[linguagem_verificador]["extension"]
+    veredito: list[str] = []
 
     client = docker.from_env()
     image = commands[linguagem_verificador]["image"]
@@ -87,9 +88,12 @@ def execute_checker(
                 stdout_logs_decode = stdout_logs.decode()
                 stderr_logs_decode = stderr_logs.decode()
 
-                print("sdout checker: ", stdout_logs_decode)
-                print("stderr checker: ", stderr_logs_decode)
-                print()
+                if (stderr_logs_decode != ""):
+                    error = stderr_logs_decode.split()
+                    veredito.append(error[0])
+
+                else:
+                    veredito.append(stdout_logs_decode)
 
                 container.stop()  # type: ignore
                 container.remove()  # type: ignore
@@ -100,7 +104,7 @@ def execute_checker(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
                 )
 
-    return "ok guys"
+    return veredito
 
 
 def execute_arquivo_solucao(db_problema: Problema, arquivo_solucao: Arquivo):
@@ -248,14 +252,14 @@ def execute_processo_resolucao(
         )
 
         if (isinstance(output_codigo_user, str)):
-            return output_codigo_user
+            return output_codigo_user, [], []
 
         veredito = execute_checker(
             db_problema,
             output_codigo_solucao,
             output_codigo_user
         )
-        return veredito
+        return veredito, output_codigo_user, output_codigo_solucao
 
     print("Erro executa processo solucao")
     raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -281,7 +285,7 @@ async def create_problema_resposta(
                 status_code=status.HTTP_401_UNAUTHORIZED, detail="Erro. O problema o qual se está tentando submeter uma resposta é privado!")
 
     try:
-        veredito = execute_processo_resolucao(
+        veredito, output_user, output_judge = execute_processo_resolucao(
             problema_resposta=problema_resposta,
             db_problema=db_problema
         )
@@ -290,12 +294,16 @@ async def create_problema_resposta(
             **problema_resposta.model_dump(exclude=set(["problema", "usuario"])))
 
         db_problema.respostas.append(db_problema_resposta)
-
         db_problema_resposta.usuario = user
 
         db_problema_resposta.veredito = veredito  # type: ignore
-        if (isinstance(veredito, tuple) and veredito[0] == 'error'):
-            db_problema_resposta.veredito = veredito[1]  # type: ignore
+        db_problema_resposta.erro = False
+        db_problema_resposta.saida_usuario = output_user  # type: ignore
+        db_problema_resposta.saida_esperada = output_judge  # type: ignore
+
+        if (isinstance(veredito, str)):
+            db_problema_resposta.erro = True
+            db_problema_resposta.veredito = [veredito]  # type: ignore
 
         # Bloco temporário
         db_problema_resposta.tempo = 250
