@@ -33,9 +33,6 @@ def execute_checker(
         output_codigo_solucao: list[str],
         output_codigo_user: list[str]
 ):
-    print("out codigo solucao: ", output_codigo_solucao)
-    print("out codigo user: ", output_codigo_user)
-
     codigo_verificador = db_problema.verificador.corpo
     linguagem_verificador: str = db_problema.verificador.linguagem
     extension_verificador: str = commands[linguagem_verificador]["extension"]
@@ -90,7 +87,7 @@ def execute_checker(
 
                 if (stderr_logs_decode != ""):
                     error = stderr_logs_decode.split()
-                    veredito.append(error[0])
+                    veredito.append(error[0].lower())
 
                 else:
                     veredito.append(stdout_logs_decode)
@@ -98,8 +95,7 @@ def execute_checker(
                 container.stop()  # type: ignore
                 container.remove()  # type: ignore
 
-            except DockerException as e:
-                print("Error docker compara solucoes: ", e)
+            except DockerException:
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
                 )
@@ -157,13 +153,11 @@ def execute_arquivo_solucao(db_problema: Problema, arquivo_solucao: Arquivo):
                 container.remove()  # type: ignore
 
                 if (stderr_logs_decode != ""):
-                    print("Error arquivo solucao")
                     raise HTTPException(
                         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
                     )
 
-            except DockerException as e:
-                print("Error docker executa arquivo solucao: ", e)
+            except DockerException:
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
                 )
@@ -226,8 +220,7 @@ def execute_codigo_user(
                 if (stderr_logs_decode != ""):
                     return f"Erro em tempo de execução no teste {i+1}"
 
-            except DockerException as e:
-                print("Error docker executa arquivo user: ", e)
+            except DockerException:
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
                 )
@@ -261,7 +254,6 @@ def execute_processo_resolucao(
         )
         return veredito, output_codigo_user, output_codigo_solucao
 
-    print("Erro executa processo solucao")
     raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
@@ -319,8 +311,7 @@ async def create_problema_resposta(
 
         return db_problema_resposta
 
-    except SQLAlchemyError as e:
-        print("Erro sql responder problema: ", e)
+    except SQLAlchemyError:
         db.rollback()
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
