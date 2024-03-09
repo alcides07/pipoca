@@ -40,6 +40,25 @@ class ProblemaResposta(Base):
         nullable=False
     )
 
+    veredito = Column(
+        ARRAY(String()),
+        nullable=False
+    )
+
+    saida_usuario = Column(
+        ARRAY(String()),
+        nullable=False
+    )
+
+    saida_esperada = Column(
+        ARRAY(String()),
+        nullable=False
+    )
+
+    erro = Column(
+        String()
+    )
+
     problema_id = Column(
         Integer,
         ForeignKey(
@@ -62,22 +81,6 @@ class ProblemaResposta(Base):
             name="problema_respostas_usuario_id_fkey"
         )
     )
-
-    veredito = Column(
-        ARRAY(String()),
-        nullable=False
-    )
-
-    saida_usuario = Column(
-        ARRAY(String()),
-        nullable=False
-    )
-
-    saida_esperada = Column(
-        ARRAY(String()),
-        nullable=False
-    )
-
     usuario = relationship(
         "User",
         uselist=False,
