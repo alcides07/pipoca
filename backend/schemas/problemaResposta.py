@@ -1,3 +1,4 @@
+from enum import Enum
 from datetime import datetime
 from typing import Optional
 from pydantic import BaseModel, Field
@@ -6,6 +7,14 @@ from schemas.user import UserReadSimple
 
 PROBLEMA_RESPOSTA_ID_DESCRIPTION = "Identificador da resposta do problema"
 PROBLEMA_ID_DESCRIPTION = "Identificador do problema associado à resposta"
+
+
+class VereditoEnum(Enum):
+    OK = "ok"
+    WA = "wrong"
+    FA = "fail"
+    PE = "presentation"
+    PC = "partially"
 
 
 class ProblemaRespostaBase(BaseModel):
@@ -28,12 +37,8 @@ class ProblemaRespostaBaseFull(ProblemaRespostaBase):
         description="Data e horário em que a resposta foi submetida"
     )
 
-    veredito: list[str] = Field(
-        description="Veredítos da submissão da resposta"
-    )
-
-    erro: bool = Field(
-        description="Indica se ocorreu erro em tempo de execução do código do usuário"
+    veredito: list[VereditoEnum] = Field(
+        description="Veredítos da submissão da resposta."
     )
 
     saida_usuario: list[str] = Field(
@@ -42,6 +47,10 @@ class ProblemaRespostaBaseFull(ProblemaRespostaBase):
 
     saida_esperada: list[str] = Field(
         description="Resultados esperados para a resposta do problema"
+    )
+
+    erro: str = Field(
+        description="Erro gerado durante a execução do código do usuário"
     )
 
 
