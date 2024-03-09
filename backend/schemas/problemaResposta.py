@@ -49,7 +49,8 @@ class ProblemaRespostaBaseFull(ProblemaRespostaBase):
         description="Resultados esperados para a resposta do problema"
     )
 
-    erro: str = Field(
+    erro: Optional[str] = Field(
+        default=None,
         description="Erro gerado durante a execução do código do usuário"
     )
 
