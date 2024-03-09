@@ -77,20 +77,14 @@ def execute_checker(
 
                 container.wait()  # type: ignore
 
-                stdout_logs = container.logs(  # type: ignore
-                    stdout=True, stderr=False)
                 stderr_logs = container.logs(  # type: ignore
                     stdout=False, stderr=True)
 
-                stdout_logs_decode = stdout_logs.decode()
                 stderr_logs_decode = stderr_logs.decode()
 
                 if (stderr_logs_decode != ""):
                     error = stderr_logs_decode.split()
                     veredito.append(error[0].lower())
-
-                else:
-                    veredito.append(stdout_logs_decode)
 
                 container.stop()  # type: ignore
                 container.remove()  # type: ignore
@@ -245,14 +239,14 @@ def execute_processo_resolucao(
         )
 
         if (isinstance(output_codigo_user, str)):
-            return output_codigo_user, [], []
+            return [], [], [], output_codigo_user
 
         veredito = execute_checker(
             db_problema,
             output_codigo_solucao,
             output_codigo_user
         )
-        return veredito, output_codigo_user, output_codigo_solucao
+        return veredito, output_codigo_user, output_codigo_solucao, None
 
     raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -277,7 +271,7 @@ async def create_problema_resposta(
                 status_code=status.HTTP_401_UNAUTHORIZED, detail="Erro. O problema o qual se está tentando submeter uma resposta é privado!")
 
     try:
-        veredito, output_user, output_judge = execute_processo_resolucao(
+        veredito, output_user, output_judge, erro = execute_processo_resolucao(
             problema_resposta=problema_resposta,
             db_problema=db_problema
         )
@@ -289,13 +283,9 @@ async def create_problema_resposta(
         db_problema_resposta.usuario = user
 
         db_problema_resposta.veredito = veredito  # type: ignore
-        db_problema_resposta.erro = False
+        db_problema_resposta.erro = erro  # type: ignore
         db_problema_resposta.saida_usuario = output_user  # type: ignore
         db_problema_resposta.saida_esperada = output_judge  # type: ignore
-
-        if (isinstance(veredito, str)):
-            db_problema_resposta.erro = True
-            db_problema_resposta.veredito = [veredito]  # type: ignore
 
         # Bloco temporário
         db_problema_resposta.tempo = 250
