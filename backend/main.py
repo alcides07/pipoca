@@ -9,9 +9,12 @@ from fastapi.openapi.utils import get_openapi
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from decouple import config
 
+TEST_ENV = config("TEST_ENV")
 
-Base.metadata.create_all(bind=engine)
+if (TEST_ENV != 1):
+    Base.metadata.create_all(bind=engine)
 
 app = FastAPI(docs_url=None,
               redoc_url=None,
