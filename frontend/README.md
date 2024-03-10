@@ -1,30 +1,61 @@
-# React + TypeScript + Vite
+<section align="center" style="margin-bottom: 2em">
+    <img style="border-radius: 50%;" src="https://avatars.githubusercontent.com/Israelkleber" width="200px;" alt="Desenvolvedor Alcides Dantas"/>
+  <h4>Frontend em desenvolvimento</h4>
+  <div>
+    <a href="#1-tecnologias-utilizadas">Tecnologias</a> •
+    <a href="#2-execução-do-projeto">Execução</a> 
+  </div>
+</section>
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## 1. Tecnologias utilizadas
 
-Currently, two official plugins are available:
+> As seguintes tecnologias foram utilizadas no desenvolvimento do frontend do projeto:
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- [Git 2.34.1](https://git-scm.com/)
+- [Node.js 18.17.1](https://nodejs.org/en)
+- [PNPM 8.15.4](https://pnpm.io/pt/installation)
+- [React 18.2.0](https://pt-br.react.dev/)
+- [TypeScript: 5.2.2](https://www.typescriptlang.org/pt/)
+- [Vite: 5.1.4](https://vitejs.dev/)
 
-## Expanding the ESLint configuration
+## 2. Execução do projeto
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+### 2.1. Ferramentas necessárias
 
-- Configure the top-level `parserOptions` property like this:
+> Para executar o projeto, você precisa possuir previamente em sua máquina as seguintes ferramentas:
 
-```js
-export default {
-  // other rules...
-  parserOptions: {
-    ecmaVersion: 'latest',
-    sourceType: 'module',
-    project: ['./tsconfig.json', './tsconfig.node.json'],
-    tsconfigRootDir: __dirname,
-  },
-}
+- [Git 2.34.1](https://git-scm.com/)
+- [Node.js 18.17.1](https://nodejs.org/en)
+- Editor de código sugerido: [Visual Studio Code](https://code.visualstudio.com/) (VS Code)
+
+### 2.2. Execução
+
+#### 2.2.1. Clone o repositório:
+
+```
+git clone https://github.com/alcides07/pipoca.git
 ```
 
-- Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
-- Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
+#### 2.2.2. Acesse o diretório gerado:
+
+```
+cd pipoca/frontend/
+```
+
+#### 2.2.3. Instale o gerenciador de pacotes PNPM:
+
+```
+npm install -g pnpm@8.15.4
+```
+
+#### 2.2.4. Instale as dependências:
+
+```
+pnpm install
+```
+
+#### 2.2.5. Execute a aplicação:
+
+```
+pnpm dev
+```
