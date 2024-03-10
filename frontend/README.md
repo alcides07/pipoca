@@ -42,13 +42,19 @@ git clone https://github.com/alcides07/pipoca.git
 cd pipoca/frontend/
 ```
 
-#### 2.2.3. Instale as dependências:
+#### 2.2.3. Instale o gerenciador de pacotes PNPM:
+
+```
+npm install -g pnpm@8.15.4
+```
+
+#### 2.2.4. Instale as dependências:
 
 ```
 pnpm install
 ```
 
-#### 2.2.4. Execute a aplicação:
+#### 2.2.5. Execute a aplicação:
 
 ```
 pnpm dev
