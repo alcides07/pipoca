@@ -49,7 +49,7 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
       - name: Wait for PostgreSQL
-          run: sleep 10
+        run: sleep 10
       - name: Setup Test Database
         run: |
           psql -c 'create database pipoca_test_bd;' -U postgres -h postgres
