@@ -24,6 +24,7 @@ jobs:
       ALGORITHM: ${{ secrets.ALGORITHM }}
       SECRET_KEY: ${{ secrets.SECRET_KEY }}
       TOKEN_EXPIRE_MINUTES: ${{ secrets.TOKEN_EXPIRE_MINUTES }}
+      TEST_ENV: ${{ secrets.TEST_ENV }}
     services:
       postgres:
         image: postgres:16
