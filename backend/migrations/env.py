@@ -10,8 +10,10 @@ from models.common import index
 # access to the values within the .ini file in use.
 config = context.config
 
-DATABASE_URL = str(config_env("DATABASE_URL"))
-config.set_main_option('sqlalchemy.url', DATABASE_URL)
+TEST_ENV = config_env("TEST_ENV")
+if (TEST_ENV != 1):
+    DATABASE_URL = str(config_env("DATABASE_URL"))
+    config.set_main_option('sqlalchemy.url', DATABASE_URL)
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
