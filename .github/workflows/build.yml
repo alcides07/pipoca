@@ -52,7 +52,7 @@ jobs:
         run: sleep 10
       - name: Setup Test Database
         run: |
-          psql -c 'create database pipoca_test_bd;' -U postgres -h postgres
+          psql -c 'create database ${{ secrets.POSTGRES_DB_TEST }};' -U ${{ secrets.POSTGRES_USER }} -h localhost
       - name: Run tox
         run: tox -e py
       - name: SonarCloud Scan
