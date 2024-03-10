@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy import Column, ForeignKey, Integer, String, CheckConstraint, UniqueConstraint, DateTime
+from sqlalchemy import ARRAY, Column, ForeignKey, Integer, String, CheckConstraint, DateTime
 from sqlalchemy.orm import relationship
 from database import Base
 
@@ -38,6 +38,25 @@ class ProblemaResposta(Base):
     linguagem = Column(
         String(),
         nullable=False
+    )
+
+    veredito = Column(
+        ARRAY(String()),
+        nullable=False
+    )
+
+    saida_usuario = Column(
+        ARRAY(String()),
+        nullable=False
+    )
+
+    saida_esperada = Column(
+        ARRAY(String()),
+        nullable=False
+    )
+
+    erro = Column(
+        String()
     )
 
     problema_id = Column(

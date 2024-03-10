@@ -57,7 +57,7 @@ async def read(
 
 
 @router.get("/users/",
-            response_model=ResponsePaginationSchema[ProblemaRespostaReadSimple],
+            response_model=ResponsePaginationSchema[ProblemaRespostaReadFull],
             summary="Lista respostas fornecidas à problemas pelo usuário autenticado",
             )
 async def read_problemas_respostas_me(

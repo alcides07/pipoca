@@ -1,16 +1,16 @@
-from database import SessionLocal, engine
-from sqlalchemy import text
 from decouple import config
 
 
-def get_db():
-    db = SessionLocal()
-    try:
-        USE_DOCKER = config("USE_DOCKER")
+def get_session_local():
+    from database import SessionLocal
+    return SessionLocal()
 
-        if (USE_DOCKER == "0"):
-            with engine.connect() as connection:
-                connection.execute(text('PRAGMA foreign_keys=ON'))
-        yield db
-    finally:
-        db.close()
+
+def get_db():
+    TEST_ENV = str(config("TEST_ENV"))
+    if (TEST_ENV != "1"):
+        db = get_session_local()
+        try:
+            yield db
+        finally:
+            db.close()

@@ -29,7 +29,7 @@ class ProblemaTesteBase(BaseModel):
 
 class ProblemaTesteBaseFull(ProblemaTesteBase):
     entrada: str = Field(
-        max_length=250000,
+        max_length=1000000,
         description="Dados de entrada do teste"
     )
 
@@ -85,7 +85,7 @@ class ProblemaTesteUpdatePartial(BaseModel):
 
     entrada: Optional[str] = Field(
         default=None,
-        max_length=250000,
+        max_length=1000000,
         description="Dados de entrada do teste"
     )
 
