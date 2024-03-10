@@ -24,7 +24,7 @@
 
 > Para executar o projeto, você precisa possuir previamente em sua máquina as seguintes ferramentas:
 
-- [Git](https://git-scm.com)
+- [Git 2.34.1](https://git-scm.com/)
 - [Node.js 18.17.1](https://nodejs.org/en)
 - Editor de código sugerido: [Visual Studio Code](https://code.visualstudio.com/) (VS Code)
 
