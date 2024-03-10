@@ -52,6 +52,7 @@ jobs:
         run: sleep 10
       - name: Setup Test Database
         run: |
+          export PGPASSWORD=${{ secrets.POSTGRES_PASSWORD }}
           psql -c 'create database ${{ secrets.POSTGRES_DB_TEST }};' -U ${{ secrets.POSTGRES_USER }} -h localhost
       - name: Run tox
         run: tox -e py
