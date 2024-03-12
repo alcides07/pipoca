@@ -3,11 +3,10 @@ import problemaService from "../../service/api/problemaService";
 import { iDataProblema } from "../../interfaces/iProblema";
 import { DataTable } from "../../components/table";
 import { problemaColumns } from "@/components/table/columns/problemaColumns";
-import Header from "@/components/header";
 
 function ListarProblema() {
   const [problemas, setProblemas] = useState<iDataProblema[]>([]);
-
+  const [selectedFile, setSelectedFile] = useState(null);
   useEffect(() => {
     handleProblem();
   }, []);
@@ -19,6 +18,11 @@ function ListarProblema() {
     });
   }
 
+  const handleFileChange = (event) => {
+    setSelectedFile(event.target.files[0]);
+    console.log("event", event.target.files[0]);
+  };
+
   return (
     <div className="px-28">
       <div className="py-4">
@@ -26,7 +30,11 @@ function ListarProblema() {
       </div>
       {problemas && problemas.length > 0 ? (
         <div>
-          <DataTable columns={problemaColumns} data={problemas} />
+          <DataTable
+            columns={problemaColumns}
+            data={problemas}
+            onFileChange={handleFileChange}
+          />
         </div>
       ) : (
         <div className="font-bold flex justify-center items-center">

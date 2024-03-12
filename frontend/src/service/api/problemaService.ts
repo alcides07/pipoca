@@ -10,6 +10,14 @@ class ProblemaService {
     const response = await axiosInstance.get(`/problemas/${id}`);
     return response.data;
   }
+  async uploadFile(formData: FormData) {
+    const response = await axiosInstance.post(`/problemas/upload/`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    return response.data;
+  }
 }
 
 export default new ProblemaService();

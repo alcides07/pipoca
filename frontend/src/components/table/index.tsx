@@ -27,6 +27,18 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+
 import { useState } from "react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
@@ -34,11 +46,13 @@ import { Input } from "../ui/input";
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
+  onFileChange: () => void;
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
+  onFileChange,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -63,7 +77,7 @@ export function DataTable<TData, TValue>({
 
   return (
     <>
-      <div className="flex items-center py-4">
+      <div className="flex items-center py-4 gap-3">
         <Input
           placeholder="Filter nome..."
           value={(table.getColumn("nome")?.getFilterValue() as string) ?? ""}
@@ -72,10 +86,51 @@ export function DataTable<TData, TValue>({
           }
           className="max-w-sm"
         />
+        <div>
+          <Button
+            variant="outline"
+            className="ml-auto hover:bg-slate-900 hover:text-white"
+          >
+            Cadastrar
+          </Button>
+        </div>
+
+        <div>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                variant="outline"
+                className="ml-auto hover:bg-slate-900 hover:text-white"
+              >
+                Importar{" "}
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Escolha o arquivo desejado!</AlertDialogTitle>
+                <AlertDialogDescription>
+                  <Input
+                    id="picture"
+                    placeholder="Nenhum arquivo selecionado"
+                    type="file"
+                    onChange={onFileChange}
+                  />
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                <AlertDialogAction>Importar</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="ml-auto">
+            <Button
+              variant="outline"
+              className="ml-auto hover:bg-slate-900 hover:text-white"
+            >
               Columns
             </Button>
           </DropdownMenuTrigger>
