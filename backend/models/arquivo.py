@@ -24,6 +24,10 @@ class Arquivo(Base):
         nullable=False,
     )
 
+    linguagem = Column(
+        String()
+    )
+
     secao = Column(
         Enum(SecaoEnum),
         index=True

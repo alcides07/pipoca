@@ -1,8 +1,8 @@
-"""recria models com nomes em fk
+"""recria migracoes com postgres
 
-Revision ID: 9b2c9985c469
+Revision ID: 61e22bb179de
 Revises: 
-Create Date: 2024-02-12 21:35:51.479826
+Create Date: 2024-03-07 20:57:55.587040
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '9b2c9985c469'
+revision = '61e22bb179de'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -44,6 +44,7 @@ def upgrade():
     sa.Column('username', sa.String(length=32), nullable=False),
     sa.Column('email', sa.String(), nullable=False),
     sa.Column('password', sa.String(length=64), nullable=False),
+    sa.Column('criado_em', sa.DateTime(), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )
     with op.batch_alter_table('users', schema=None) as batch_op:
@@ -59,6 +60,7 @@ def upgrade():
     sa.Column('nome_arquivo_saida', sa.String(length=64), nullable=False),
     sa.Column('tempo_limite', sa.Integer(), nullable=False),
     sa.Column('memoria_limite', sa.Integer(), nullable=False),
+    sa.Column('criado_em', sa.DateTime(), nullable=True),
     sa.Column('verificador_id', sa.Integer(), nullable=True),
     sa.Column('validador_id', sa.Integer(), nullable=True),
     sa.Column('usuario_id', sa.Integer(), nullable=True),
@@ -71,13 +73,14 @@ def upgrade():
     )
     with op.batch_alter_table('problemas', schema=None) as batch_op:
         batch_op.create_index(batch_op.f('ix_problemas_id'), ['id'], unique=False)
-        batch_op.create_index(batch_op.f('ix_problemas_nome'), ['nome'], unique=False)
+        batch_op.create_index(batch_op.f('ix_problemas_nome'), ['nome'], unique=True)
         batch_op.create_index(batch_op.f('ix_problemas_privado'), ['privado'], unique=False)
 
     op.create_table('arquivos',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('nome', sa.String(length=64), nullable=False),
     sa.Column('corpo', sa.String(length=250000), nullable=False),
+    sa.Column('linguagem', sa.String(), nullable=True),
     sa.Column('secao', sa.Enum('RECURSO', 'FONTE', 'ANEXO', 'SOLUCAO', name='secaoenum'), nullable=True),
     sa.Column('status', sa.String(), nullable=True),
     sa.Column('problema_id', sa.Integer(), nullable=True),
@@ -106,6 +109,23 @@ def upgrade():
     with op.batch_alter_table('declaracoes', schema=None) as batch_op:
         batch_op.create_index(batch_op.f('ix_declaracoes_id'), ['id'], unique=False)
         batch_op.create_index(batch_op.f('ix_declaracoes_titulo'), ['titulo'], unique=False)
+
+    op.create_table('problema_respostas',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('resposta', sa.String(length=250000), nullable=False),
+    sa.Column('respondido_em', sa.DateTime(), nullable=True),
+    sa.Column('tempo', sa.Integer(), nullable=False),
+    sa.Column('memoria', sa.Integer(), nullable=False),
+    sa.Column('linguagem', sa.String(), nullable=False),
+    sa.Column('problema_id', sa.Integer(), nullable=True),
+    sa.Column('usuario_id', sa.Integer(), nullable=True),
+    sa.Column('veredito', sa.ARRAY(sa.String()), nullable=False),
+    sa.ForeignKeyConstraint(['problema_id'], ['problemas.id'], name='problema_respostas_problema_id_fkey'),
+    sa.ForeignKeyConstraint(['usuario_id'], ['users.id'], name='problema_respostas_usuario_id_fkey'),
+    sa.PrimaryKeyConstraint('id')
+    )
+    with op.batch_alter_table('problema_respostas', schema=None) as batch_op:
+        batch_op.create_index(batch_op.f('ix_problema_respostas_id'), ['id'], unique=False)
 
     op.create_table('problema_tag',
     sa.Column('problema_id', sa.Integer(), nullable=True),
@@ -161,7 +181,7 @@ def upgrade():
     sa.Column('entrada', sa.String(length=250000), nullable=False),
     sa.Column('veredito', sa.Enum('VALID', 'INVALID', name='vereditovalidadortesteenum'), nullable=False),
     sa.Column('validador_id', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['validador_id'], ['validadores.id'], name='validador_testes_validador_id_fkey'),
+    sa.ForeignKeyConstraint(['validador_id'], ['validadores.id'], name='validador_testes_validador_id_fkey', ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
     with op.batch_alter_table('validador_testes', schema=None) as batch_op:
@@ -173,7 +193,7 @@ def upgrade():
     sa.Column('entrada', sa.String(length=250000), nullable=False),
     sa.Column('veredito', sa.Enum('OK', 'WA', 'PE', 'CA', name='vereditoverificadortesteenum'), nullable=False),
     sa.Column('verificador_id', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['verificador_id'], ['verificadores.id'], name='verificador_testes_verificador_id_fkey'),
+    sa.ForeignKeyConstraint(['verificador_id'], ['verificadores.id'], name='verificador_testes_verificador_id_fkey', ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
     with op.batch_alter_table('verificador_testes', schema=None) as batch_op:
@@ -207,6 +227,10 @@ def downgrade():
 
     op.drop_table('problema_testes')
     op.drop_table('problema_tag')
+    with op.batch_alter_table('problema_respostas', schema=None) as batch_op:
+        batch_op.drop_index(batch_op.f('ix_problema_respostas_id'))
+
+    op.drop_table('problema_respostas')
     with op.batch_alter_table('declaracoes', schema=None) as batch_op:
         batch_op.drop_index(batch_op.f('ix_declaracoes_titulo'))
         batch_op.drop_index(batch_op.f('ix_declaracoes_id'))

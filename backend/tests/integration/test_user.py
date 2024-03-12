@@ -122,12 +122,18 @@ def test_read_users_admin():
 
 
 def test_create_user():
+    remove_dependencies()
+
     response, _, _ = create_user_helper()
 
     assert response.status_code == 201
 
+    resume_dependencies()
+
 
 def test_create_user_email_exists():
+    remove_dependencies()
+
     key = os.urandom(16)
     value = base64.b64encode(key).decode()
     password = pwd_context.hash(value)
@@ -156,8 +162,12 @@ def test_create_user_email_exists():
 
     assert response.status_code == 400
 
+    resume_dependencies()
+
 
 def test_create_user_username_exists():
+    remove_dependencies()
+
     key = os.urandom(16)
     value = base64.b64encode(key).decode()
     password = pwd_context.hash(value)
@@ -184,6 +194,8 @@ def test_create_user_username_exists():
     )
 
     assert response.status_code == 400
+
+    resume_dependencies()
 
 
 def test_update_full_user_username_exists():

@@ -14,7 +14,7 @@
 - [FastAPI 0.109.1](https://fastapi.tiangolo.com/)
 - [Uvicorn 0.23.2](https://www.uvicorn.org/)
 - [SQLAlchemy 2.0.23](https://www.sqlalchemy.org/)
-- [PostgreSQL 14.9](https://www.postgresql.org/)
+- [PostgreSQL 16](https://www.postgresql.org/)
 - [Docker Compose 1.29.2](https://docs.docker.com/compose/)
 
 ## 2. Execução do projeto
