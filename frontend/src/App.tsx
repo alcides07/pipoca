@@ -17,9 +17,9 @@ function App() {
       <BrowserRouter>
         <Header options={linksHeader} />
         <Routes>
-          <Route path="/" element={<Dashboard />} />
+          <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/problemas" element={<ListarProblema />} />
-          <Route path="/Login" element={<Login />} />
+          <Route path="/" element={<Login />} />
         </Routes>
       </BrowserRouter>
     </>
