@@ -58,6 +58,9 @@ def create_verificador(db, problema, db_problema):
 
 def create_verificador_testes(db, problema, db_problema):
     for verificador_teste in problema.verificador.testes:
+        verificador_teste.veredito = str(
+            verificador_teste.veredito.value)
+
         db_verificador_teste = VerificadorTeste(
             **verificador_teste.model_dump())
         db.add(db_verificador_teste)
@@ -75,6 +78,9 @@ def create_validador(db, problema, db_problema):
 
 def create_validador_testes(db, problema, db_problema):
     for validador_teste in problema.validador.testes:
+        validador_teste.veredito = str(
+            validador_teste.veredito.value)
+
         db_validador_teste = ValidadorTeste(
             **validador_teste.model_dump())
         db.add(db_validador_teste)
@@ -82,6 +88,8 @@ def create_validador_testes(db, problema, db_problema):
 
 
 def create_arquivos(db, arquivo, db_problema):
+    arquivo.secao = str(arquivo.secao.value)
+
     db_arquivo = Arquivo(
         **arquivo.model_dump())
     db.add(db_arquivo)
@@ -89,6 +97,8 @@ def create_arquivos(db, arquivo, db_problema):
 
 
 def create_declaracoes(db, declaracao, db_problema):
+    declaracao.idioma = str(declaracao.idioma.value)
+
     db_declaracao = Declaracao(
         **declaracao.model_dump())
     db.add(db_declaracao)
@@ -104,6 +114,8 @@ def create_tags(db, tag, db_problema):
 
 
 def create_testes(db, teste, db_problema):
+    teste.tipo = str(teste.tipo.value)
+
     db_teste = ProblemaTeste(**teste.model_dump())
     db.add(db_teste)
     db_problema.testes.append(db_teste)
