@@ -1,7 +1,6 @@
-from sqlalchemy import Column, Enum, ForeignKey, Integer, String
+from sqlalchemy import Column, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 from database import Base
-from schemas.arquivo import SecaoEnum
 
 
 class Arquivo(Base):
@@ -25,11 +24,11 @@ class Arquivo(Base):
     )
 
     linguagem = Column(
-        String()
+        String
     )
 
     secao = Column(
-        Enum(SecaoEnum),
+        String,
         index=True
     )
 
