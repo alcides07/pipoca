@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import FormLogin from "./components/formLogin";
 import FormRegister from "./components/formRegister";
+import { Toaster } from "@/components/ui/toaster";
 
 function Login() {
   const [activeTab, setActiveTab] = useState("login");
@@ -31,6 +32,7 @@ function Login() {
           <FormRegister onSuccess={handleRegisterSuccess} />
         </TabsContent>
       </Tabs>
+      <Toaster />
     </div>
   );
 }

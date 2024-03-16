@@ -19,20 +19,26 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import AutenticacaoService from "@/service/api/autenticacaoService";
+import { useToast } from "@/components/ui/use-toast";
+import { Toaster } from "@/components/ui/toaster";
 
 const formSchema = z.object({
-  username: z.string().min(2, {
-    message: "Username must be at least 2 characters.",
+  username: z.string().nonempty({ message: "O nome é obrigatório." }).min(3, {
+    message: "O nome de usuário deve ter pelo menos 3 caracteres.",
   }),
-  email: z.string().email({
-    message: "Email must be a valid email.",
+  email: z.string().nonempty({ message: "O e-mail é obrigatório." }).email({
+    message: "O email deve ser um email válido.",
   }),
-  password: z.string().min(3, {
-    message: "Password must be at least 3 characters.",
+  password: z.string().nonempty({ message: "A senha é obrigatória." }).min(3, {
+    message: "A senha deve ter pelo menos 3 caracteres.",
   }),
-  passwordConfirmation: z.string().min(3, {
-    message: "Password must be at least 3 characters.",
-  }),
+
+  passwordConfirmation: z
+    .string()
+    .nonempty({ message: "A confirmação da senha é obrigatória." })
+    .min(3, {
+      message: "A senha deve ter pelo menos 3 caracteres.",
+    }),
 });
 
 interface FormRegisterProps {
@@ -40,6 +46,8 @@ interface FormRegisterProps {
 }
 
 function FormRegister({ onSuccess }: FormRegisterProps) {
+  const { toast } = useToast();
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -64,10 +72,21 @@ function FormRegister({ onSuccess }: FormRegisterProps) {
     AutenticacaoService.register(data)
       .then((response) => {
         console.log("Cadastro", response);
+        toast({
+          title: "Sucesso.",
+          description: "Usuário cadastrado com sucesso!",
+          duration: 2000,
+        });
         onSuccess();
       })
       .catch((error) => {
-        console.error("Cadastro erro:", error);
+        // console.error("Cadastro erro:", error);
+        toast({
+          variant: "destructive",
+          title: "Erro.",
+          description: error.response.data.error,
+          duration: 2000,
+        });
       });
   }
   return (
