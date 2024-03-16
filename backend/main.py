@@ -51,7 +51,7 @@ def custom_openapi():
     openapi_schema = get_openapi(
         title="API do sistema PIPOCA",
         version="0.0.1",
-        description="API em desenvolvimento da Plataforma Interativa de Programação On-line em Competições Acadêmicas (PIPOCA)",
+        description="API em desenvolvimento da Plataforma Interativa de Programação On-line e Competições Acadêmicas (PIPOCA)",
         routes=app.routes,
     )
     openapi_schema["info"]["x-logo"] = {

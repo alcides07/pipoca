@@ -347,6 +347,33 @@ async def upload(
         testes=[]
     )
 
+    def process_files_gerador(data: ET.Element, nome_arquivo_gerador: str):
+        path_file = ""
+        filename = ""
+
+        for source in data.findall('.//files/executables/executable'):
+            gerador = source.find("source")
+
+            if (gerador != None):
+                path_file = gerador.get("path")
+
+                if (path_file != None):
+                    fullname = os.path.basename(path_file)
+                    filename, _ = os.path.splitext(fullname)
+
+                    if (nome_arquivo_gerador in filename):
+                        linguagem = gerador.get("type")
+                        break
+
+        if (path_file and fullname and linguagem):
+            with zip.open(path_file) as file:
+                corpo = file.read().decode()
+
+                arquivo = ArquivoCreate(
+                    nome=fullname, corpo=corpo, secao=SecaoEnum.GERADOR, linguagem=CompilersEnum(linguagem))
+
+                problema.arquivos.append(arquivo)
+
     def process_files_recursos(data: ET.Element):
         for file in data.findall('.//resources/file'):
             path = file.get("path")
@@ -460,6 +487,8 @@ async def upload(
             problema.tags.append(name)
 
     def process_tests(data: ET.Element):
+        nome_arquivo_gerador = ""
+
         for indice, test in enumerate(data.findall(".//judging/testset/tests/test"), start=1):
             cmd = test.get("cmd")
             tipo = test.get("method")
@@ -469,6 +498,7 @@ async def upload(
                 numero=indice, tipo=TipoTesteProblemaEnum.MANUAL, exemplo=False, entrada="")
 
             if (cmd != None):
+                nome_arquivo_gerador = cmd.split()[0]
                 teste.entrada = cmd
 
             if (tipo != None):
@@ -484,6 +514,9 @@ async def upload(
                     teste.exemplo = False
 
             problema.testes.append(teste)
+
+        if (nome_arquivo_gerador != ""):
+            process_files_gerador(data, nome_arquivo_gerador)
 
     async def process_xml(zip, filename):
         with zip.open(filename) as xml:
