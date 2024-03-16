@@ -62,8 +62,10 @@ async def read_me(
     user_db = await get_authenticated_user(token, db)
 
     if (is_admin(user_db)):
-        raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED,
-                            detail="Erro. Funcionalidade não disponível para administradores!")
+        raise HTTPException(
+            status_code=status.HTTP_501_NOT_IMPLEMENTED,
+            detail="Funcionalidade não disponível para administradores!"
+        )
 
     user = await get_by_id(
         id=user_db.id,

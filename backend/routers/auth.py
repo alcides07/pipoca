@@ -70,7 +70,7 @@ async def login(
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Erro. Credenciais inválidas!",
+            detail="Credenciais inválidas!",
             headers={"WWW-Authenticate": "Bearer"},
         )
     access_token_expires = timedelta(minutes=TOKEN_EXPIRE_MINUTES)

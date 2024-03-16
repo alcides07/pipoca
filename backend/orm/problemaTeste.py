@@ -18,8 +18,10 @@ async def create_problema_teste(
     ).first()
 
     if (not db_problema):
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail="Problema não encontrado!")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="O problema não foi encontrado!"
+        )
 
     user = await get_authenticated_user(token, db)
     if (db_problema.usuario_id != user.id):
@@ -28,8 +30,9 @@ async def create_problema_teste(
 
     for teste in db_problema.testes:
         if (problema_teste.numero == teste.numero):
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                                detail="Erro. Um teste com o mesmo número já foi registrado para este problema!")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Um teste com o mesmo número já foi registrado para este problema!")
 
     try:
         problema_teste.tipo = str(problema_teste.tipo.value)  # type: ignore
@@ -70,8 +73,10 @@ async def update_problema_teste(
     try:
         for teste in db_problema_teste.problema.testes:
             if (problema_teste.numero == teste.numero and bool(id != teste.id)):
-                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                                    detail="Erro. Um teste com o mesmo número já foi registrado para este problema!")
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Um teste com o mesmo número já foi registrado para este problema!"
+                )
 
         for key, value in problema_teste:
             if (value is not None and hasattr(db_problema_teste, key)):

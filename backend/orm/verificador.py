@@ -21,8 +21,10 @@ async def create_verificador(
     ).first()
 
     if (not db_problema):
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail="Problema não encontrado!")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="O problema não foi encontrado!"
+        )
 
     user = await get_authenticated_user(token=token, db=db)
     if (is_user(user) and db_problema.usuario_id != user.id):
