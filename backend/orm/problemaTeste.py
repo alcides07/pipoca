@@ -1,4 +1,4 @@
-from schemas.problemaTeste import ProblemaTesteCreateSingle, ProblemaTesteUpdatePartial, ProblemaTesteUpdateTotal
+from schemas.problemaTeste import ProblemaTesteCreateSingle, ProblemaTesteUpdatePartial, ProblemaTesteUpdateTotal, TipoTesteProblemaEnum
 from models.problemaTeste import ProblemaTeste
 from dependencies.authenticated_user import get_authenticated_user
 from dependencies.authorization_user import is_user
@@ -32,6 +32,8 @@ async def create_problema_teste(
                                 detail="Erro. Um teste com o mesmo número já foi registrado para este problema!")
 
     try:
+        problema_teste.tipo = str(problema_teste.tipo.value)  # type: ignore
+
         db_problema_teste = ProblemaTeste(
             **problema_teste.model_dump(exclude=set(["problema"])))
 
@@ -72,8 +74,9 @@ async def update_problema_teste(
                                     detail="Erro. Um teste com o mesmo número já foi registrado para este problema!")
 
         for key, value in problema_teste:
-            if (value != None and hasattr(db_problema_teste, key)):
-                setattr(db_problema_teste, key, value)
+            if (value is not None and hasattr(db_problema_teste, key)):
+                setattr(db_problema_teste, key, value.value if isinstance(
+                    value, TipoTesteProblemaEnum) else value)
 
         db.commit()
         db.refresh(db_problema_teste)

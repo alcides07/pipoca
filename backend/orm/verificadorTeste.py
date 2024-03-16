@@ -7,7 +7,7 @@ from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from fastapi import status
 
-from schemas.verificadorTeste import VerificadorTesteCreateSingle, VerificadorTesteUpdatePartial, VerificadorTesteUpdateTotal
+from schemas.verificadorTeste import VereditoVerificadorTesteEnum, VerificadorTesteCreateSingle, VerificadorTesteUpdatePartial, VerificadorTesteUpdateTotal
 
 
 async def create_verificador_teste(
@@ -35,6 +35,8 @@ async def create_verificador_teste(
                                 detail="Erro. Um teste com o mesmo número já foi registrado para este verificador!")
 
     try:
+        verificador_teste.veredito = verificador_teste.veredito.value  # type: ignore
+
         db_verificador_teste = VerificadorTeste(
             **verificador_teste.model_dump(exclude=set(["verificador"])))
         db_verificador.testes.append(db_verificador_teste)
@@ -76,8 +78,9 @@ async def update_verificador_teste(
                                     detail="Erro. Um teste com o mesmo número já foi registrado para este verificador!")
 
         for key, value in verificador_teste:
-            if (value != None and hasattr(db_verificador_teste, key)):
-                setattr(db_verificador_teste, key, value)
+            if (value is not None and hasattr(db_verificador_teste, key)):
+                setattr(db_verificador_teste, key, value.value if isinstance(
+                    value, VereditoVerificadorTesteEnum) else value)
 
         db.commit()
         db.refresh(db_verificador_teste)

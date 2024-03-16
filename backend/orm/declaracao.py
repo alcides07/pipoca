@@ -6,6 +6,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from models.declaracao import Declaracao
 from models.problema import Problema
 from schemas.declaracao import DeclaracaoCreateSingle, DeclaracaoUpdatePartial, DeclaracaoUpdateTotal
+from schemas.idioma import IdiomaEnum
 
 
 async def get_declaracao_by_id(
@@ -57,6 +58,8 @@ async def create_declaracao(
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
 
     try:
+        declaracao.idioma = declaracao.idioma.value  # type: ignore
+
         db_declaracao = Declaracao(
             **declaracao.model_dump(exclude=set(["problema"]))
         )
@@ -92,8 +95,9 @@ async def update_declaracao(
 
     try:
         for key, value in declaracao:
-            if (value != None and hasattr(db_declaracao, key)):
-                setattr(db_declaracao, key, value)
+            if (value is not None and hasattr(db_declaracao, key)):
+                setattr(db_declaracao, key, value.value if isinstance(
+                    value, IdiomaEnum) else value)
 
         db.commit()
         db.refresh(db_declaracao)

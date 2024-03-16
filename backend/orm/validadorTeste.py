@@ -6,7 +6,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from fastapi import status
-from schemas.validadorTeste import ValidadorTesteCreateSingle, ValidadorTesteUpdatePartial, ValidadorTesteUpdateTotal
+from schemas.validadorTeste import ValidadorTesteCreateSingle, ValidadorTesteUpdatePartial, ValidadorTesteUpdateTotal, VereditoValidadorTesteEnum
 
 
 async def create_validador_teste(
@@ -34,6 +34,8 @@ async def create_validador_teste(
                                 detail="Erro. Um teste com o mesmo número já foi registrado para este validador!")
 
     try:
+        validador_teste.veredito = validador_teste.veredito.value  # type: ignore
+
         db_validador_teste = ValidadorTeste(
             **validador_teste.model_dump(exclude=set(["validador"])))
         db_validador.testes.append(db_validador_teste)
@@ -74,8 +76,9 @@ async def update_validador_teste(
                                     detail="Erro. Um teste com o mesmo número já foi registrado para este validador!")
 
         for key, value in validador_teste:
-            if (value != None and hasattr(db_validador_teste, key)):
-                setattr(db_validador_teste, key, value)
+            if (value is not None and hasattr(db_validador_teste, key)):
+                setattr(db_validador_teste, key, value.value if isinstance(
+                    value, VereditoValidadorTesteEnum) else value)
 
         db.commit()
         db.refresh(db_validador_teste)
