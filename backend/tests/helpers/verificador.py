@@ -74,7 +74,7 @@ def update_full_verificador_helper(profile: str = ""):
     verificador_copy = verificador.copy()
 
     verificador["nome"] = "PUT"
-    verificador["linguagem"] = "PUT"
+    verificador["linguagem"] = "cpp.g++17"
     verificador["corpo"] = "PUT"
 
     response = client.put(
@@ -90,7 +90,7 @@ def update_full_verificador_helper(profile: str = ""):
 
 JSON_VERIFICADOR = {
     "nome": "string",
-    "linguagem": "string",
+    "linguagem": "python.3",
     "corpo": "string",
     "problema_id": 0
 }

@@ -1,3 +1,4 @@
+import React from "react";
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -34,11 +35,13 @@ import { Input } from "../ui/input";
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
+  children: React.ReactNode;
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
+  children,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -63,7 +66,7 @@ export function DataTable<TData, TValue>({
 
   return (
     <>
-      <div className="flex items-center py-4">
+      <div className="flex items-center py-4 gap-3">
         <Input
           placeholder="Filter nome..."
           value={(table.getColumn("nome")?.getFilterValue() as string) ?? ""}
@@ -73,9 +76,14 @@ export function DataTable<TData, TValue>({
           className="max-w-sm"
         />
 
+        {children}
+
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="ml-auto">
+            <Button
+              variant="outline"
+              className="ml-auto hover:bg-slate-900 hover:text-white"
+            >
               Columns
             </Button>
           </DropdownMenuTrigger>

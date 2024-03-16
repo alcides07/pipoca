@@ -35,7 +35,10 @@ export default function Header({ options }: HeaderProps): JSX.Element {
     <div>
       <Card className="rounded-none px-28">
         <CardContent className="px-0 py-3 flex justify-between">
-          <div className="font-bold flex items-center ">Juiz Online</div>
+          <div className="font-bold flex items-center text-2xl">
+            <Popcorn />
+            PIPOCA
+          </div>
           <div>
             <NavigationMenu>
               <NavigationMenuList className="gap-6">

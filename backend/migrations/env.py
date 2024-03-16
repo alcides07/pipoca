@@ -10,14 +10,10 @@ from models.common import index
 # access to the values within the .ini file in use.
 config = context.config
 
-DATABASE_CONTAINER_ALEMBIC = str(config_env("DATABASE_CONTAINER_ALEMBIC"))
-DATABASE_LOCAL = str(config_env("DATABASE_LOCAL"))
-USE_DOCKER = str(config_env("USE_DOCKER"))
-
-if (USE_DOCKER == "1"):
-    config.set_main_option('sqlalchemy.url', DATABASE_CONTAINER_ALEMBIC)
-else:
-    config.set_main_option('sqlalchemy.url', DATABASE_LOCAL)
+TEST_ENV = str(config_env("TEST_ENV"))
+if (TEST_ENV != "1"):
+    DATABASE_URL = str(config_env("DATABASE_URL"))
+    config.set_main_option('sqlalchemy.url', DATABASE_URL)
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)

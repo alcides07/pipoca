@@ -26,7 +26,7 @@ class ProblemaTeste(Base):
     )
 
     entrada = Column(
-        String(length=250000),
+        String(length=1000000),
         nullable=False,
     )
 

@@ -13,7 +13,7 @@ URL_DECLARACAO = "/declaracoes"
 # -------------------------------
 # Testes de leitura (GET)
 # -------------------------------
-def test_read_declaracao_all_com_user_criador_do_problema():
+def test_read_declaracao_all_com_user():
     remove_dependencies()
 
     _, token_user, _ = create_user_helper()

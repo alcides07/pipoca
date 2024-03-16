@@ -4,14 +4,23 @@ from utils.translate import translate
 from utils.errors import errors
 from openapi.validation_exception import validation_exception_handler
 from routers.common.index import routes
-from database import engine, Base
 from fastapi.openapi.utils import get_openapi
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from decouple import config
+
+TEST_ENV = str(config("TEST_ENV"))
 
 
-Base.metadata.create_all(bind=engine)
+def get_config_database():
+    from database import engine, Base
+    return engine, Base
+
+
+if (TEST_ENV != "1"):
+    engine, Base = get_config_database()
+    Base.metadata.create_all(bind=engine)
 
 app = FastAPI(docs_url=None,
               redoc_url=None,

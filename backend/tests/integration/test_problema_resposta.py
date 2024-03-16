@@ -1,167 +1,27 @@
+from schemas.common.compilers import CompilersEnum
 from tests.database import get_db_test
 from tests.helpers.administrador import create_administrador_helper
-from tests.helpers.problema import URL_PROBLEMA, create_problema_user_helper
-from tests.helpers.problema import JSON_PROBLEMA
+from tests.helpers.problema_resposta import URL_PROBLEMA_RESPOSTAS, create_problema_resposta_helper
 from tests.helpers.user import create_user_helper
 from main import app
 from fastapi.testclient import TestClient
 from tests.config_test import remove_dependencies, resume_dependencies
 
 client = TestClient(app)
-URL_PROBLEMA_RESPOSTA = "/problemaRespostas"
 
 
-def test_read_problema_resposta_unit_privado_e_autor_do_problema_e_da_resposta_user():
+# -------------------------------
+# Testes de leitura (GET)
+# -------------------------------
+def test_read_problema_respostas_all_com_user():
     remove_dependencies()
 
-    response_problema_criado, token_autor_problema = create_problema_user_helper()
-    problema_id = response_problema_criado.json().get("data").get("id")
-
-    resposta_submissao = JSON_PROBLEMA_RESPOSTA.copy()
-    resposta_submissao["problema_id"] = problema_id
-
-    response_resposta = client.post(
-        URL_PROBLEMA_RESPOSTA,
-        json=resposta_submissao,
-        headers={
-            "Authorization": f"Bearer {token_autor_problema}",
-        },
-    )
-    id_resposta = response_resposta.json().get("data").get("id")
+    _, token, _ = create_user_helper()
 
     response = client.get(
-        f"{URL_PROBLEMA_RESPOSTA}/{id_resposta}",
+        URL_PROBLEMA_RESPOSTAS,
         headers={
-            "Authorization": f"Bearer {token_autor_problema}",
-        },
-    )
-
-    assert response.status_code == 200
-
-    resume_dependencies()
-
-
-def test_read_problema_resposta_unit_privado_nao_sou_autor_nem_respondi_user():
-    remove_dependencies()
-
-    response_problema_criado, token_criador = create_problema_user_helper()
-    problema_id = response_problema_criado.json().get("data").get("id")
-
-    resposta_submissao = JSON_PROBLEMA_RESPOSTA.copy()
-    resposta_submissao["problema_id"] = problema_id
-
-    response_resposta = client.post(
-        URL_PROBLEMA_RESPOSTA,
-        json=resposta_submissao,
-        headers={
-            "Authorization": f"Bearer {token_criador}",
-        },
-    )
-    id_resposta = response_resposta.json().get("data").get("id")
-
-    _, token_user_verifica, _ = create_user_helper()
-
-    response = client.get(
-        f"{URL_PROBLEMA_RESPOSTA}/{id_resposta}",
-        headers={
-            "Authorization": f"Bearer {token_user_verifica}",
-        },
-    )
-
-    assert response.status_code == 401
-
-    resume_dependencies()
-
-
-def test_read_problema_resposta_unit_privado_nao_sou_autor_mas_respondi_user():
-    remove_dependencies()
-    json_problema = JSON_PROBLEMA.copy()
-    json_problema["privado"] = False
-
-    response_problema_criado, token_criador_problema = create_problema_user_helper(
-        json_problema)
-    problema_id = response_problema_criado.json().get("data").get("id")
-
-    resposta_submissao = JSON_PROBLEMA_RESPOSTA.copy()
-    resposta_submissao["problema_id"] = problema_id
-
-    _, token_usuario_resposta, _ = create_user_helper()
-
-    response_resposta = client.post(
-        URL_PROBLEMA_RESPOSTA,
-        json=resposta_submissao,
-        headers={
-            "Authorization": f"Bearer {token_usuario_resposta}",
-        },
-    )
-    id_resposta = response_resposta.json().get("data").get("id")
-
-    client.patch(
-        f"{URL_PROBLEMA}/{problema_id}/",
-        json={
-            "privado": True
-        },
-        headers={
-            "Authorization": f"Bearer {token_criador_problema}",
-        },
-    )
-
-    response = client.get(
-        f"{URL_PROBLEMA_RESPOSTA}/{id_resposta}",
-        headers={
-            "Authorization": f"Bearer {token_usuario_resposta}",
-        },
-    )
-
-    assert response.status_code == 200
-
-    resume_dependencies()
-
-
-def test_read_problema_resposta_unit_publico_nao_sou_autor_mas_respondi_user():
-    remove_dependencies()
-    json_problema = JSON_PROBLEMA.copy()
-    json_problema["privado"] = False
-
-    response_problema_criado, _ = create_problema_user_helper(
-        json_problema)
-    problema_id = response_problema_criado.json().get("data").get("id")
-
-    resposta_submissao = JSON_PROBLEMA_RESPOSTA.copy()
-    resposta_submissao["problema_id"] = problema_id
-
-    _, token_usuario_resposta, _ = create_user_helper()
-
-    response_resposta = client.post(
-        URL_PROBLEMA_RESPOSTA,
-        json=resposta_submissao,
-        headers={
-            "Authorization": f"Bearer {token_usuario_resposta}",
-        },
-    )
-    id_resposta = response_resposta.json().get("data").get("id")
-
-    response = client.get(
-        f"{URL_PROBLEMA_RESPOSTA}/{id_resposta}",
-        headers={
-            "Authorization": f"Bearer {token_usuario_resposta}",
-        },
-    )
-
-    assert response.status_code == 200
-
-    resume_dependencies()
-
-
-def test_read_problemas_respostas_user():
-    remove_dependencies()
-
-    _, token_user, _ = create_user_helper()
-
-    response = client.get(
-        URL_PROBLEMA_RESPOSTA,
-        headers={
-            "Authorization": f"Bearer {token_user}",
+            "Authorization": f"Bearer {token}",
         },
     )
     assert response.status_code == 401
@@ -169,14 +29,14 @@ def test_read_problemas_respostas_user():
     resume_dependencies()
 
 
-def test_read_problemas_respostas_admin():
+def test_read_problema_respostas_all_com_admin():
     remove_dependencies()
 
     database = next(get_db_test())
     token_admin = create_administrador_helper(database)
 
     response = client.get(
-        URL_PROBLEMA_RESPOSTA,
+        URL_PROBLEMA_RESPOSTAS,
         headers={
             "Authorization": f"Bearer {token_admin}",
         },
@@ -186,19 +46,26 @@ def test_read_problemas_respostas_admin():
     resume_dependencies()
 
 
-def test_read_problemas_respostas_de_naoautor_by_problema_id_admin():
+def test_read_problema_resposta_by_id_com_user_criador_do_problema():
     remove_dependencies()
 
-    response_problema_criado, _ = create_problema_user_helper()
-    problema_id = response_problema_criado.json().get("data").get("id")
+    _, token_user, _ = create_user_helper()
 
-    database = next(get_db_test())
-    token_admin = create_administrador_helper(database)
+    response_problema_resposta = create_problema_resposta_helper(
+        token_user_criador_problema=token_user,
+        token_user_resposta=token_user,
+        problema_privado=False,
+        path_problema="./tests/integration/multiplication_problem.zip",
+        resposta="#include<iostream>\nusing namespace std;\nint main() {\nint a, b;\ncin >> a >> b;\ncout << a * b;\nreturn 0;\n}",
+        linguagem=CompilersEnum("cpp.g++17")
+    )
+
+    response_resposta_id = response_problema_resposta.json().get("data").get("id")
 
     response = client.get(
-        f"{URL_PROBLEMA}/{problema_id}/respostas/",
+        f"{URL_PROBLEMA_RESPOSTAS}/{response_resposta_id}/",
         headers={
-            "Authorization": f"Bearer {token_admin}",
+            "Authorization": f"Bearer {token_user}",
         },
     )
 
@@ -207,152 +74,167 @@ def test_read_problemas_respostas_de_naoautor_by_problema_id_admin():
     resume_dependencies()
 
 
-def test_read_minhas_respostas_problemas():
+def test_read_problema_resposta_by_id_com_user_autor_da_resposta():
     remove_dependencies()
 
-    _, token_user, _ = create_user_helper()
-
-    response_problema_user = client.get(
-        f"{URL_PROBLEMA_RESPOSTA}/users/",
-        headers={
-            "Authorization": f"Bearer {token_user}",
-        },
-    )
-    assert response_problema_user.status_code == 200
-
-    resume_dependencies()
-
-
-def test_create_problema_resposta_em_problema_privado_negado_user():
-    remove_dependencies()
-
-    response_problema_criado, _ = create_problema_user_helper()
-    problema_id = response_problema_criado.json().get("data").get("id")
-
-    _, token_usuario_resposta, _ = create_user_helper()
-    resposta_submissao = JSON_PROBLEMA_RESPOSTA.copy()
-    resposta_submissao["problema_id"] = problema_id
-
-    response = client.post(
-        URL_PROBLEMA_RESPOSTA,
-        json=resposta_submissao,
-        headers={
-            "Authorization": f"Bearer {token_usuario_resposta}",
-        },
-    )
-
-    assert response.status_code == 401
-
-    resume_dependencies()
-
-
-def test_create_problema_resposta_em_problema_privado_autor_permitido_user():
-    remove_dependencies()
-
-    response_problema_criado, token_autor_problema = create_problema_user_helper()
-    problema_id = response_problema_criado.json().get("data").get("id")
-
-    resposta_submissao = JSON_PROBLEMA_RESPOSTA.copy()
-    resposta_submissao["problema_id"] = problema_id
-
-    response = client.post(
-        URL_PROBLEMA_RESPOSTA,
-        json=resposta_submissao,
-        headers={
-            "Authorization": f"Bearer {token_autor_problema}",
-        },
-    )
-
-    assert response.status_code == 201
-
-    resume_dependencies()
-
-
-def test_create_problema_resposta_em_problema_privado_admin_permitido_user():
-    remove_dependencies()
-
-    response_problema_criado, _ = create_problema_user_helper()
-    problema_id = response_problema_criado.json().get("data").get("id")
-
-    resposta_submissao = JSON_PROBLEMA_RESPOSTA.copy()
-    resposta_submissao["problema_id"] = problema_id
-
-    database = next(get_db_test())
-    administrador_token = create_administrador_helper(database)
-
-    response = client.post(
-        URL_PROBLEMA_RESPOSTA,
-        json=resposta_submissao,
-        headers={
-            "Authorization": f"Bearer {administrador_token}",
-        },
-    )
-
-    assert response.status_code == 201
-
-    resume_dependencies()
-
-
-def test_create_problema_resposta_em_problema_publico_user():
-    remove_dependencies()
-
-    json_problema = JSON_PROBLEMA.copy()
-    json_problema["privado"] = False
-
-    response_problema_criado, _ = create_problema_user_helper(
-        json_problema)
-    problema_id = response_problema_criado.json().get("data").get("id")
-
+    _, token_user_criador_problema, _ = create_user_helper()
     _, token_user_resposta, _ = create_user_helper()
-    resposta_submissao = JSON_PROBLEMA_RESPOSTA.copy()
-    resposta_submissao["problema_id"] = problema_id
 
-    response = client.post(
-        URL_PROBLEMA_RESPOSTA,
-        json=resposta_submissao,
+    response_problema_resposta = create_problema_resposta_helper(
+        token_user_criador_problema=token_user_criador_problema,
+        token_user_resposta=token_user_resposta,
+        problema_privado=False,
+        path_problema="./tests/integration/multiplication_problem.zip",
+        resposta="#include<iostream>\nusing namespace std;\nint main() {\nint a, b;\ncin >> a >> b;\ncout << a * b;\nreturn 0;\n}",
+        linguagem=CompilersEnum("cpp.g++17")
+    )
+
+    response_resposta_id = response_problema_resposta.json().get("data").get("id")
+
+    response = client.get(
+        f"{URL_PROBLEMA_RESPOSTAS}/{response_resposta_id}/",
         headers={
             "Authorization": f"Bearer {token_user_resposta}",
         },
     )
 
-    assert response.status_code == 201
+    assert response.status_code == 200
 
     resume_dependencies()
 
 
-def test_create_problema_resposta_em_problema_publico_admin():
+def test_read_problema_resposta_by_id_com_user_qualquer_negado():
     remove_dependencies()
 
-    json_problema = JSON_PROBLEMA.copy()
-    json_problema["privado"] = False
+    _, token_user_criador_problema, _ = create_user_helper()
+    _, token_user_resposta, _ = create_user_helper()
+    _, token_user_qualquer, _ = create_user_helper()
 
-    response_problema_criado, _ = create_problema_user_helper(
-        json_problema)
-    problema_id = response_problema_criado.json().get("data").get("id")
+    response_problema_resposta = create_problema_resposta_helper(
+        token_user_criador_problema=token_user_criador_problema,
+        token_user_resposta=token_user_resposta,
+        problema_privado=False,
+        path_problema="./tests/integration/multiplication_problem.zip",
+        resposta="#include<iostream>\nusing namespace std;\nint main() {\nint a, b;\ncin >> a >> b;\ncout << a * b;\nreturn 0;\n}",
+        linguagem=CompilersEnum("cpp.g++17")
+    )
 
-    database = next(get_db_test())
-    administrador_token = create_administrador_helper(database)
+    response_resposta_id = response_problema_resposta.json().get("data").get("id")
 
-    resposta_submissao = JSON_PROBLEMA_RESPOSTA.copy()
-    resposta_submissao["problema_id"] = problema_id
-
-    response = client.post(
-        URL_PROBLEMA_RESPOSTA,
-        json=resposta_submissao,
+    response = client.get(
+        f"{URL_PROBLEMA_RESPOSTAS}/{response_resposta_id}/",
         headers={
-            "Authorization": f"Bearer {administrador_token}",
+            "Authorization": f"Bearer {token_user_qualquer}",
         },
     )
 
+    assert response.status_code == 401
+
+    resume_dependencies()
+
+
+def test_read_meus_problema_respostas_com_user():
+    remove_dependencies()
+
+    _, token, _ = create_user_helper()
+
+    response = client.get(
+        f"{URL_PROBLEMA_RESPOSTAS}/users/",
+        headers={
+            "Authorization": f"Bearer {token}",
+        },
+    )
+    assert response.status_code == 200
+
+    resume_dependencies()
+
+
+def test_read_meus_problema_respostas_com_admin():
+    remove_dependencies()
+
+    database = next(get_db_test())
+    token_admin = create_administrador_helper(database)
+
+    response = client.get(
+        f"{URL_PROBLEMA_RESPOSTAS}/users/",
+        headers={
+            "Authorization": f"Bearer {token_admin}",
+        },
+    )
+    assert response.status_code == 200
+
+    resume_dependencies()
+
+
+# -------------------------------
+# Testes de escrita (POST)
+# -------------------------------
+def test_create_problema_resposta_com_user_qualquer():
+    remove_dependencies()
+
+    _, token_user_criador_problema, _ = create_user_helper()
+    _, token_user_resposta, _ = create_user_helper()
+
+    response = create_problema_resposta_helper(
+        token_user_criador_problema=token_user_criador_problema,
+        token_user_resposta=token_user_resposta,
+        problema_privado=False,
+        path_problema="./tests/integration/multiplication_problem.zip",
+        resposta="#include<iostream>\nusing namespace std;\nint main() {\nint a, b;\ncin >> a >> b;\ncout << a * b;\nreturn 0;\n}",
+        linguagem=CompilersEnum("cpp.g++17")
+    )
+    response_json = response.json().get("data")
+    erro = response_json.get("erro")
+    veredito = response_json.get("veredito")
+    saida_usuario = response_json.get("saida_usuario")
+    saida_esperada = response_json.get("saida_esperada")
+
+    assert erro == None
+    assert veredito != []
+    assert saida_usuario != []
+    assert saida_esperada != []
     assert response.status_code == 201
 
     resume_dependencies()
 
 
-JSON_PROBLEMA_RESPOSTA = {
-    "resposta": "string",
-    "tempo": 0,
-    "memoria": 0,
-    "linguagem": "string",
-    "problema_id": 0
-}
+def test_create_problema_resposta_runtime_error_com_user_qualquer():
+    remove_dependencies()
+
+    _, token_user_criador_problema, _ = create_user_helper()
+    _, token_user_resposta, _ = create_user_helper()
+
+    response = create_problema_resposta_helper(
+        token_user_criador_problema=token_user_criador_problema,
+        token_user_resposta=token_user_resposta,
+        problema_privado=False,
+        path_problema="./tests/integration/multiplication_problem.zip",
+        resposta="#include<iostream>\nusingg namespace std;\nint main() {\nint a, b;\ncin >> a >> b;\ncout << a * b;\nreturn 0;\n}",
+        linguagem=CompilersEnum("cpp.g++17")
+    )
+    erro = response.json().get("data").get("erro")
+
+    assert erro != None
+    assert response.status_code == 201
+
+    resume_dependencies()
+
+
+def test_create_problema_resposta_de_problema_privado_com_user_qualquer():
+    remove_dependencies()
+
+    _, token_user_criador_problema, _ = create_user_helper()
+    _, token_user_resposta, _ = create_user_helper()
+
+    response = create_problema_resposta_helper(
+        token_user_criador_problema=token_user_criador_problema,
+        token_user_resposta=token_user_resposta,
+        problema_privado=True,
+        path_problema="./tests/integration/multiplication_problem.zip",
+        resposta="#include<iostream>\nusing namespace std;\nint main() {\nint a, b;\ncin >> a >> b;\ncout << a * b;\nreturn 0;\n}",
+        linguagem=CompilersEnum("cpp.g++17")
+    )
+
+    assert response.status_code == 401
+
+    resume_dependencies()
