@@ -2,6 +2,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Card, CardContent } from "../ui/card";
 import { Link, useLocation } from "react-router-dom";
 import { LogOut } from "lucide-react";
+import { Popcorn } from "lucide-react";
 
 import {
   NavigationMenu,
