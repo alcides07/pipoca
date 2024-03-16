@@ -91,6 +91,7 @@ def execute_checker(
 
             except DockerException:
                 raise HTTPException(
+                    detail="Erro. O processamento de comparação dos resultados falhou!",
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
                 )
 
@@ -148,11 +149,13 @@ def execute_arquivo_solucao(db_problema: Problema, arquivo_solucao: Arquivo):
 
                 if (stderr_logs_decode != ""):
                     raise HTTPException(
+                        detail="Erro. O arquivo interno de solução do problema possui alguma falha!",
                         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
                     )
 
             except DockerException:
                 raise HTTPException(
+                    detail="Erro. O processamento do arquivo interno de solução do problema falhou!",
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
                 )
 
@@ -216,6 +219,7 @@ def execute_codigo_user(
 
             except DockerException:
                 raise HTTPException(
+                    detail="Erro. O processamento do código do usuário falhou!",
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
                 )
 
@@ -248,7 +252,10 @@ def execute_processo_resolucao(
         )
         return veredito, output_codigo_user, output_codigo_solucao, None
 
-    raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    raise HTTPException(
+        detail="Erro. O arquivo de solução do problema não foi encontrado!",
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+    )
 
 
 async def create_problema_resposta(
