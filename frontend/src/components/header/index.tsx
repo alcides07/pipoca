@@ -1,6 +1,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Card, CardContent } from "../ui/card";
 import { Link, useLocation } from "react-router-dom";
+import { LogOut } from "lucide-react";
 import { Popcorn } from "lucide-react";
 
 import {
@@ -9,13 +10,26 @@ import {
   NavigationMenuList,
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "../ui/dropdown-menu";
+import { useNavigate } from "react-router-dom";
 
 interface HeaderProps {
   options: { nome: string; link: string }[];
 }
 
-export default function Header({ options }: HeaderProps) {
+export default function Header({ options }: HeaderProps): JSX.Element {
   const location = useLocation();
+  const navigate = useNavigate();
+
+  function handleLogout(): void {
+    localStorage.removeItem("access_token");
+    navigate("/");
+  }
 
   return (
     <div>
@@ -50,12 +64,20 @@ export default function Header({ options }: HeaderProps) {
               </NavigationMenuList>
             </NavigationMenu>
           </div>
-          <div>
-            <Avatar>
-              <AvatarImage src="https://github.com/shadcn.png" />
-              <AvatarFallback>CN</AvatarFallback>
-            </Avatar>
-          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Avatar>
+                <AvatarImage src="https://github.com/shadcn.png" />
+                <AvatarFallback>CN</AvatarFallback>
+              </Avatar>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-25">
+              <DropdownMenuItem>
+                <LogOut className="mr-2 h-4 w-4" />
+                <button onClick={handleLogout}>Sair</button>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </CardContent>
       </Card>
     </div>
