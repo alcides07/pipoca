@@ -1,7 +1,6 @@
-from sqlalchemy import Column, Enum, ForeignKey, Integer, String
+from sqlalchemy import Column, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 from database import Base
-from schemas.arquivo import SecaoSchema
 
 
 class Arquivo(Base):
@@ -24,8 +23,12 @@ class Arquivo(Base):
         nullable=False,
     )
 
+    linguagem = Column(
+        String
+    )
+
     secao = Column(
-        Enum(SecaoSchema),
+        String,
         index=True
     )
 
@@ -34,7 +37,13 @@ class Arquivo(Base):
         index=True
     )
 
-    problema_id = Column(Integer, ForeignKey('problemas.id'))
+    problema_id = Column(
+        Integer,
+        ForeignKey(
+            'problemas.id',
+            name="arquivos_problema_id_fkey"
+        )
+    )
     problema = relationship(
         "Problema",
         back_populates="arquivos",

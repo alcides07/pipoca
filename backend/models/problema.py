@@ -1,6 +1,9 @@
+from datetime import datetime
+from models.problemaResposta import ProblemaResposta
+from models.problemaTeste import ProblemaTeste
 from models.validador import Validador
 from models.verificador import Verificador
-from sqlalchemy import Column, ForeignKey, Integer, String, CheckConstraint, UniqueConstraint
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, CheckConstraint, UniqueConstraint, DateTime
 from sqlalchemy.orm import relationship
 from database import Base
 from models.arquivo import Arquivo
@@ -19,6 +22,13 @@ class Problema(Base):
 
     nome = Column(
         String(length=64),
+        index=True,
+        unique=True,
+        nullable=False,
+    )
+
+    privado = Column(
+        Boolean(),
         index=True,
         nullable=False,
     )
@@ -47,6 +57,11 @@ class Problema(Base):
         nullable=False,
     )
 
+    criado_em = Column(
+        DateTime,
+        default=datetime.utcnow
+    )
+
     tags = relationship(
         "Tag",
         secondary=problema_tag_relationship,
@@ -63,18 +78,61 @@ class Problema(Base):
         back_populates="problema"
     )
 
-    verificador_id = Column(Integer, ForeignKey('verificadores.id'))
+    testes = relationship(
+        ProblemaTeste,
+        back_populates="problema"
+    )
+
+    verificador_id = Column(
+        Integer,
+        ForeignKey(
+            'verificadores.id',
+            name="problemas_verificador_id_fkey",
+            use_alter=True,
+            ondelete='SET NULL'
+        )
+    )
     verificador = relationship(
         Verificador,
         uselist=False,
         foreign_keys=[verificador_id],
+        passive_deletes=True
     )
 
-    validador_id = Column(Integer, ForeignKey('validadores.id'))
+    validador_id = Column(
+        Integer,
+        ForeignKey(
+            'validadores.id',
+            name="problemas_validador_id_fkey",
+            use_alter=True,
+            ondelete='SET NULL'
+        )
+    )
     validador = relationship(
         Validador,
         uselist=False,
         foreign_keys=[validador_id],
+        passive_deletes=True
+    )
+
+    usuario_id = Column(
+        Integer,
+        ForeignKey(
+            "users.id",
+            name="problemas_usuario_id_fkey",
+            ondelete='SET NULL'
+        )
+    )
+    usuario = relationship(
+        "User",
+        uselist=False,
+        foreign_keys=[usuario_id],
+        passive_deletes=True
+    )
+
+    respostas = relationship(
+        ProblemaResposta,
+        back_populates="problema"
     )
 
     __table_args__ = (

@@ -11,11 +11,11 @@
 
 > As seguintes tecnologias foram utilizadas no desenvolvimento do backend projeto:
 
--   [FastAPI 0.104.1](https://fastapi.tiangolo.com/)
--   [Uvicorn 0.23.2](https://www.uvicorn.org/)
--   [SQLAlchemy 2.0.23](https://www.sqlalchemy.org/)
--   [PostgreSQL 14.9](https://www.postgresql.org/)
--   [Docker Compose 1.29.2](https://docs.docker.com/compose/)
+- [FastAPI 0.109.1](https://fastapi.tiangolo.com/)
+- [Uvicorn 0.23.2](https://www.uvicorn.org/)
+- [SQLAlchemy 2.0.23](https://www.sqlalchemy.org/)
+- [PostgreSQL 16](https://www.postgresql.org/)
+- [Docker Compose 1.29.2](https://docs.docker.com/compose/)
 
 ## 2. Execução do projeto
 
@@ -23,10 +23,10 @@
 
 > Para executar o projeto, você precisa possuir previamente em sua máquina as seguintes ferramentas:
 
--   [Python 3.10](https://www.python.org/downloads/)
--   [Git](https://git-scm.com)
--   [Docker 24.0.5](https://docs.docker.com/get-docker/) (Opcional)
--   [Docker Compose 1.29.2](https://docs.docker.com/compose/) (Opcional)
+- [Python 3.10](https://www.python.org/downloads/)
+- [Git](https://git-scm.com)
+- [Docker 24.0.5](https://docs.docker.com/get-docker/) (Opcional)
+- [Docker Compose 1.29.2](https://docs.docker.com/compose/) (Opcional)
 
 <details>
   <summary><h3>2.2. Execução com Uvicorn:</h3></summary>
@@ -34,13 +34,13 @@
 #### 2.2.1. Clone o repositório:
 
 ```
-git clone https://github.com/alcides07/juiz-online.git
+git clone https://github.com/alcides07/pipoca.git
 ```
 
 #### 2.2.2. Acesse o diretório gerado:
 
 ```
-cd juiz-online/backend/
+cd pipoca/backend/
 ```
 
 #### 2.2.3. Crie um ambiente virtual:
@@ -83,13 +83,13 @@ uvicorn main:app --reload
 #### 2.3.1. Clone o repositório:
 
 ```
-git clone https://github.com/alcides07/juiz-online.git
+git clone https://github.com/alcides07/pipoca.git
 ```
 
 #### 2.3.2. Acesse o diretório gerado:
 
 ```
-cd juiz-online/backend/
+cd pipoca/backend/
 ```
 
 #### 2.3.3. Execute a aplicação:

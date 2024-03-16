@@ -1,5 +1,9 @@
-from sqlalchemy import Column, Integer, String
+from models.problema import Problema
+from models.problemaResposta import ProblemaResposta
+from sqlalchemy import Column, DateTime, Integer, String
+from sqlalchemy.orm import relationship
 from database import Base
+from datetime import datetime
 
 
 class User(Base):
@@ -28,4 +32,19 @@ class User(Base):
     password = Column(
         String(length=64),
         nullable=False,
+    )
+
+    criado_em = Column(
+        DateTime,
+        default=datetime.utcnow
+    )
+
+    problemas = relationship(
+        Problema,
+        back_populates="usuario"
+    )
+
+    problemas_respostas = relationship(
+        ProblemaResposta,
+        back_populates="usuario"
     )

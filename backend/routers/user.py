@@ -1,13 +1,16 @@
-from fastapi import APIRouter, Body, Depends, HTTPException, Path, status
+from dependencies.authorization_user import is_admin
+from dependencies.is_admin import is_admin_dependencies
+from routers.auth import oauth2_scheme
+from fastapi import APIRouter, Body, Depends, HTTPException, Path, Response, status
 from utils.errors import errors
 from models.user import User
-from orm.common.index import delete_object, get_by_key_value_exists, get_by_id, get_all, update_total
+from orm.common.index import delete_object, get_by_id, get_all
 from dependencies.authenticated_user import get_authenticated_user
-from schemas.user import UserCreate, UserRead
+from schemas.user import UserCreate, UserReadFull, UserUpdatePartial, UserUpdateTotal
 from schemas.common.pagination import PaginationSchema
 from dependencies.database import get_db
 from sqlalchemy.orm import Session
-from orm.user import create_user
+from orm.user import create_user, update_user
 from schemas.common.response import ResponsePaginationSchema, ResponseUnitSchema
 from passlib.context import CryptContext
 
@@ -18,20 +21,26 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 router = APIRouter(
     prefix="/users",
-    tags=["user"],
+    tags=["users"],
 )
 
 
 @router.get("/",
-            response_model=ResponsePaginationSchema[UserRead],
+            response_model=ResponsePaginationSchema[UserReadFull],
             summary="Lista usuários",
-            dependencies=[Depends(get_authenticated_user)],
+            dependencies=[Depends(is_admin_dependencies)]
             )
-def read(
+async def read(
         db: Session = Depends(get_db),
-        common: PaginationSchema = Depends(),
+        pagination: PaginationSchema = Depends(),
+        token: str = Depends(oauth2_scheme)
 ):
-    users, metadata = get_all(db, User, common)
+    users, metadata = await get_all(
+        db=db,
+        model=User,
+        pagination=pagination,
+        token=token
+    )
 
     return ResponsePaginationSchema(
         data=users,
@@ -39,19 +48,58 @@ def read(
     )
 
 
+@router.get("/me/",
+            response_model=ResponseUnitSchema[UserReadFull],
+            summary="Lista dados do usuário autenticado",
+            dependencies=[Depends(get_authenticated_user)],
+            responses={
+                501: {"501": 501}
+            })
+async def read_me(
+        db: Session = Depends(get_db),
+        token: str = Depends(oauth2_scheme)
+):
+    user_db = await get_authenticated_user(token, db)
+
+    if (is_admin(user_db)):
+        raise HTTPException(
+            status_code=status.HTTP_501_NOT_IMPLEMENTED,
+            detail="Funcionalidade não disponível para administradores!"
+        )
+
+    user = await get_by_id(
+        id=user_db.id,
+        path_has_user_key="user",
+        db=db,
+        model=User,
+        token=token
+    )
+
+    return ResponseUnitSchema(
+        data=user
+    )
+
+
 @router.get("/{id}/",
-            response_model=ResponseUnitSchema[UserRead],
+            response_model=ResponseUnitSchema[UserReadFull],
             summary="Lista um usuário",
             dependencies=[Depends(get_authenticated_user)],
             responses={
                 404: errors[404]
             }
             )
-def read_id(
+async def read_id(
         id: int = Path(description=USER_ID_DESCRIPTION),
-        db: Session = Depends(get_db)
+        db: Session = Depends(get_db),
+        token: str = Depends(oauth2_scheme)
 ):
-    users = get_by_id(db, User, id)
+    users = await get_by_id(
+        db=db,
+        model=User,
+        id=id,
+        token=token,
+        path_has_user_key="user"
+    )
 
     return ResponseUnitSchema(
         data=users
@@ -59,7 +107,7 @@ def read_id(
 
 
 @router.post("/",
-             response_model=ResponseUnitSchema[UserRead],
+             response_model=ResponseUnitSchema[UserReadFull],
              status_code=201,
              summary="Cadastra um usuário",
              responses={
@@ -72,60 +120,86 @@ def create(
     user: UserCreate,
     db: Session = Depends(get_db),
 ):
+    data = create_user(db=db, user=user)
 
-    if (user.password != user.passwordConfirmation):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                            detail="Erro. As senhas fornecidas não coincidem!")
-
-    elif (get_by_key_value_exists(db, User, "username", user.username)):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                            detail="Erro. O nome de usuário fornecido está em uso!")
-
-    elif (get_by_key_value_exists(db, User, "email", user.email)):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                            detail="Erro. O e-mail fornecido está em uso!")
-
-    else:
-        user.password = pwd_context.hash(user.password)
-        data = create_user(db=db, user=user)
-
-        return ResponseUnitSchema(data=data)
+    return ResponseUnitSchema(data=data)
 
 
 @router.put("/{id}/",
-            response_model=ResponseUnitSchema[UserRead],
+            response_model=ResponseUnitSchema[UserReadFull],
             summary="Atualiza um usuário por completo",
             responses={
                 404: errors[404]
             },
             dependencies=[Depends(get_authenticated_user)],
             )
-def total_update(
+async def total_update(
         id: int = Path(description=USER_ID_DESCRIPTION),
         db: Session = Depends(get_db),
-        data: UserCreate = Body(),
+        data: UserUpdateTotal = Body(
+            description="Usuário a ser atualizado por completo"),
+        token: str = Depends(oauth2_scheme)
 ):
+    response = await update_user(
+        db=db,
+        id=id,
+        data=data,
+        token=token
+    )
 
-    response = update_total(db, User, id, data)
+    return ResponseUnitSchema(
+        data=response
+    )
+
+
+@router.patch("/{id}/",
+              response_model=ResponseUnitSchema[UserReadFull],
+              summary="Atualiza um usuário parcialmente",
+              responses={
+                  400: errors[400],
+                  404: errors[404]
+              },
+              dependencies=[Depends(get_authenticated_user)],
+              )
+async def partial_update(
+        id: int = Path(description=USER_ID_DESCRIPTION),
+        db: Session = Depends(get_db),
+        data: UserUpdatePartial = Body(
+            description="Usuário a ser atualizado parcialmente"),
+        token: str = Depends(oauth2_scheme)
+):
+    response = await update_user(
+        db=db,
+        id=id,
+        data=data,
+        token=token
+    )
+
     return ResponseUnitSchema(
         data=response
     )
 
 
 @router.delete("/{id}/",
-               response_model=ResponseUnitSchema[UserRead],
+               status_code=204,
                summary="Deleta um usuário",
                responses={
                    404: errors[404]
                },
                dependencies=[Depends(get_authenticated_user)],
                )
-def delete(
+async def delete(
         id: int = Path(description=USER_ID_DESCRIPTION),
-        db: Session = Depends(get_db)
+        db: Session = Depends(get_db),
+        token: str = Depends(oauth2_scheme)
 ):
 
-    user = delete_object(db, User, id)
-    return ResponseUnitSchema(
-        data=user
+    user = await delete_object(
+        db=db,
+        model=User,
+        id=id,
+        token=token,
+        path_has_user_key="user"
     )
+    if (user):
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
