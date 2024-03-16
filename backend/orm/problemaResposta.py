@@ -11,21 +11,102 @@ from dependencies.authorization_user import is_admin, is_user
 from fastapi import HTTPException, status
 from models.arquivo import Arquivo
 from models.problemaResposta import ProblemaResposta
+from models.problemaTeste import ProblemaTeste
 from schemas.arquivo import SecaoEnum
 from schemas.problemaResposta import ProblemaRespostaCreate
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 from models.problema import Problema
 from docker.errors import DockerException
+from schemas.problemaTeste import TipoTesteProblemaEnum
 
 
 def get_arquivo_solucao(
         db_problema: Problema
 ):
     for arquivo in db_problema.arquivos:
-        if (arquivo.secao == SecaoEnum.SOLUCAO and arquivo.status == "main"):
+        if (arquivo.secao == SecaoEnum.SOLUCAO.value and arquivo.status == "main"):
+            return arquivo
+
+    raise HTTPException(
+        detail="O arquivo de solução principal do problema não foi encontrado!",
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+    )
+
+
+def get_arquivo_gerador(db_problema: Problema):
+    for arquivo in db_problema.arquivos:
+        if (arquivo.secao == SecaoEnum.GERADOR.value):
             return arquivo
     return None
+
+
+def execute_teste_gerado(
+    teste: ProblemaTeste,
+    arquivo_gerador: Arquivo
+):
+    linguagem_gerador: str = arquivo_gerador.linguagem  # type: ignore
+    extension_gerador: str = commands[linguagem_gerador]["extension"]
+
+    client = docker.from_env()
+    image = commands[linguagem_gerador]["image"]
+    command = commands[linguagem_gerador]["run_gerador"]
+    WORKING_DIR = "/problema/gerador/"
+
+    teste_entrada = " ".join(teste.entrada.split()[1:])
+
+    with tempfile.TemporaryDirectory() as temp_dir:
+        with open(os.path.join(temp_dir, 'testlib.h'), 'wb') as file:
+            response = requests.get(URL_TEST_LIB, stream=True)
+            response.raise_for_status()
+            response.raw.decode_content = True
+            shutil.copyfileobj(response.raw, file)
+
+        with open(os.path.join(temp_dir, f"{FILENAME_RUN}{extension_gerador}"), "w") as file:
+            file.write(str(arquivo_gerador.corpo))
+
+        with open(os.path.join(temp_dir, INPUT_TEST_FILENAME), "w") as file:
+            file.write(teste_entrada)
+
+        try:
+            client.images.pull(image)
+            volumes = {temp_dir: {
+                'bind': WORKING_DIR, 'mode': 'rw'}}
+
+            container = client.containers.run(
+                image,
+                command,
+                detach=True,
+                volumes=volumes,
+                working_dir=WORKING_DIR
+            )
+
+            container.wait()  # type: ignore
+
+            stdout_logs = container.logs(  # type: ignore
+                stdout=True, stderr=False)
+            stderr_logs = container.logs(  # type: ignore
+                stdout=False, stderr=True)
+
+            stdout_logs_decode = stdout_logs.decode()
+            stderr_logs_decode = stderr_logs.decode()
+
+            container.stop()  # type: ignore
+            container.remove()  # type: ignore
+
+            if (stderr_logs_decode != ""):
+                raise HTTPException(
+                    detail="O arquivo gerador de testes do problema possui alguma falha!",
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+
+        except DockerException:
+            raise HTTPException(
+                detail="Ocorreu uma falha na execução dos testes gerados!",
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    return stdout_logs_decode
 
 
 def execute_checker(
@@ -49,12 +130,20 @@ def execute_checker(
             response.raw.decode_content = True
             shutil.copyfileobj(response.raw, file)
 
+        arquivo_gerador: Arquivo | None = get_arquivo_gerador(db_problema)
+
         for i, teste in enumerate(db_problema.testes):
+            teste_entrada = teste.entrada
+
+            if (teste.tipo == TipoTesteProblemaEnum.GERADO.value and arquivo_gerador != None):
+                teste_entrada = execute_teste_gerado(
+                    teste, arquivo_gerador)
+
             with open(os.path.join(temp_dir, f"{FILENAME_RUN}{extension_verificador}"), "w") as file:
                 file.write(codigo_verificador)
 
             with open(os.path.join(temp_dir, INPUT_TEST_FILENAME), "w") as file:
-                file.write(teste.entrada)
+                file.write(teste_entrada)
 
             with open(os.path.join(temp_dir, OUTPUT_JUDGE_FILENAME), "w") as file:
                 file.write(output_codigo_solucao[i])
@@ -91,7 +180,7 @@ def execute_checker(
 
             except DockerException:
                 raise HTTPException(
-                    detail="Erro. O processamento de comparação dos resultados falhou!",
+                    detail="Ocorreu uma falha no processamento de comparação dos resultados!",
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
                 )
 
@@ -149,13 +238,13 @@ def execute_arquivo_solucao(db_problema: Problema, arquivo_solucao: Arquivo):
 
                 if (stderr_logs_decode != ""):
                     raise HTTPException(
-                        detail="Erro. O arquivo interno de solução do problema possui alguma falha!",
+                        detail="O arquivo de solução oficial do problema possui alguma falha!",
                         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
                     )
 
             except DockerException:
                 raise HTTPException(
-                    detail="Erro. O processamento do arquivo interno de solução do problema falhou!",
+                    detail="Ocorreu uma falha no processamento do arquivo de solução oficial do problema!",
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
                 )
 
@@ -219,7 +308,7 @@ def execute_codigo_user(
 
             except DockerException:
                 raise HTTPException(
-                    detail="Erro. O processamento do código do usuário falhou!",
+                    detail="Ocorreu uma falha no processamento do código do usuário!",
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
                 )
 
@@ -231,31 +320,25 @@ def execute_processo_resolucao(
     db_problema: Problema
 ):
     arquivo_solucao = get_arquivo_solucao(db_problema)
-    if (arquivo_solucao):
-        output_codigo_solucao = execute_arquivo_solucao(
-            db_problema,
-            arquivo_solucao
-        )
-
-        output_codigo_user = execute_codigo_user(
-            db_problema,
-            problema_resposta
-        )
-
-        if (isinstance(output_codigo_user, str)):
-            return [], [], [], output_codigo_user
-
-        veredito = execute_checker(
-            db_problema,
-            output_codigo_solucao,
-            output_codigo_user
-        )
-        return veredito, output_codigo_user, output_codigo_solucao, None
-
-    raise HTTPException(
-        detail="Erro. O arquivo de solução do problema não foi encontrado!",
-        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+    output_codigo_solucao = execute_arquivo_solucao(
+        db_problema,
+        arquivo_solucao
     )
+
+    output_codigo_user = execute_codigo_user(
+        db_problema,
+        problema_resposta
+    )
+
+    if (isinstance(output_codigo_user, str)):
+        return [], [], [], output_codigo_user
+
+    veredito = execute_checker(
+        db_problema,
+        output_codigo_solucao,
+        output_codigo_user
+    )
+    return veredito, output_codigo_user, output_codigo_solucao, None
 
 
 async def create_problema_resposta(
@@ -275,7 +358,9 @@ async def create_problema_resposta(
     if (bool(db_problema.privado) == True):
         if (is_user(user) and bool(user.id != db_problema.usuario_id)):
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED, detail="Erro. O problema o qual se está tentando submeter uma resposta é privado!")
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="O problema o qual se está tentando submeter uma resposta é privado!"
+            )
 
     try:
         veredito, output_user, output_judge, erro = execute_processo_resolucao(
