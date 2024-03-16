@@ -50,7 +50,7 @@ async def create_declaracao(
     if (not db_problema):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Problema não encontrado!"
+            detail="O problema não foi encontrado!"
         )
 
     user = await get_authenticated_user(token=token, db=db)

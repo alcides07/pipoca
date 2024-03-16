@@ -19,8 +19,10 @@ async def create_validador_teste(
     ).first()
 
     if (not db_validador):
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail="Validador não encontrado!")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="O validador não foi encontrado!"
+        )
 
     user = await get_authenticated_user(token, db)
 
@@ -30,8 +32,10 @@ async def create_validador_teste(
 
     for teste in db_validador.testes:
         if (validador_teste.numero == teste.numero):
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                                detail="Erro. Um teste com o mesmo número já foi registrado para este validador!")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Um teste com o mesmo número já foi registrado para este validador!"
+            )
 
     try:
         validador_teste.veredito = validador_teste.veredito.value  # type: ignore
@@ -72,8 +76,10 @@ async def update_validador_teste(
     try:
         for teste in db_validador_teste.validador.testes:
             if (validador_teste.numero == teste.numero and bool(id != teste.id)):
-                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                                    detail="Erro. Um teste com o mesmo número já foi registrado para este validador!")
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Um teste com o mesmo número já foi registrado para este validador!"
+                )
 
         for key, value in validador_teste:
             if (value is not None and hasattr(db_validador_teste, key)):

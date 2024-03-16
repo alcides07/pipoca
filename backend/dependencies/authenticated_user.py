@@ -16,7 +16,7 @@ ALGORITHM = str(config("ALGORITHM"))
 async def get_authenticated_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Erro. Não foi possível validar as credenciais!",
+        detail="Não foi possível validar as credenciais!",
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:

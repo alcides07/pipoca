@@ -323,8 +323,10 @@ async def upload(
 ):
 
     if (pacote.content_type not in ["application/zip", "application/x-zip-compressed"]):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                            detail="Erro. Formato de pacote inválido!")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Formato de pacote inválido!"
+        )
 
     temp_file = tempfile.TemporaryFile()
     temp_file.write(pacote.file.read())
@@ -642,8 +644,10 @@ async def upload(
         return ResponseUnitSchema(data=data)
 
     except HTTPException:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                            detail="Erro. Ocorreu uma falha no processamento do pacote!")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Ocorreu uma falha no processamento do pacote!"
+        )
 
 
 @router.put("/{id}/",

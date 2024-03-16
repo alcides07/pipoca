@@ -20,8 +20,10 @@ async def create_verificador_teste(
     ).first()
 
     if (not db_verificador):
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail="Verificador não encontrado!")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="O verificador não foi encontrado!"
+        )
 
     user = await get_authenticated_user(token, db)
 
@@ -31,8 +33,10 @@ async def create_verificador_teste(
 
     for teste in db_verificador.testes:
         if (verificador_teste.numero == teste.numero):
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                                detail="Erro. Um teste com o mesmo número já foi registrado para este verificador!")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Um teste com o mesmo número já foi registrado para este verificador!"
+            )
 
     try:
         verificador_teste.veredito = verificador_teste.veredito.value  # type: ignore
@@ -74,8 +78,10 @@ async def update_verificador_teste(
     try:
         for teste in db_verificador_teste.verificador.testes:
             if (verificador_teste.numero == teste.numero and bool(id != teste.id)):
-                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                                    detail="Erro. Um teste com o mesmo número já foi registrado para este verificador!")
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Um teste com o mesmo número já foi registrado para este verificador!"
+                )
 
         for key, value in verificador_teste:
             if (value is not None and hasattr(db_verificador_teste, key)):

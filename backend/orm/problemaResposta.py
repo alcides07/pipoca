@@ -351,8 +351,10 @@ async def create_problema_resposta(
     ).first()
 
     if (not db_problema):
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail="Problema não encontrado!")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="O problema não foi encontrado!"
+        )
 
     user = await get_authenticated_user(token, db)
     if (bool(db_problema.privado) == True):

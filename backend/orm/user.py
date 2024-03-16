@@ -13,16 +13,22 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 def create_user(db: Session, user: UserCreate):
     if (user.password != user.passwordConfirmation):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                            detail="Erro. As senhas fornecidas não coincidem!")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="As senhas fornecidas não coincidem!"
+        )
 
     elif (get_by_key_value_exists(db, User, "username", user.username)):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                            detail="Erro. O nome de usuário fornecido está em uso!")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="O nome de usuário fornecido está em uso!"
+        )
 
     elif (get_by_key_value_exists(db, User, "email", user.email)):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                            detail="Erro. O e-mail fornecido está em uso!")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="O e-mail fornecido está em uso!"
+        )
 
     user.password = pwd_context.hash(user.password)
 
@@ -54,15 +60,19 @@ async def update_user(
             User.username == data.username).first()
 
         if (user_by_username != None and bool(user_by_username.id != id)):
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                                detail="Erro. O nome de usuário fornecido está em uso!")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="O nome de usuário fornecido está em uso!"
+            )
 
         user_by_email = db.query(User).filter(
             User.email == data.email).first()
 
         if (user_by_email != None and bool(user_by_email.id != id)):
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                                detail="Erro. O e-mail fornecido está em uso!")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="O e-mail fornecido está em uso!"
+            )
 
         for key, value in data:
             if (value != None and hasattr(user_db, key)):

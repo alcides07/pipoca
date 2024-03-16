@@ -17,8 +17,10 @@ async def create_arquivo(
         Problema.id == arquivo.problema_id).first()
 
     if (problema == None):
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail="Problema não encontrado!")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="O problema não foi encontrado!"
+        )
 
     user = await get_authenticated_user(token=token, db=db)
     if (is_user(user) and problema.usuario_id != user.id):
