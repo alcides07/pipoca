@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from fastapi import Depends, HTTPException, status
 from models.administrador import Administrador
 from models.user import User
@@ -24,7 +24,7 @@ async def get_authenticated_user(token: str = Depends(oauth2_scheme), db: Sessio
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
 
         expire_timestamp: float | None = payload.get("exp")
-        current_time = datetime.utcnow()
+        current_time = datetime.now(timezone.utc)
         current_timestamp = int(current_time.timestamp())
 
         if (expire_timestamp and current_timestamp > expire_timestamp):
