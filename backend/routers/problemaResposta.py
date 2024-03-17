@@ -57,7 +57,7 @@ async def read(
 
 
 @router.get("/users/",
-            response_model=ResponsePaginationSchema[ProblemaRespostaReadSimple],
+            response_model=ResponsePaginationSchema[ProblemaRespostaReadFull],
             summary="Lista respostas fornecidas à problemas pelo usuário autenticado",
             )
 async def read_problemas_respostas_me(
@@ -138,16 +138,16 @@ async def create(
 @router.patch("/{id}/", deprecated=True)
 async def parcial_update(
 ):
-    raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED)
+    raise HTTPException(status.HTTP_501_NOT_IMPLEMENTED)
 
 
 @router.put("/{id}/",  deprecated=True)
 async def total_update(
 ):
-    raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED)
+    raise HTTPException(status.HTTP_501_NOT_IMPLEMENTED)
 
 
 @router.delete("/{id}/",  deprecated=True)
 async def delete(
 ):
-    raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED)
+    raise HTTPException(status.HTTP_501_NOT_IMPLEMENTED)

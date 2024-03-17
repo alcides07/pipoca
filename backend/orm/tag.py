@@ -17,11 +17,14 @@ async def associate_tag_with_problema(
     db_problema = db.query(Problema).filter(Problema.id == problema_id).first()
 
     if (not db_problema):
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND,
+            "O problema não foi encontrado!"
+        )
 
     user = await get_authenticated_user(token=token, db=db)
     if (db_problema.usuario_id != user.id):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED)
 
     db_problema.tags.append(db_tag)
     db.refresh(db_problema)
@@ -54,4 +57,7 @@ async def create_tag(
 
     except SQLAlchemyError:
         db.rollback()
-        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR)
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            "Ocorreu um erro na criação da tag!"
+        )

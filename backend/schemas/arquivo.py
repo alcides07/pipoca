@@ -1,6 +1,7 @@
 from typing import Optional
 from pydantic import BaseModel, Field
 from enum import Enum
+from schemas.common.compilers import CompilersEnum
 
 ARQUIVO_ID_DESCRIPTION = "Identificador do arquivo"
 PROBLEMA_ID_DESCRIPTION = "Identificador do problema associado ao arquivo"
@@ -11,6 +12,7 @@ class SecaoEnum(Enum):
     FONTE = "arquivos_fonte"
     ANEXO = "anexo"
     SOLUCAO = "solucao"
+    GERADOR = "gerador"
 
 
 class ArquivoBase(BaseModel):
@@ -27,6 +29,11 @@ class ArquivoBase(BaseModel):
     status: Optional[str] = Field(
         default=None,
         description="Tipos de status de veredíto para arquivos de solução"
+    )
+
+    linguagem: Optional[CompilersEnum] = Field(
+        default=None,
+        description="Linguagem de programação em que o arquivo está escrito"
     )
 
 

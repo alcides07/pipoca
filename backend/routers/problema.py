@@ -9,6 +9,7 @@ from routers.auth import oauth2_scheme
 from fastapi import APIRouter, Body, Depends, File, HTTPException, Path, Query, UploadFile, status
 from filters.problema import OrderByFieldsProblemaEnum, ProblemaFilter, search_fields_problema
 from schemas.arquivo import ArquivoCreate, ArquivoReadFull, SecaoEnum
+from schemas.common.compilers import CompilersEnum
 from schemas.common.direction_order_by import DirectionOrderByEnum
 from schemas.declaracao import DeclaracaoCreate
 from schemas.idioma import IdiomaEnum
@@ -314,7 +315,8 @@ async def create(
              }
              )
 async def upload(
-    pacote: UploadFile = File(description="Pacote .zip gerado pelo Polygon"),
+    pacote: UploadFile = File(
+        description="Pacote **.zip** gerado pelo Polygon"),
     privado: bool = Body(
         description="Visibilidade do problema (privado/público)"),
     db: Session = Depends(get_db),
@@ -322,8 +324,10 @@ async def upload(
 ):
 
     if (pacote.content_type not in ["application/zip", "application/x-zip-compressed"]):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                            detail="Erro. Formato de pacote inválido!")
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            "Formato de pacote inválido!"
+        )
 
     temp_file = tempfile.TemporaryFile()
     temp_file.write(pacote.file.read())
@@ -339,12 +343,39 @@ async def upload(
         declaracoes=[],
         arquivos=[],
         verificador=VerificadorCreate(
-            nome="", linguagem="", corpo="", testes=[]),
+            nome="", linguagem=CompilersEnum.PYTHON_3, corpo="", testes=[]),
         validador=ValidadorCreate(
-            nome="", linguagem="", corpo="", testes=[]),
+            nome="", linguagem=CompilersEnum.PYTHON_3, corpo="", testes=[]),
         privado=privado,
         testes=[]
     )
+
+    def process_files_gerador(data: ET.Element, nome_arquivo_gerador: str):
+        path_file = ""
+        filename = ""
+
+        for source in data.findall('.//files/executables/executable'):
+            gerador = source.find("source")
+
+            if (gerador != None):
+                path_file = gerador.get("path")
+
+                if (path_file != None):
+                    fullname = os.path.basename(path_file)
+                    filename, _ = os.path.splitext(fullname)
+
+                    if (nome_arquivo_gerador in filename):
+                        linguagem = gerador.get("type")
+                        break
+
+        if (path_file and fullname and linguagem):
+            with zip.open(path_file) as file:
+                corpo = file.read().decode()
+
+                arquivo = ArquivoCreate(
+                    nome=fullname, corpo=corpo, secao=SecaoEnum.GERADOR, linguagem=CompilersEnum(linguagem))
+
+                problema.arquivos.append(arquivo)
 
     def process_files_recursos(data: ET.Element):
         for file in data.findall('.//resources/file'):
@@ -367,14 +398,14 @@ async def upload(
 
             if source != None:
                 path = source.get("path")
+                linguagem = source.get("type")
 
             if (path != None):
                 with zip.open(path) as file:
                     nome = file.name.split("/")[-1]
                     corpo = file.read().decode()
-
                     arquivo = ArquivoCreate(
-                        nome=nome, corpo=corpo, secao=SecaoEnum.SOLUCAO, status=status)
+                        nome=nome, corpo=corpo, linguagem=CompilersEnum(linguagem), secao=SecaoEnum.SOLUCAO, status=status)
 
                     problema.arquivos.append(arquivo)
 
@@ -403,7 +434,7 @@ async def upload(
                     corpo = file.read().decode()
 
                     verificador = VerificadorCreate(
-                        nome=nome, corpo=corpo, linguagem=linguagem or "", testes=[])
+                        nome=nome, corpo=corpo, linguagem=CompilersEnum(linguagem), testes=[])
 
                     problema.verificador = verificador
 
@@ -419,7 +450,7 @@ async def upload(
                 corpo = file.read().decode()
 
                 validador = ValidadorCreate(
-                    nome=nome, corpo=corpo, linguagem=linguagem or "", testes=[])
+                    nome=nome, corpo=corpo, linguagem=CompilersEnum(linguagem), testes=[])
 
                 problema.validador = validador
 
@@ -459,6 +490,8 @@ async def upload(
             problema.tags.append(name)
 
     def process_tests(data: ET.Element):
+        nome_arquivo_gerador = ""
+
         for indice, test in enumerate(data.findall(".//judging/testset/tests/test"), start=1):
             cmd = test.get("cmd")
             tipo = test.get("method")
@@ -468,6 +501,7 @@ async def upload(
                 numero=indice, tipo=TipoTesteProblemaEnum.MANUAL, exemplo=False, entrada="")
 
             if (cmd != None):
+                nome_arquivo_gerador = cmd.split()[0]
                 teste.entrada = cmd
 
             if (tipo != None):
@@ -483,6 +517,9 @@ async def upload(
                     teste.exemplo = False
 
             problema.testes.append(teste)
+
+        if (nome_arquivo_gerador != ""):
+            process_files_gerador(data, nome_arquivo_gerador)
 
     async def process_xml(zip, filename):
         with zip.open(filename) as xml:
@@ -608,8 +645,10 @@ async def upload(
         return ResponseUnitSchema(data=data)
 
     except HTTPException:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                            detail="Erro. Ocorreu uma falha no processamento do pacote!")
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            "Ocorreu um erro no processamento do pacote!"
+        )
 
 
 @router.put("/{id}/",

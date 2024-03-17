@@ -1,4 +1,4 @@
-from schemas.problemaTeste import ProblemaTesteCreateSingle, ProblemaTesteUpdatePartial, ProblemaTesteUpdateTotal
+from schemas.problemaTeste import ProblemaTesteCreateSingle, ProblemaTesteUpdatePartial, ProblemaTesteUpdateTotal, TipoTesteProblemaEnum
 from models.problemaTeste import ProblemaTeste
 from dependencies.authenticated_user import get_authenticated_user
 from dependencies.authorization_user import is_user
@@ -18,20 +18,25 @@ async def create_problema_teste(
     ).first()
 
     if (not db_problema):
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail="Problema não encontrado!")
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND,
+            "O problema não foi encontrado!"
+        )
 
     user = await get_authenticated_user(token, db)
     if (db_problema.usuario_id != user.id):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED)
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED)
 
     for teste in db_problema.testes:
         if (problema_teste.numero == teste.numero):
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                                detail="Erro. Um teste com o mesmo número já foi registrado para este problema!")
+            raise HTTPException(
+                status.HTTP_400_BAD_REQUEST,
+                "Um teste com o mesmo número já foi registrado para este problema!"
+            )
 
     try:
+        problema_teste.tipo = str(problema_teste.tipo.value)  # type: ignore
+
         db_problema_teste = ProblemaTeste(
             **problema_teste.model_dump(exclude=set(["problema"])))
 
@@ -45,7 +50,10 @@ async def create_problema_teste(
 
     except SQLAlchemyError:
         db.rollback()
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            "Ocorreu um erro na criação do teste!"
+        )
 
 
 async def update_problema_teste(
@@ -58,22 +66,27 @@ async def update_problema_teste(
         ProblemaTeste.id == id).first()
 
     if (not db_problema_teste):
-        raise HTTPException(status.HTTP_404_NOT_FOUND)
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND,
+            "O teste não foi encontrado!"
+        )
 
     user = await get_authenticated_user(token, db)
     if (db_problema_teste.problema.usuario_id != user.id):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED)
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED)
 
     try:
         for teste in db_problema_teste.problema.testes:
             if (problema_teste.numero == teste.numero and bool(id != teste.id)):
-                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                                    detail="Erro. Um teste com o mesmo número já foi registrado para este problema!")
+                raise HTTPException(
+                    status.HTTP_400_BAD_REQUEST,
+                    "Um teste com o mesmo número já foi registrado para este problema!"
+                )
 
         for key, value in problema_teste:
-            if (value != None and hasattr(db_problema_teste, key)):
-                setattr(db_problema_teste, key, value)
+            if (value is not None and hasattr(db_problema_teste, key)):
+                setattr(db_problema_teste, key, value.value if isinstance(
+                    value, TipoTesteProblemaEnum) else value)
 
         db.commit()
         db.refresh(db_problema_teste)
@@ -82,7 +95,10 @@ async def update_problema_teste(
 
     except SQLAlchemyError:
         db.rollback()
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            "Ocorreu um erro na atualização do teste!"
+        )
 
 
 async def get_problema_teste_by_id(
@@ -94,7 +110,10 @@ async def get_problema_teste_by_id(
         ProblemaTeste.id == id).first()
 
     if (not db_problema_teste):
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND,
+            "O teste não foi encontrado!"
+        )
 
     user = await get_authenticated_user(token, db)
 
@@ -103,9 +122,12 @@ async def get_problema_teste_by_id(
         if (is_user(user) and db_problema_teste.problema.usuario_id != user.id):  # Não sou o dono
             # O problema é privado ou não é um teste de exemplo
             if (db_problema_teste.problema.privado == True or bool(db_problema_teste.exemplo) == False):
-                raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+                raise HTTPException(status.HTTP_401_UNAUTHORIZED)
 
         return db_problema_teste
 
     except SQLAlchemyError:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            "Ocorreu um erro na busca pelo teste!"
+        )

@@ -3,3 +3,6 @@ __pycache__
 venv
 **.db
 .pytest_cache
+.coverage
+coverage.xml
+static

@@ -1,5 +1,4 @@
-from schemas.problemaTeste import TipoTesteProblemaEnum
-from sqlalchemy import Boolean, CheckConstraint, Column, Enum, ForeignKey, Integer, String, UniqueConstraint
+from sqlalchemy import Boolean, CheckConstraint, Column, ForeignKey, Integer, String, UniqueConstraint
 from sqlalchemy.orm import relationship
 from database import Base
 
@@ -21,12 +20,12 @@ class ProblemaTeste(Base):
     )
 
     tipo = Column(
-        Enum(TipoTesteProblemaEnum),
+        String,
         nullable=False,
     )
 
     entrada = Column(
-        String(length=250000),
+        String(length=1000000),
         nullable=False,
     )
 

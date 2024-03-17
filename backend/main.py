@@ -4,14 +4,23 @@ from utils.translate import translate
 from utils.errors import errors
 from openapi.validation_exception import validation_exception_handler
 from routers.common.index import routes
-from database import engine, Base
 from fastapi.openapi.utils import get_openapi
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from decouple import config
+
+TEST_ENV = str(config("TEST_ENV"))
 
 
-Base.metadata.create_all(bind=engine)
+def get_config_database():
+    from database import engine, Base
+    return engine, Base
+
+
+if (TEST_ENV != "1"):
+    engine, Base = get_config_database()
+    Base.metadata.create_all(bind=engine)
 
 app = FastAPI(docs_url=None,
               redoc_url=None,
@@ -42,7 +51,7 @@ def custom_openapi():
     openapi_schema = get_openapi(
         title="API do sistema PIPOCA",
         version="0.0.1",
-        description="API em desenvolvimento da Plataforma Interativa de Programação On-line em Competições Acadêmicas (PIPOCA)",
+        description="API em desenvolvimento da Plataforma Interativa de Programação On-line e Competições Acadêmicas (PIPOCA)",
         routes=app.routes,
     )
     openapi_schema["info"]["x-logo"] = {
@@ -62,7 +71,7 @@ def custom_openapi():
 
 
 @app.exception_handler(HTTPException)
-async def exception_handler(request: Request, exception: HTTPException):
+async def exception_handler(_: Request, exception: HTTPException):
     return JSONResponse(
         status_code=exception.status_code,
         content={"error": translate(exception.detail)}

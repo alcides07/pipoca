@@ -1,5 +1,6 @@
 from typing import Optional
 from pydantic import BaseModel, Field
+from schemas.common.compilers import CompilersEnum
 from schemas.validadorTeste import ValidadorTesteCreate, ValidadorTesteReadFull, ValidadorTesteReadSimple
 
 VALIDADOR_ID_DESCRIPTION = "Identificador do validador"
@@ -13,8 +14,7 @@ class ValidadorBase(BaseModel):
         description="Nome do validador"
     )
 
-    # Talvez Enum em breve
-    linguagem: str = Field(
+    linguagem: CompilersEnum = Field(
         description="Linguagem em que o validador está escrito"
     )
 

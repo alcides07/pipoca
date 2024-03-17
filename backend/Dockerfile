@@ -15,7 +15,10 @@ COPY ./routers ./routers
 COPY ./schemas ./schemas
 COPY ./tests ./tests
 COPY ./utils ./utils
+COPY ./filters ./filters
 COPY database.py .
+COPY compilers.py .
+COPY constants.py .
 COPY main.py .
 
 USER user

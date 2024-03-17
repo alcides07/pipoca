@@ -75,7 +75,7 @@ def update_full_validador_helper(profile: str = ""):
     validador_copy = validador.copy()
 
     validador["nome"] = "PUT"
-    validador["linguagem"] = "PUT"
+    validador["linguagem"] = "cpp.g++17"
     validador["corpo"] = "PUT"
 
     response = client.put(
@@ -91,7 +91,7 @@ def update_full_validador_helper(profile: str = ""):
 
 JSON_VALIDADOR = {
     "nome": "string",
-    "linguagem": "string",
+    "linguagem": "python.3",
     "corpo": "string",
     "problema_id": 0
 }
