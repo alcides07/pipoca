@@ -147,7 +147,7 @@ def create(
 
 @router.post("/{id}/imagem/",
              response_class=FileResponse,
-             status_code=201,
+             status_code=200,
              summary="Cadastra uma imagem de perfil para um usuário",
              dependencies=[Depends(get_authenticated_user)],
              responses={
@@ -176,7 +176,7 @@ async def upload_imagem(
         id=id
     )
 
-    return FileResponse(path=data, status_code=201)
+    return FileResponse(path=data)
 
 
 @router.put("/{id}/",
