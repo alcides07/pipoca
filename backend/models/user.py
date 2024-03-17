@@ -39,6 +39,10 @@ class User(Base):
         default=datetime.now(timezone.utc)
     )
 
+    caminho_imagem = Column(
+        String
+    )
+
     problemas = relationship(
         Problema,
         back_populates="usuario"
