@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from models.problemaResposta import ProblemaResposta
 from models.problemaTeste import ProblemaTeste
 from models.validador import Validador
@@ -59,7 +59,7 @@ class Problema(Base):
 
     criado_em = Column(
         DateTime,
-        default=datetime.utcnow
+        default=datetime.now(timezone.utc)
     )
 
     tags = relationship(
