@@ -64,8 +64,8 @@ async def read_me(
 
     if (is_admin(user_db)):
         raise HTTPException(
-            status_code=status.HTTP_501_NOT_IMPLEMENTED,
-            detail="Funcionalidade não disponível para administradores!"
+            status.HTTP_501_NOT_IMPLEMENTED,
+            "Funcionalidade não disponível para administradores!"
         )
 
     user = await get_by_id(
@@ -86,7 +86,6 @@ async def read_me(
             summary="Retorna a imagem de perfil de um usuário",
             dependencies=[Depends(get_authenticated_user)],
             responses={
-                400: {"400": 400},
                 404: {"404": 404}
             })
 async def get_imagem(
@@ -166,8 +165,8 @@ async def upload_imagem(
 ):
     if (imagem.content_type not in ["image/jpeg", "image/png"]):
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Formato de imagem inválido!"
+            status.HTTP_400_BAD_REQUEST,
+            "Formato de imagem inválido!"
         )
 
     data = await create_imagem_user(
@@ -177,7 +176,7 @@ async def upload_imagem(
         id=id
     )
 
-    return FileResponse(data, status_code=201)
+    return FileResponse(path=data, status_code=201)
 
 
 @router.put("/{id}/",
@@ -248,7 +247,6 @@ async def delete(
         db: Session = Depends(get_db),
         token: str = Depends(oauth2_scheme)
 ):
-
     user = await delete_object(
         db=db,
         model=User,

@@ -18,7 +18,10 @@ async def get_declaracao_by_id(
     db_declaracao = db.query(Declaracao).filter(Declaracao.id == id).first()
 
     if (not db_declaracao):
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND,
+            "A declaração não foi encontrada!"
+        )
 
     user = await get_authenticated_user(token, db)
 
@@ -30,12 +33,15 @@ async def get_declaracao_by_id(
             and
             db_declaracao.problema.usuario_id != user.id
         ):
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+            raise HTTPException(status.HTTP_401_UNAUTHORIZED)
 
         return db_declaracao
 
     except SQLAlchemyError:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            "Ocorreu um erro na busca pela declaração!"
+        )
 
 
 async def create_declaracao(
@@ -49,13 +55,13 @@ async def create_declaracao(
 
     if (not db_problema):
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="O problema não foi encontrado!"
+            status.HTTP_404_NOT_FOUND,
+            "O problema não foi encontrado!"
         )
 
     user = await get_authenticated_user(token=token, db=db)
     if (is_user(user) and db_problema.usuario_id != user.id):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED)
 
     try:
         declaracao.idioma = declaracao.idioma.value  # type: ignore
@@ -75,7 +81,10 @@ async def create_declaracao(
 
     except SQLAlchemyError:
         db.rollback()
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            "Ocorreu um erro na criação da declaração!"
+        )
 
 
 async def update_declaracao(
@@ -87,7 +96,10 @@ async def update_declaracao(
     db_declaracao = db.query(Declaracao).filter(Declaracao.id == id).first()
 
     if (not db_declaracao):
-        raise HTTPException(status.HTTP_404_NOT_FOUND)
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND,
+            "A declaração não foi encontrada!"
+        )
 
     user = await get_authenticated_user(token, db)
     if (is_user(user) and user.id != db_declaracao.problema.usuario_id):
@@ -106,4 +118,7 @@ async def update_declaracao(
 
     except SQLAlchemyError:
         db.rollback()
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            "Ocorreu um erro na atualização da declaração!"
+        )

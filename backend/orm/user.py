@@ -15,30 +15,38 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 def create_user(db: Session, user: UserCreate):
     if (user.password != user.passwordConfirmation):
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="As senhas fornecidas não coincidem!"
+            status.HTTP_400_BAD_REQUEST,
+            "As senhas fornecidas não coincidem!"
         )
 
     elif (get_by_key_value_exists(db, User, "username", user.username)):
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="O nome de usuário fornecido está em uso!"
+            status.HTTP_400_BAD_REQUEST,
+            "O nome de usuário fornecido está em uso!"
         )
 
     elif (get_by_key_value_exists(db, User, "email", user.email)):
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="O e-mail fornecido está em uso!"
+            status.HTTP_400_BAD_REQUEST,
+            "O e-mail fornecido está em uso!"
         )
 
-    user.password = pwd_context.hash(user.password)
+    try:
+        user.password = pwd_context.hash(user.password)
 
-    db_user = User(
-        **user.model_dump(exclude=set(["passwordConfirmation"])))
-    db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
-    return db_user
+        db_user = User(
+            **user.model_dump(exclude=set(["passwordConfirmation"])))
+        db.add(db_user)
+        db.commit()
+        db.refresh(db_user)
+        return db_user
+
+    except SQLAlchemyError:
+        db.rollback()
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            "Ocorreu um erro na criação do usuário!"
+        )
 
 
 async def update_user(
@@ -50,11 +58,14 @@ async def update_user(
     user_db = db.query(User).filter(User.id == id).first()
 
     if (not user_db):
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND,
+            "O usuário não foi encontrado!"
+        )
 
     user = await get_authenticated_user(db=db, token=token)
     if (is_user(user) and user_db.id != user.id):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED)
 
     try:
         user_by_username = db.query(User).filter(
@@ -62,8 +73,8 @@ async def update_user(
 
         if (user_by_username != None and bool(user_by_username.id != id)):
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="O nome de usuário fornecido está em uso!"
+                status.HTTP_400_BAD_REQUEST,
+                "O nome de usuário fornecido está em uso!"
             )
 
         user_by_email = db.query(User).filter(
@@ -71,8 +82,8 @@ async def update_user(
 
         if (user_by_email != None and bool(user_by_email.id != id)):
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="O e-mail fornecido está em uso!"
+                status.HTTP_400_BAD_REQUEST,
+                "O e-mail fornecido está em uso!"
             )
 
         for key, value in data:
@@ -86,7 +97,10 @@ async def update_user(
 
     except SQLAlchemyError:
         db.rollback()
-        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR)
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            "Ocorreu um erro na atualização do usuário!"
+        )
 
 
 async def create_imagem_user(
@@ -98,11 +112,14 @@ async def create_imagem_user(
     db_user = db.query(User).filter(User.id == id).first()
 
     if (not db_user):
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND,
+            "O usuário não foi encontrado!"
+        )
 
     user = await get_authenticated_user(db=db, token=token)
     if (is_user(user) and db_user.id != user.id):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED)
 
     caminho_diretorio = f"static/users/profile/{user.id}"
 
@@ -132,14 +149,17 @@ async def get_imagem_user(
     db_user = db.query(User).filter(User.id == id).first()
 
     if (not db_user):
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND,
+            "O usuário não foi encontrado!"
+        )
 
     caminho_imagem = str(db_user.caminho_imagem)
 
     if (caminho_imagem is None or not os.path.exists(caminho_imagem)):
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="A imagem de perfil do usuário solicitado não foi encontrada!"
+            status.HTTP_404_NOT_FOUND,
+            "A imagem de perfil do usuário solicitado não foi encontrada!"
         )
 
     return caminho_imagem

@@ -164,11 +164,14 @@ async def create_problema_upload(
         db.commit()
         db.refresh(db_problema)
 
+        return db_problema
+
     except SQLAlchemyError:
         db.rollback()
-        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-    return db_problema
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            "Ocorreu um erro na criação do problema!"
+        )
 
 
 async def create_problema(
@@ -196,11 +199,14 @@ async def create_problema(
         db.commit()
         db.refresh(db_problema)
 
+        return db_problema
+
     except SQLAlchemyError:
         db.rollback()
-        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-    return db_problema
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            "Ocorreu um erro na criação do problema!"
+        )
 
 
 async def update_problema(
@@ -211,7 +217,10 @@ async def update_problema(
 ):
     db_problema = db.query(Problema).filter(Problema.id == id).first()
     if not db_problema:
-        raise HTTPException(status.HTTP_404_NOT_FOUND)
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND,
+            "O problema não foi encontrado!"
+        )
 
     user = await get_authenticated_user(token, db)
     if (is_user(user) and user.id != db_problema.usuario_id):
@@ -239,7 +248,10 @@ async def update_problema(
 
     except SQLAlchemyError:
         db.rollback()
-        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR)
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            "Ocorreu um erro na atualização do problema!"
+        )
 
 
 async def get_all_problemas(
@@ -256,7 +268,7 @@ async def get_all_problemas(
 
     if (is_user(user)):
         if (filters.privado == True):
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+            raise HTTPException(status.HTTP_401_UNAUTHORIZED)
 
         filters.privado = False
 
@@ -282,11 +294,14 @@ async def get_respostas_problema(
     db_problema = db.query(Problema).filter(Problema.id == id).first()
 
     if (not db_problema):
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND,
+            "O problema não foi encontrado!"
+        )
 
     user = await get_authenticated_user(token, db)
     if (is_user(user) and bool(db_problema.usuario_id != user.id)):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED)
 
     try:
         query = db.query(ProblemaResposta).filter(
@@ -301,7 +316,10 @@ async def get_respostas_problema(
         return db_problema_respostas.all(), metadata
 
     except SQLAlchemyError:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            "Ocorreu um erro na busca pelas respostas do problema!"
+        )
 
 
 async def get_arquivos_problema(
@@ -313,11 +331,14 @@ async def get_arquivos_problema(
     db_problema = db.query(Problema).filter(Problema.id == id).first()
 
     if (not db_problema):
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND,
+            "O problema não foi encontrado!"
+        )
 
     user = await get_authenticated_user(token, db)
     if (is_user(user) and bool(db_problema.usuario_id != user.id)):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED)
 
     try:
         query = db.query(Arquivo).filter(
@@ -332,7 +353,10 @@ async def get_arquivos_problema(
         return db_problema_arquivos.all(), metadata
 
     except SQLAlchemyError:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            "Ocorreu um erro na busca pelos arquivos do problema!"
+        )
 
 
 async def get_testes_problema(
@@ -345,7 +369,10 @@ async def get_testes_problema(
     db_problema = db.query(Problema).filter(Problema.id == id).first()
 
     if (not db_problema):
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND,
+            "O problema não foi encontrado!"
+        )
 
     user = await get_authenticated_user(token, db)
 
@@ -355,7 +382,7 @@ async def get_testes_problema(
         bool(db_problema.usuario_id != user.id)
     ):
         if (bool(db_problema.privado) == True or filters.exemplo == False):
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+            raise HTTPException(status.HTTP_401_UNAUTHORIZED)
 
         filters.exemplo = True
 
@@ -373,7 +400,10 @@ async def get_testes_problema(
         return db_problema_testes.all(), metadata
 
     except SQLAlchemyError:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            "Ocorreu um erro na busca pelos testes do problema!"
+        )
 
 
 async def get_tags_problema(
@@ -385,7 +415,10 @@ async def get_tags_problema(
     db_problema = db.query(Problema).filter(Problema.id == id).first()
 
     if (not db_problema):
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND,
+            "O problema não foi encontrado!"
+        )
 
     user = await get_authenticated_user(token, db)
 
@@ -396,7 +429,7 @@ async def get_tags_problema(
         and
         bool(db_problema.privado) == True
     ):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED)
 
     try:
         query = db.query(Tag).join(problema_tag_relationship).filter(
@@ -411,7 +444,10 @@ async def get_tags_problema(
         return db_problema_tags.all(), metadata
 
     except SQLAlchemyError:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            "Ocorreu um erro na busca pelas tags do problema!"
+        )
 
 
 async def get_validador_problema(
@@ -422,11 +458,14 @@ async def get_validador_problema(
     db_problema = db.query(Problema).filter(Problema.id == id).first()
 
     if (not db_problema):
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND,
+            "O problema não foi encontrado!"
+        )
 
     user = await get_authenticated_user(token, db)
     if (is_user(user) and bool(db_problema.usuario_id != user.id)):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED)
 
     return db_problema.validador
 
@@ -439,11 +478,14 @@ async def get_verificador_problema(
     db_problema = db.query(Problema).filter(Problema.id == id).first()
 
     if (not db_problema):
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND,
+            "O problema não foi encontrado!"
+        )
 
     user = await get_authenticated_user(token, db)
     if (is_user(user) and bool(db_problema.usuario_id != user.id)):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED)
 
     return db_problema.verificador
 
@@ -456,7 +498,10 @@ async def get_problema_by_id(
     db_problema = db.query(Problema).filter(Problema.id == id).first()
 
     if (not db_problema):
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND,
+            "O problema não foi encontrado!"
+        )
 
     user = await get_authenticated_user(token, db)
     if (
@@ -466,6 +511,6 @@ async def get_problema_by_id(
         and
         bool(db_problema.privado == True)
     ):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED)
 
     return db_problema

@@ -13,4 +13,5 @@ async def is_admin_dependencies(
     user = await get_authenticated_user(token, db)
     if (isinstance(user, Administrador)):
         return True
-    raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+
+    raise HTTPException(status.HTTP_401_UNAUTHORIZED)
