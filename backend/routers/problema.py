@@ -315,7 +315,8 @@ async def create(
              }
              )
 async def upload(
-    pacote: UploadFile = File(description="Pacote .zip gerado pelo Polygon"),
+    pacote: UploadFile = File(
+        description="Pacote **.zip** gerado pelo Polygon"),
     privado: bool = Body(
         description="Visibilidade do problema (privado/público)"),
     db: Session = Depends(get_db),
@@ -324,8 +325,8 @@ async def upload(
 
     if (pacote.content_type not in ["application/zip", "application/x-zip-compressed"]):
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Formato de pacote inválido!"
+            status.HTTP_400_BAD_REQUEST,
+            "Formato de pacote inválido!"
         )
 
     temp_file = tempfile.TemporaryFile()
@@ -645,8 +646,8 @@ async def upload(
 
     except HTTPException:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Ocorreu uma falha no processamento do pacote!"
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            "Ocorreu um erro no processamento do pacote!"
         )
 
 

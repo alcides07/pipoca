@@ -29,8 +29,8 @@ def get_arquivo_solucao(
             return arquivo
 
     raise HTTPException(
-        detail="O arquivo de solução principal do problema não foi encontrado!",
-        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+        status.HTTP_500_INTERNAL_SERVER_ERROR,
+        "O arquivo de solução principal do problema não foi encontrado!"
     )
 
 
@@ -96,14 +96,14 @@ def execute_teste_gerado(
 
             if (stderr_logs_decode != ""):
                 raise HTTPException(
-                    detail="O arquivo gerador de testes do problema possui alguma falha!",
-                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+                    status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    "O arquivo gerador de testes do problema possui alguma falha!"
                 )
 
         except DockerException:
             raise HTTPException(
-                detail="Ocorreu uma falha na execução dos testes gerados!",
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+                "Ocorreu um erro na execução dos testes gerados!"
             )
 
     return stdout_logs_decode
@@ -180,8 +180,8 @@ def execute_checker(
 
             except DockerException:
                 raise HTTPException(
-                    detail="Ocorreu uma falha no processamento de comparação dos resultados!",
-                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+                    status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    "Ocorreu um erro no processo de comparação dos resultados!"
                 )
 
     return veredito
@@ -238,14 +238,14 @@ def execute_arquivo_solucao(db_problema: Problema, arquivo_solucao: Arquivo):
 
                 if (stderr_logs_decode != ""):
                     raise HTTPException(
-                        detail="O arquivo de solução oficial do problema possui alguma falha!",
-                        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+                        status.HTTP_500_INTERNAL_SERVER_ERROR,
+                        "O arquivo de solução oficial do problema possui alguma falha!"
                     )
 
             except DockerException:
                 raise HTTPException(
-                    detail="Ocorreu uma falha no processamento do arquivo de solução oficial do problema!",
-                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+                    status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    "Ocorreu um erro no processamento do arquivo de solução oficial do problema!"
                 )
 
         return output_codigo_solucao
@@ -308,8 +308,8 @@ def execute_codigo_user(
 
             except DockerException:
                 raise HTTPException(
-                    detail="Ocorreu uma falha no processamento do código do usuário!",
-                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+                    status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    "Ocorreu um erro no processamento do código do usuário!"
                 )
 
         return output_codigo_user
@@ -352,16 +352,16 @@ async def create_problema_resposta(
 
     if (not db_problema):
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="O problema não foi encontrado!"
+            status.HTTP_404_NOT_FOUND,
+            "O problema não foi encontrado!"
         )
 
     user = await get_authenticated_user(token, db)
     if (bool(db_problema.privado) == True):
         if (is_user(user) and bool(user.id != db_problema.usuario_id)):
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="O problema o qual se está tentando submeter uma resposta é privado!"
+                status.HTTP_401_UNAUTHORIZED,
+                "O problema o qual se está tentando submeter uma resposta é privado!"
             )
 
     try:
@@ -397,7 +397,10 @@ async def create_problema_resposta(
 
     except SQLAlchemyError:
         db.rollback()
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            "Ocorreu um erro na criação da resposta para o problema!"
+        )
 
 
 async def get_problema_resposta_by_id(
@@ -409,7 +412,10 @@ async def get_problema_resposta_by_id(
         ProblemaResposta.id == id).first()
 
     if (not db_problema_resposta):
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND,
+            "A resposta não foi encontrada!"
+        )
 
     user = await get_authenticated_user(token, db)
 
@@ -422,9 +428,12 @@ async def get_problema_resposta_by_id(
             and
             db_problema_resposta.problema.usuario_id != user.id  # Não sou o autor do problema
         ):
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+            raise HTTPException(status.HTTP_401_UNAUTHORIZED)
 
         return db_problema_resposta
 
     except SQLAlchemyError:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            "Ocorreu um erro na busca pela resposta!"
+        )

@@ -71,7 +71,7 @@ def custom_openapi():
 
 
 @app.exception_handler(HTTPException)
-async def exception_handler(request: Request, exception: HTTPException):
+async def exception_handler(_: Request, exception: HTTPException):
     return JSONResponse(
         status_code=exception.status_code,
         content={"error": translate(exception.detail)}

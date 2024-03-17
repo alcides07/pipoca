@@ -18,13 +18,13 @@ async def create_arquivo(
 
     if (problema == None):
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="O problema não foi encontrado!"
+            status.HTTP_404_NOT_FOUND,
+            "O problema não foi encontrado!"
         )
 
     user = await get_authenticated_user(token=token, db=db)
     if (is_user(user) and problema.usuario_id != user.id):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED)
 
     try:
         arquivo.secao = arquivo.secao.value  # type: ignore
@@ -41,7 +41,10 @@ async def create_arquivo(
 
     except SQLAlchemyError:
         db.rollback()
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            "Ocorreu um erro na criação do arquivo!"
+        )
 
 
 async def update_arquivo(
@@ -53,7 +56,10 @@ async def update_arquivo(
     db_arquivo = db.query(Arquivo).filter(Arquivo.id == id).first()
 
     if (not db_arquivo):
-        raise HTTPException(status.HTTP_404_NOT_FOUND)
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND,
+            "O arquivo não foi encontrado!"
+        )
 
     user = await get_authenticated_user(token, db)
     if (is_user(user) and user.id != db_arquivo.problema.usuario_id):
@@ -72,4 +78,7 @@ async def update_arquivo(
 
     except SQLAlchemyError:
         db.rollback()
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            "Ocorreu um erro na atualização do arquivo!"
+        )

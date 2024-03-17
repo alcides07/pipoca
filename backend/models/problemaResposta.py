@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import ARRAY, Column, ForeignKey, Integer, String, CheckConstraint, DateTime
 from sqlalchemy.orm import relationship
 from database import Base
@@ -20,7 +20,7 @@ class ProblemaResposta(Base):
 
     respondido_em = Column(
         DateTime,
-        default=datetime.utcnow
+        default=datetime.now(timezone.utc)
     )
 
     tempo = Column(

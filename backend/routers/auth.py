@@ -69,9 +69,9 @@ async def login(
         db, form_data.username, form_data.password)
     if not user:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Credenciais inválidas!",
-            headers={"WWW-Authenticate": "Bearer"},
+            status.HTTP_401_UNAUTHORIZED,
+            "Credenciais inválidas!",
+            {"WWW-Authenticate": "Bearer"},
         )
     access_token_expires = timedelta(minutes=TOKEN_EXPIRE_MINUTES)
     access_token = create_token(

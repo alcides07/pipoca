@@ -22,13 +22,13 @@ async def create_verificador(
 
     if (not db_problema):
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="O problema não foi encontrado!"
+            status.HTTP_404_NOT_FOUND,
+            "O problema não foi encontrado!"
         )
 
     user = await get_authenticated_user(token=token, db=db)
     if (is_user(user) and db_problema.usuario_id != user.id):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED)
 
     try:
         db_verificador = Verificador(
@@ -55,7 +55,10 @@ async def create_verificador(
 
     except SQLAlchemyError:
         db.rollback()
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            "Ocorreu um erro na criação do verificador!"
+        )
 
 
 async def get_testes_verificador(
@@ -67,12 +70,15 @@ async def get_testes_verificador(
     db_verificador = db.query(Verificador).filter(Verificador.id == id).first()
 
     if (not db_verificador):
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND,
+            "O verificador não foi encontrado!"
+        )
 
     user = await get_authenticated_user(token, db)
 
     if (is_user(user) and db_verificador.problema.usuario_id != user.id):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED)
 
     try:
         query = db.query(VerificadorTeste).filter(
@@ -87,7 +93,10 @@ async def get_testes_verificador(
         return db_verificador_testes.all(), metadata
 
     except SQLAlchemyError:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            "Ocorreu um erro na busca pelos testes do verificador!"
+        )
 
 
 async def update_verificador(
@@ -99,7 +108,10 @@ async def update_verificador(
     db_verificador = db.query(Verificador).filter(Verificador.id == id).first()
 
     if (not db_verificador):
-        raise HTTPException(status.HTTP_404_NOT_FOUND)
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND,
+            "O verificador não foi encontrado!"
+        )
 
     user = await get_authenticated_user(token, db)
     if (is_user(user) and user.id != db_verificador.problema.usuario_id):
@@ -117,4 +129,7 @@ async def update_verificador(
 
     except SQLAlchemyError:
         db.rollback()
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            "Ocorreu um erro na atualização do verificador!"
+        )

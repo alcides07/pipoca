@@ -21,21 +21,20 @@ async def create_verificador_teste(
 
     if (not db_verificador):
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="O verificador não foi encontrado!"
+            status.HTTP_404_NOT_FOUND,
+            "O verificador não foi encontrado!"
         )
 
     user = await get_authenticated_user(token, db)
 
     if (is_user(user) and db_verificador.problema.usuario_id != user.id):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED)
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED)
 
     for teste in db_verificador.testes:
         if (verificador_teste.numero == teste.numero):
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Um teste com o mesmo número já foi registrado para este verificador!"
+                status.HTTP_400_BAD_REQUEST,
+                "Um teste com o mesmo número já foi registrado para este verificador!"
             )
 
     try:
@@ -54,7 +53,10 @@ async def create_verificador_teste(
 
     except SQLAlchemyError:
         db.rollback()
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            "Ocorreu um erro na criação do teste do verificador!"
+        )
 
 
 async def update_verificador_teste(
@@ -67,20 +69,21 @@ async def update_verificador_teste(
         VerificadorTeste.id == id).first()
 
     if (not db_verificador_teste):
-        raise HTTPException(status.HTTP_404_NOT_FOUND)
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND,
+            "O teste do verificador não foi encontrado!"
+        )
 
     user = await get_authenticated_user(token, db)
     if (is_user(user) and db_verificador_teste.verificador.problema.usuario_id != user.id):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED
-        )
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED)
 
     try:
         for teste in db_verificador_teste.verificador.testes:
             if (verificador_teste.numero == teste.numero and bool(id != teste.id)):
                 raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Um teste com o mesmo número já foi registrado para este verificador!"
+                    status.HTTP_400_BAD_REQUEST,
+                    "Um teste com o mesmo número já foi registrado para este verificador!"
                 )
 
         for key, value in verificador_teste:
@@ -95,7 +98,10 @@ async def update_verificador_teste(
 
     except SQLAlchemyError:
         db.rollback()
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            "Ocorreu um erro na atualização do teste do verificador!"
+        )
 
 
 async def delete_verificador_teste(
@@ -107,13 +113,16 @@ async def delete_verificador_teste(
         VerificadorTeste.id == id).first()
 
     if (not db_verificador_teste):
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND,
+            "O teste do verificador não foi encontrado!"
+        )
 
     user = await get_authenticated_user(token, db)
 
     try:
         if (is_user(user) and user.id != db_verificador_teste.verificador.problema.usuario_id):
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+            raise HTTPException(status.HTTP_401_UNAUTHORIZED)
 
         db.delete(db_verificador_teste)
         db.commit()
@@ -121,4 +130,7 @@ async def delete_verificador_teste(
 
     except SQLAlchemyError:
         db.rollback()
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            "Ocorreu um erro na exclusão do teste do verificador!"
+        )

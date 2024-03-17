@@ -20,21 +20,20 @@ async def create_validador_teste(
 
     if (not db_validador):
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="O validador não foi encontrado!"
+            status.HTTP_404_NOT_FOUND,
+            "O validador não foi encontrado!"
         )
 
     user = await get_authenticated_user(token, db)
 
     if (is_user(user) and db_validador.problema.usuario_id != user.id):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED)
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED)
 
     for teste in db_validador.testes:
         if (validador_teste.numero == teste.numero):
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Um teste com o mesmo número já foi registrado para este validador!"
+                status.HTTP_400_BAD_REQUEST,
+                "Um teste com o mesmo número já foi registrado para este validador!"
             )
 
     try:
@@ -53,7 +52,10 @@ async def create_validador_teste(
 
     except SQLAlchemyError:
         db.rollback()
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            "Ocorreu um erro na criação do teste do validador!"
+        )
 
 
 async def update_validador_teste(
@@ -66,19 +68,21 @@ async def update_validador_teste(
         ValidadorTeste.id == id).first()
 
     if (not db_validador_teste):
-        raise HTTPException(status.HTTP_404_NOT_FOUND)
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND,
+            "O teste do validador não foi encontrado!"
+        )
 
     user = await get_authenticated_user(token, db)
     if (is_user(user) and db_validador_teste.validador.problema.usuario_id != user.id):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED)
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED)
 
     try:
         for teste in db_validador_teste.validador.testes:
             if (validador_teste.numero == teste.numero and bool(id != teste.id)):
                 raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Um teste com o mesmo número já foi registrado para este validador!"
+                    status.HTTP_400_BAD_REQUEST,
+                    "Um teste com o mesmo número já foi registrado para este validador!"
                 )
 
         for key, value in validador_teste:
@@ -93,7 +97,10 @@ async def update_validador_teste(
 
     except SQLAlchemyError:
         db.rollback()
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            "Ocorreu um erro na atualização do teste do validador!"
+        )
 
 
 async def delete_validador_teste(
@@ -105,13 +112,16 @@ async def delete_validador_teste(
         ValidadorTeste.id == id).first()
 
     if (not db_validador_teste):
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND,
+            "O teste do validador não foi encontrado!"
+        )
 
     user = await get_authenticated_user(token, db)
 
     try:
         if (is_user(user) and user.id != db_validador_teste.validador.problema.usuario_id):
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+            raise HTTPException(status.HTTP_401_UNAUTHORIZED)
 
         db.delete(db_validador_teste)
         db.commit()
@@ -119,4 +129,7 @@ async def delete_validador_teste(
 
     except SQLAlchemyError:
         db.rollback()
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            "Ocorreu um erro na exclusão do teste do validador!"
+        )
