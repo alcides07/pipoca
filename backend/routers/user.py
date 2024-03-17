@@ -1,7 +1,8 @@
+from fastapi.responses import FileResponse
 from dependencies.authorization_user import is_admin
 from dependencies.is_admin import is_admin_dependencies
 from routers.auth import oauth2_scheme
-from fastapi import APIRouter, Body, Depends, HTTPException, Path, Response, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Path, Response, UploadFile, status, File
 from utils.errors import errors
 from models.user import User
 from orm.common.index import delete_object, get_by_id, get_all
@@ -10,7 +11,7 @@ from schemas.user import UserCreate, UserReadFull, UserUpdatePartial, UserUpdate
 from schemas.common.pagination import PaginationSchema
 from dependencies.database import get_db
 from sqlalchemy.orm import Session
-from orm.user import create_user, update_user
+from orm.user import create_imagem_user, create_user, get_imagem_user, update_user
 from schemas.common.response import ResponsePaginationSchema, ResponseUnitSchema
 from passlib.context import CryptContext
 
@@ -80,6 +81,26 @@ async def read_me(
     )
 
 
+@router.get("/{id}/imagem/",
+            response_class=FileResponse,
+            summary="Retorna a imagem de perfil de um usuário",
+            dependencies=[Depends(get_authenticated_user)],
+            responses={
+                400: {"400": 400},
+                404: {"404": 404}
+            })
+async def get_imagem(
+    id: int = Path(description=USER_ID_DESCRIPTION),
+    db: Session = Depends(get_db)
+):
+    data = await get_imagem_user(
+        id=id,
+        db=db
+    )
+
+    return FileResponse(data)
+
+
 @router.get("/{id}/",
             response_model=ResponseUnitSchema[UserReadFull],
             summary="Lista um usuário",
@@ -117,12 +138,46 @@ async def read_id(
              }
              )
 def create(
-    user: UserCreate,
+    user: UserCreate = Body(description="Dados do usuário"),
     db: Session = Depends(get_db),
 ):
     data = create_user(db=db, user=user)
 
     return ResponseUnitSchema(data=data)
+
+
+@router.post("/{id}/imagem/",
+             response_class=FileResponse,
+             status_code=201,
+             summary="Cadastra uma imagem de perfil para um usuário",
+             dependencies=[Depends(get_authenticated_user)],
+             responses={
+                 400: errors[400],
+                 422: errors[422],
+             }
+             )
+async def upload_imagem(
+    id: int = Path(description=USER_ID_DESCRIPTION),
+    imagem: UploadFile = File(
+        description="Imagem **.jpeg** ou **.png** de perfil do usuário."
+    ),
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db),
+):
+    if (imagem.content_type not in ["image/jpeg", "image/png"]):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Formato de imagem inválido!"
+        )
+
+    data = await create_imagem_user(
+        imagem=imagem,
+        token=token,
+        db=db,
+        id=id
+    )
+
+    return FileResponse(data, status_code=201)
 
 
 @router.put("/{id}/",
