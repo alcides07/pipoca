@@ -1,7 +1,8 @@
+import os
 from dependencies.authenticated_user import get_authenticated_user
 from dependencies.authorization_user import is_user
 from sqlalchemy.exc import SQLAlchemyError
-from fastapi import HTTPException, status
+from fastapi import HTTPException, UploadFile, status
 from orm.common.index import get_by_key_value_exists
 from sqlalchemy.orm import Session
 from models.user import User
@@ -86,3 +87,59 @@ async def update_user(
     except SQLAlchemyError:
         db.rollback()
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+async def create_imagem_user(
+    imagem: UploadFile,
+    token: str,
+    db: Session,
+    id=id
+):
+    db_user = db.query(User).filter(User.id == id).first()
+
+    if (not db_user):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+    user = await get_authenticated_user(db=db, token=token)
+    if (is_user(user) and db_user.id != user.id):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+
+    caminho_diretorio = f"static/users/profile/{user.id}"
+
+    if not os.path.exists(caminho_diretorio):
+        os.makedirs(caminho_diretorio)
+
+    if (imagem.content_type is not None):
+        extensao_arquivo = imagem.content_type.split('/')[-1]
+
+    caminho_imagem = os.path.join(
+        caminho_diretorio, f"profile_image.{extensao_arquivo}")
+
+    with open(caminho_imagem, "wb") as buffer:
+        buffer.write(imagem.file.read())
+
+    db_user.caminho_imagem = caminho_imagem  # type: ignore
+    db.commit()
+    db.refresh(db_user)
+
+    return caminho_imagem
+
+
+async def get_imagem_user(
+    db: Session,
+    id=id
+):
+    db_user = db.query(User).filter(User.id == id).first()
+
+    if (not db_user):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+    caminho_imagem = str(db_user.caminho_imagem)
+
+    if (caminho_imagem is None or not os.path.exists(caminho_imagem)):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="A imagem de perfil do usuário solicitado não foi encontrada!"
+        )
+
+    return caminho_imagem
