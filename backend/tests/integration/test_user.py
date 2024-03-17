@@ -87,6 +87,51 @@ def test_read_meus_dados_user():
     resume_dependencies()
 
 
+def test_read_imagem_user():
+    remove_dependencies()
+
+    response_user, token, _ = create_user_helper()
+    user_id = response_user.json().get("data").get("id")
+
+    with open("./tests/integration/user.png", 'rb') as file:
+        client.post(
+            f"{URL_USER}/{user_id}/imagem/",
+            files={"imagem": file},
+            headers={
+                "Authorization": f"Bearer {token}",
+            },
+        )
+
+    response = client.get(
+        f"{URL_USER}/{user_id}/imagem/",
+        headers={
+            "Authorization": f"Bearer {token}",
+        },
+    )
+
+    assert response.status_code == 200
+
+    resume_dependencies()
+
+
+def test_read_imagem_inexistente_user():
+    remove_dependencies()
+
+    response_user, token, _ = create_user_helper()
+    user_id = response_user.json().get("data").get("id")
+
+    response = client.get(
+        f"{URL_USER}/{user_id}/imagem/",
+        headers={
+            "Authorization": f"Bearer {token}",
+        },
+    )
+
+    assert response.status_code == 404
+
+    resume_dependencies()
+
+
 def test_read_users_user():
     remove_dependencies()
 
@@ -194,6 +239,26 @@ def test_create_user_username_exists():
     )
 
     assert response.status_code == 400
+
+    resume_dependencies()
+
+
+def test_create_imagem_user():
+    remove_dependencies()
+
+    response_user, token, _ = create_user_helper()
+    user_id = response_user.json().get("data").get("id")
+
+    with open("./tests/integration/user.png", 'rb') as file:
+        response = client.post(
+            f"{URL_USER}/{user_id}/imagem/",
+            files={"imagem": file},
+            headers={
+                "Authorization": f"Bearer {token}",
+            },
+        )
+
+    assert response.status_code == 200
 
     resume_dependencies()
 
