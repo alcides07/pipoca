@@ -315,7 +315,8 @@ async def create(
              }
              )
 async def upload(
-    pacote: UploadFile = File(description="Pacote .zip gerado pelo Polygon"),
+    pacote: UploadFile = File(
+        description="Pacote **.zip** gerado pelo Polygon"),
     privado: bool = Body(
         description="Visibilidade do problema (privado/público)"),
     db: Session = Depends(get_db),
