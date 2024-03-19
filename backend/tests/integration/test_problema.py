@@ -590,7 +590,7 @@ def test_upload_problema_user():
 
     _, token, _ = create_user_helper()
 
-    with open("./tests/integration/multiplication_problem.zip", 'rb') as file:
+    with open("./tests/integration/example_problem", 'rb') as file:
         response = client.post(
             f"{URL_PROBLEMA}/upload/",
             files={"pacote": file},
@@ -611,7 +611,7 @@ def test_upload_problema_admin():
     database = next(get_db_test())
     token = create_administrador_helper(database)
 
-    with open("./tests/integration/multiplication_problem.zip", 'rb') as file:
+    with open("./tests/integration/example_problem", 'rb') as file:
         response = client.post(
             f"{URL_PROBLEMA}/upload/",
             files={"pacote": file},
