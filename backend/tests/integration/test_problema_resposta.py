@@ -55,7 +55,7 @@ def test_read_problema_resposta_by_id_com_user_criador_do_problema():
         token_user_criador_problema=token_user,
         token_user_resposta=token_user,
         problema_privado=False,
-        path_problema="./tests/integration/example_problem",
+        path_problema="./tests/integration/example_problem.zip",
         resposta=JSON_PROBLEMA_RESPOSTA["resposta"],
         linguagem=CompilersEnum("cpp.g++17")
     )
@@ -84,7 +84,7 @@ def test_read_problema_resposta_by_id_com_user_autor_da_resposta():
         token_user_criador_problema=token_user_criador_problema,
         token_user_resposta=token_user_resposta,
         problema_privado=False,
-        path_problema="./tests/integration/example_problem",
+        path_problema="./tests/integration/example_problem.zip",
         resposta=JSON_PROBLEMA_RESPOSTA["resposta"],
         linguagem=CompilersEnum("cpp.g++17")
     )
@@ -114,7 +114,7 @@ def test_read_problema_resposta_by_id_com_user_qualquer_negado():
         token_user_criador_problema=token_user_criador_problema,
         token_user_resposta=token_user_resposta,
         problema_privado=False,
-        path_problema="./tests/integration/example_problem",
+        path_problema="./tests/integration/example_problem.zip",
         resposta=JSON_PROBLEMA_RESPOSTA["resposta"],
         linguagem=CompilersEnum("cpp.g++17")
     )
@@ -179,7 +179,7 @@ def test_create_problema_resposta_com_user_qualquer():
         token_user_criador_problema=token_user_criador_problema,
         token_user_resposta=token_user_resposta,
         problema_privado=False,
-        path_problema="./tests/integration/example_problem",
+        path_problema="./tests/integration/example_problem.zip",
         resposta=JSON_PROBLEMA_RESPOSTA["resposta"],
         linguagem=CompilersEnum("cpp.g++17")
     )
@@ -208,8 +208,8 @@ def test_create_problema_resposta_runtime_error_com_user_qualquer():
         token_user_criador_problema=token_user_criador_problema,
         token_user_resposta=token_user_resposta,
         problema_privado=False,
-        path_problema="./tests/integration/example_problem",
-        resposta="#include<iostream>\nusingg namespace std;\nint main() {\nint a, b;\ncin >> a >> b;\ncout << a * b;\nreturn 0;\n}",
+        path_problema="./tests/integration/example_problem.zip",
+        resposta=JSON_PROBLEMA_RESPOSTA["resposta"],
         linguagem=CompilersEnum("cpp.g++17")
     )
     erro = response.json().get("data").get("erro")
@@ -230,7 +230,7 @@ def test_create_problema_resposta_de_problema_privado_com_user_qualquer():
         token_user_criador_problema=token_user_criador_problema,
         token_user_resposta=token_user_resposta,
         problema_privado=True,
-        path_problema="./tests/integration/example_problem",
+        path_problema="./tests/integration/example_problem.zip",
         resposta=JSON_PROBLEMA_RESPOSTA["resposta"],
         linguagem=CompilersEnum("cpp.g++17")
     )
