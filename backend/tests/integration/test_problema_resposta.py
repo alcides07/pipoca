@@ -204,12 +204,15 @@ def test_create_problema_resposta_runtime_error_com_user_qualquer():
     _, token_user_criador_problema, _ = create_user_helper()
     _, token_user_resposta, _ = create_user_helper()
 
+    JSON_RESPOSTA = JSON_PROBLEMA_RESPOSTA.copy()
+    JSON_RESPOSTA["resposta"] = "#include <iostream>\r\n#include <vector>\r\n#include <algorithm>\r\n \r\nusing namespace std;\r\n \r\npair<int, int> solve(vector<pair<int, int>>& v, int s) {\r\n    int left = 0, right = v.size() - 1;\r\n    while (left < right) {\r\n        int sum = v[left].first + v[right].first;\r\n        if (sum == s) return { v[left].second,v[right].second };\r\n        if (sum < s) left++;\r\n        else right--;\r\n    }\r\n    return { -1, -1 };\r\n}\r\n \r\nint main() {\r\n    int n, s; cin >> n >> s;\r\n    vector<pair<int, int>> v(n);\r\n    for (int i = 0; i < n; ++i) {\r\n        cin >> v[i].first;\r\n        v[i].second = i + 1;\r\n    }\r\n    sort(v.begin(), v.end());\r\n    auto ans = solve(v, s);\r\n    if (ans.first != -1)\r\n        cout << ans.first << \" \" << ans.second << endl;\r\n    else\r\n        cout < \"IMPOSSIVEL\\n\";\r\n    return 0;\r\n}\r\n"
+
     response = create_problema_resposta_helper(
         token_user_criador_problema=token_user_criador_problema,
         token_user_resposta=token_user_resposta,
         problema_privado=False,
         path_problema="./tests/integration/example_problem.zip",
-        resposta=JSON_PROBLEMA_RESPOSTA["resposta"],
+        resposta=JSON_RESPOSTA["resposta"],
         linguagem=CompilersEnum("cpp.g++17")
     )
     erro = response.json().get("data").get("erro")
