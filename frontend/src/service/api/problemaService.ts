@@ -1,4 +1,3 @@
-import axios from "axios";
 import axiosInstance from "../axiosInstance";
 
 class ProblemaService {
@@ -12,11 +11,15 @@ class ProblemaService {
 		return response.data;
 	}
 	async uploadFile(formData: FormData) {
-		const response = await axios.post(`/problemas/upload/`, formData, {
-			headers: {
-				"Content-Type": "multipart/form-data",
-			},
-		});
+		const response = await axiosInstance.post(
+			`/problemas/upload/`,
+			formData,
+			{
+				headers: {
+					"Content-Type": "multipart/form-data",
+				},
+			}
+		);
 		return response.data;
 	}
 }
