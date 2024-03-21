@@ -29,13 +29,15 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
+import { Toaster } from "@/components/ui/toaster";
+import { toast } from "@/components/ui/use-toast";
 
 const FormSchema = z.object({
 	privado: z.boolean().default(false).optional(),
 	pacote: z.instanceof(FileList),
 });
 
-function TableButton(): JSX.Element {
+function TableButton({ handleProblem }: () => void): JSX.Element {
 	const [isOpen, setIsOpen] = useState(false);
 
 	const form = useForm<z.infer<typeof FormSchema>>({
@@ -54,10 +56,22 @@ function TableButton(): JSX.Element {
 
 		problemaService
 			.uploadFile(formData)
-			.then((res) => {
-				console.log(res);
+			.then(() => {
+				handleProblem();
+				toast({
+					title: "Sucesso.",
+					description: "Problema Importado!",
+					duration: 3000,
+				});
 			})
-			.catch((err) => console.error(err));
+			.catch((error) => {
+				toast({
+					variant: "destructive",
+					title: "Erro.",
+					description: error.response.data.error,
+					duration: 3000,
+				});
+			});
 	}
 
 	return (
@@ -147,7 +161,7 @@ function ListarProblema() {
 			{problemas && problemas.length > 0 ? (
 				<div>
 					<DataTable columns={problemaColumns} data={problemas}>
-						<TableButton />
+						<TableButton handleProblem={handleProblem} />
 					</DataTable>
 				</div>
 			) : (
@@ -160,12 +174,13 @@ function ListarProblema() {
 							<p>Você pode registrar um problema agora!</p>
 							<div className="flex flex-col gap-3 m-5">
 								<Button>Cadastrar</Button>
-								<TableButton />
+								<TableButton handleProblem={handleProblem} />
 							</div>
 						</div>
 					</CardContent>
 				</Card>
 			)}
+			<Toaster />
 		</div>
 	);
 }
