@@ -3,7 +3,7 @@ from models.problemaResposta import ProblemaResposta
 from sqlalchemy import Column, DateTime, Integer, String
 from sqlalchemy.orm import relationship
 from database import Base
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 class User(Base):
@@ -36,7 +36,11 @@ class User(Base):
 
     criado_em = Column(
         DateTime,
-        default=datetime.utcnow
+        default=datetime.now(timezone.utc)
+    )
+
+    caminho_imagem = Column(
+        String
     )
 
     problemas = relationship(

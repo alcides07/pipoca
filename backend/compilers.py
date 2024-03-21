@@ -12,6 +12,10 @@ commands = {
             "/bin/bash", "-c",
             f"python3 {FILENAME_RUN}.py && ./{FILENAME_RUN} {INPUT_TEST_FILENAME} {OUTPUT_USER_FILENAME} {OUTPUT_JUDGE_FILENAME}"
         ],
+        "run_gerador": [
+            "/bin/bash", "-c",
+            f"python3 {FILENAME_RUN}.py && ./{FILENAME_RUN} $(cat {INPUT_TEST_FILENAME})"
+        ]
     },
 
     "java11": {
@@ -24,6 +28,10 @@ commands = {
         "run_checker": [
             "/bin/bash", "-c",
             f"javac {FILENAME_RUN}.java && java {FILENAME_RUN} && ./{FILENAME_RUN} {INPUT_TEST_FILENAME} {OUTPUT_USER_FILENAME} {OUTPUT_JUDGE_FILENAME}"
+        ],
+        "run_gerador": [
+            "/bin/bash", "-c",
+            f"javac {FILENAME_RUN}.java && java {FILENAME_RUN} && ./{FILENAME_RUN} $(cat {INPUT_TEST_FILENAME})"
         ]
     },
 
@@ -37,6 +45,10 @@ commands = {
         "run_checker": [
             "/bin/bash", "-c",
             f"ruby {FILENAME_RUN}.rb && ./{FILENAME_RUN} {INPUT_TEST_FILENAME} {OUTPUT_USER_FILENAME} {OUTPUT_JUDGE_FILENAME}"
+        ],
+        "run_gerador": [
+            "/bin/bash", "-c",
+            f"ruby {FILENAME_RUN}.rb && ./{FILENAME_RUN} $(cat {INPUT_TEST_FILENAME})"
         ]
     },
 
@@ -50,6 +62,10 @@ commands = {
         "run_checker": [
             "/bin/bash", "-c",
             f"g++ -std=c++17 -o {FILENAME_RUN} {FILENAME_RUN}.cpp && ./{FILENAME_RUN} {INPUT_TEST_FILENAME} {OUTPUT_USER_FILENAME} {OUTPUT_JUDGE_FILENAME}"
+        ],
+        "run_gerador": [
+            "/bin/bash", "-c",
+            f"g++ -std=c++17 -o {FILENAME_RUN} {FILENAME_RUN}.cpp && ./{FILENAME_RUN} $(cat {INPUT_TEST_FILENAME})"
         ]
     }
 }

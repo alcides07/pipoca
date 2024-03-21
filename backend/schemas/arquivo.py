@@ -12,6 +12,7 @@ class SecaoEnum(Enum):
     FONTE = "arquivos_fonte"
     ANEXO = "anexo"
     SOLUCAO = "solucao"
+    GERADOR = "gerador"
 
 
 class ArquivoBase(BaseModel):
