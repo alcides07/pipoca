@@ -64,7 +64,7 @@ function FormLogin() {
       });
   }
   return (
-    <Card>
+    <Card className="border-none">
       <CardHeader>
         <CardTitle>Login</CardTitle>
         <CardDescription>
