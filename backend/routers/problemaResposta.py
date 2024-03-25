@@ -56,7 +56,7 @@ async def read(
     )
 
 
-@router.get("/users/",
+@router.get("/usuarios/",
             response_model=ResponsePaginationSchema[ProblemaRespostaReadFull],
             summary="Lista respostas fornecidas à problemas pelo usuário autenticado",
             )
