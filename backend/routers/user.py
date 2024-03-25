@@ -30,7 +30,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 router = APIRouter(
     prefix="/usuarios",
-    tags=["usuarios"],
+    tags=["usuários"],
 )
 
 
