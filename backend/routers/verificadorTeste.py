@@ -15,8 +15,8 @@ from utils.errors import errors
 VERIFICADOR_TESTE_ID_DESCRIPTION = "Identificador do teste do verificador"
 
 router = APIRouter(
-    prefix="/verificadorTestes",
-    tags=["verificadorTestes"],
+    prefix="/verificadoresTestes",
+    tags=["verificadoresTestes"],
     dependencies=[Depends(get_authenticated_user)]
 )
 
