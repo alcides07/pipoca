@@ -3,6 +3,7 @@ from sqlalchemy import Column
 from dependencies.authenticated_user import get_authenticated_user
 from dependencies.authorization_user import is_admin, is_user
 from fastapi import HTTPException, status
+from filters.arquivo import ArquivoFilter
 from filters.problema import OrderByFieldsProblemaEnum, ProblemaFilter, search_fields_problema
 from filters.problemaTeste import ProblemaTesteFilter
 from models.problemaResposta import ProblemaResposta
@@ -326,7 +327,8 @@ async def get_arquivos_problema(
     db: Session,
     id: int,
     pagination: PaginationSchema,
-    token: str
+    token: str,
+    filters: ArquivoFilter
 ):
     db_problema = db.query(Problema).filter(Problema.id == id).first()
 
@@ -346,6 +348,7 @@ async def get_arquivos_problema(
 
         db_problema_arquivos, metadata = filter_collection(
             model=Arquivo,
+            filters=filters,
             pagination=pagination,
             query=query
         )
