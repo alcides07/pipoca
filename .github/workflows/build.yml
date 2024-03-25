@@ -10,15 +10,14 @@ on:
       - dev-backend
     types: [opened, synchronize, reopened]
 jobs:
-  sonarcloud:
-    name: SonarCloud
+  tests:
+    name: Tests
     runs-on: ubuntu-20.04
     defaults:
       run:
         working-directory: backend
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       DATABASE_URL_TEST: ${{ secrets.DATABASE_URL_TEST }}
       ALGORITHM: ${{ secrets.ALGORITHM }}
       SECRET_KEY: ${{ secrets.SECRET_KEY }}
@@ -50,6 +49,20 @@ jobs:
         run: pip install -r requirements.txt
       - name: Run tox
         run: tox -e py
+  sonarcloud:
+    name: SonarCloud
+    needs: tests
+    runs-on: ubuntu-20.04
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
         with:
