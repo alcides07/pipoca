@@ -15,8 +15,8 @@ from utils.errors import errors
 PROBLEMA_TESTE_ID_DESCRIPTION = "Identificador do teste de um problema"
 
 router = APIRouter(
-    prefix="/problemaTestes",
-    tags=["problemaTestes"],
+    prefix="/problemasTestes",
+    tags=["problemasTestes"],
     dependencies=[Depends(get_authenticated_user)],
 )
 
