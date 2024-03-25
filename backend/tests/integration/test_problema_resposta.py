@@ -139,7 +139,7 @@ def test_read_meus_problema_respostas_com_user():
     _, token, _ = create_user_helper()
 
     response = client.get(
-        f"/usuarios/problemasRespostas/",
+        "/usuarios/problemasRespostas/",
         headers={
             "Authorization": f"Bearer {token}",
         },
@@ -156,7 +156,7 @@ def test_read_meus_problema_respostas_com_admin():
     token_admin = create_administrador_helper(database)
 
     response = client.get(
-        f"/usuarios/problemasRespostas/",
+        "/usuarios/problemasRespostas/",
         headers={
             "Authorization": f"Bearer {token_admin}",
         },
