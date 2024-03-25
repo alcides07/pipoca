@@ -18,8 +18,8 @@ from utils.errors import errors
 PROBLEMA_RESPOSTA_ID_DESCRIPTION = "Identificador da resposta de um problema"
 
 router = APIRouter(
-    prefix="/problemaRespostas",
-    tags=["problemaRespostas"],
+    prefix="/problemasRespostas",
+    tags=["problemasRespostas"],
     dependencies=[Depends(get_authenticated_user)]
 )
 

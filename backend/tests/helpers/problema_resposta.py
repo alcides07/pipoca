@@ -5,7 +5,7 @@ from tests.helpers.problema import URL_PROBLEMA
 from main import app
 
 client = TestClient(app)
-URL_PROBLEMA_RESPOSTAS = "/problemaRespostas"
+URL_PROBLEMA_RESPOSTAS = "/problemasRespostas"
 
 
 def create_problema_resposta_helper(
