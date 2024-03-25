@@ -406,6 +406,43 @@ async def get_testes_problema(
         )
 
 
+async def get_declaracoes_problema(
+    db: Session,
+    id: int,
+    pagination: PaginationSchema,
+    token: str
+):
+    db_problema = db.query(Problema).filter(Problema.id == id).first()
+
+    if (not db_problema):
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND,
+            "O problema não foi encontrado!"
+        )
+
+    user = await get_authenticated_user(token, db)
+    if (is_user(user) and bool(db_problema.usuario_id != user.id)):
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED)
+
+    try:
+        query = db.query(Declaracao).filter(
+            Declaracao.problema_id == id)
+
+        db_problema_declaracoes, metadata = filter_collection(
+            model=Declaracao,
+            pagination=pagination,
+            query=query
+        )
+
+        return db_problema_declaracoes.all(), metadata
+
+    except SQLAlchemyError:
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            "Ocorreu um erro na busca pelas declarações do problema!"
+        )
+
+
 async def get_tags_problema(
     db: Session,
     id: int,
