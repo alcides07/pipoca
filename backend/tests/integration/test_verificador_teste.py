@@ -7,7 +7,7 @@ from tests.config_test import remove_dependencies, resume_dependencies
 from tests.helpers.verificador import create_verificador_helper
 
 client = TestClient(app)
-URL_VERIFICADOR_TESTES = "/verificadorTestes"
+URL_VERIFICADOR_TESTES = "/verificadoresTestes"
 
 
 def test_read_verificador_testes_user():

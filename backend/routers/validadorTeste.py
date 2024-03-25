@@ -14,8 +14,8 @@ from utils.errors import errors
 
 
 router = APIRouter(
-    prefix="/validadorTestes",
-    tags=["validadorTestes"],
+    prefix="/validadoresTestes",
+    tags=["validadoresTestes"],
     dependencies=[Depends(get_authenticated_user)]
 )
 
