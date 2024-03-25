@@ -20,7 +20,7 @@ def create_problema_resposta_helper(
 
     with open(path_problema, 'rb') as file:
         response_problema = client.post(
-            f"{URL_PROBLEMA}/upload/",
+            f"{URL_PROBLEMA}/pacotes/",
             files={"pacote": file},
             data={"privado": str(problema_privado)},
             headers={

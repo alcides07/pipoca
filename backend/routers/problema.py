@@ -306,7 +306,7 @@ async def create(
     return ResponseUnitSchema(data=data)
 
 
-@router.post("/upload/",
+@router.post("/pacotes/",
              response_model=ResponseUnitSchema[ProblemaReadFull],
              status_code=201,
              summary="Cadastra um problema via pacote da plataforma Polygon",

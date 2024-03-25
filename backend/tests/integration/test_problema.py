@@ -592,7 +592,7 @@ def test_upload_problema_user():
 
     with open("./tests/integration/example_problem.zip", 'rb') as file:
         response = client.post(
-            f"{URL_PROBLEMA}/upload/",
+            f"{URL_PROBLEMA}/pacotes/",
             files={"pacote": file},
             data={"privado": "true"},
             headers={
@@ -613,7 +613,7 @@ def test_upload_problema_admin():
 
     with open("./tests/integration/example_problem.zip", 'rb') as file:
         response = client.post(
-            f"{URL_PROBLEMA}/upload/",
+            f"{URL_PROBLEMA}/pacotes/",
             files={"pacote": file},
             data={"privado": "true"},
             headers={
