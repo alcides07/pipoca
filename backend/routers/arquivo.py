@@ -1,4 +1,5 @@
 from dependencies.is_admin import is_admin_dependencies
+from filters.arquivo import ArquivoFilter
 from orm.arquivo import create_arquivo, update_arquivo
 from routers.auth import oauth2_scheme
 from fastapi import APIRouter, Body, Depends, Path, status, Response
@@ -28,11 +29,13 @@ router = APIRouter(
 async def read(
         db: Session = Depends(get_db),
         pagination: PaginationSchema = Depends(),
+        filters: ArquivoFilter = Depends()
 ):
     arquivos, metadata = await get_all(
         db=db,
         model=Arquivo,
         pagination=pagination,
+        filters=filters
     )
 
     return ResponsePaginationSchema(

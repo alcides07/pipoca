@@ -4,6 +4,7 @@ import zipfile
 import tempfile
 import xml.etree.ElementTree as ET
 from constants import DIRECTION_ORDER_BY_DESCRIPTION, FIELDS_ORDER_BY_DESCRIPTION
+from filters.arquivo import ArquivoFilter
 from filters.problemaTeste import ProblemaTesteFilter
 from routers.auth import oauth2_scheme
 from fastapi import APIRouter, Body, Depends, File, HTTPException, Path, Query, UploadFile, status
@@ -210,11 +211,13 @@ async def read_problema_id_arquivos(
     db: Session = Depends(get_db),
     pagination: PaginationSchema = Depends(),
     id: int = Path(description=PROBLEMA_ID_DESCRIPTION),
-    token: str = Depends(oauth2_scheme)
+    token: str = Depends(oauth2_scheme),
+    filters: ArquivoFilter = Depends()
 ):
     arquivos, metadata = await get_arquivos_problema(
         db=db,
         id=id,
+        filters=filters,
         pagination=pagination,
         token=token
     )
