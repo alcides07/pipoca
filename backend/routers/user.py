@@ -21,8 +21,8 @@ USER_ID_DESCRIPTION = "identificador do usuário"
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 router = APIRouter(
-    prefix="/users",
-    tags=["users"],
+    prefix="/usuarios",
+    tags=["usuarios"],
 )
 
 
@@ -49,7 +49,7 @@ async def read(
     )
 
 
-@router.get("/me/",
+@router.get("/eu/",
             response_model=ResponseUnitSchema[UserReadFull],
             summary="Lista dados do usuário autenticado",
             dependencies=[Depends(get_authenticated_user)],

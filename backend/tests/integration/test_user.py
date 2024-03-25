@@ -59,7 +59,7 @@ def test_read_meus_dados_admin():
     token_admin = create_administrador_helper(database)
 
     response = client.get(
-        f"{URL_USER}/me/",
+        f"{URL_USER}/eu/",
         headers={
             "Authorization": f"Bearer {token_admin}",
         },
@@ -76,7 +76,7 @@ def test_read_meus_dados_user():
     _, token, _ = create_user_helper()
 
     response = client.get(
-        f"{URL_USER}/me/",
+        f"{URL_USER}/eu/",
         headers={
             "Authorization": f"Bearer {token}",
         },
