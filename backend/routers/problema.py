@@ -12,7 +12,7 @@ from filters.problema import OrderByFieldsProblemaEnum, ProblemaFilter
 from schemas.arquivo import ArquivoCreate, ArquivoReadFull, SecaoEnum
 from schemas.common.compilers import CompilersEnum
 from schemas.common.direction_order_by import DirectionOrderByEnum
-from schemas.declaracao import DeclaracaoCreate
+from schemas.declaracao import DeclaracaoCreate, DeclaracaoReadFull
 from schemas.idioma import IdiomaEnum
 from schemas.problemaResposta import ProblemaRespostaReadSimple
 from schemas.problemaTeste import ProblemaTesteCreate, ProblemaTesteReadFull, TipoTesteProblemaEnum
@@ -29,7 +29,7 @@ from schemas.problema import ProblemaCreate, ProblemaCreateUpload, ProblemaReadF
 from schemas.common.pagination import PaginationSchema
 from dependencies.database import get_db
 from sqlalchemy.orm import Session
-from orm.problema import create_problema, create_problema_upload, get_all_problemas, get_arquivos_problema, get_problema_by_id, get_respostas_problema, get_tags_problema, get_testes_problema, get_validador_problema, get_verificador_problema, update_problema
+from orm.problema import create_problema, create_problema_upload, get_all_problemas, get_arquivos_problema, get_declaracoes_problema, get_problema_by_id, get_respostas_problema, get_tags_problema, get_testes_problema, get_validador_problema, get_verificador_problema, update_problema
 from schemas.common.response import ResponsePaginationSchema, ResponseUnitSchema
 
 PROBLEMA_ID_DESCRIPTION = "Identificador do problema"
@@ -98,6 +98,32 @@ async def read_problema_id_testes(
 
     return ResponsePaginationSchema(
         data=testes,
+        metadata=metadata
+    )
+
+
+@router.get("/{id}/declaracoes/",
+            response_model=ResponsePaginationSchema[DeclaracaoReadFull],
+            summary="Lista declarações relacionadas a um problema",
+            responses={
+                404: errors[404]
+            }
+            )
+async def read_problema_id_declaracoess(
+    db: Session = Depends(get_db),
+    pagination: PaginationSchema = Depends(),
+    id: int = Path(description=PROBLEMA_ID_DESCRIPTION),
+    token: str = Depends(oauth2_scheme)
+):
+    declaracoes, metadata = await get_declaracoes_problema(
+        db=db,
+        id=id,
+        pagination=pagination,
+        token=token
+    )
+
+    return ResponsePaginationSchema(
+        data=declaracoes,
         metadata=metadata
     )
 
