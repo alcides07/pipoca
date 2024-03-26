@@ -19,7 +19,7 @@ from schemas.user import UserCreate, UserReadFull, UserUpdatePartial, UserUpdate
 from schemas.common.pagination import PaginationSchema
 from dependencies.database import get_db
 from sqlalchemy.orm import Session
-from orm.user import create_imagem_user, create_user, get_imagem_user, update_user
+from orm.user import create_imagem_user, create_user, delete_imagem_user, get_imagem_user, update_user
 from schemas.common.response import ResponsePaginationSchema, ResponseUnitSchema
 from passlib.context import CryptContext
 
@@ -30,7 +30,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 router = APIRouter(
     prefix="/usuarios",
-    tags=["usuarios"],
+    tags=["usuários"],
 )
 
 
@@ -255,6 +255,28 @@ async def upload_imagem(
     )
 
     return FileResponse(path=data)
+
+
+@router.delete("/{id}/imagem/",
+               status_code=204,
+               summary="Deleta a imagem de perfil de um usuário",
+               responses={
+                   404: errors[404]
+               }
+               )
+async def delete_image(
+        id: int = Path(description=USER_ID_DESCRIPTION),
+        db: Session = Depends(get_db),
+        token: str = Depends(oauth2_scheme)
+):
+    imagem = await delete_imagem_user(
+        db=db,
+        token=token,
+        id=id
+    )
+
+    if (imagem):
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.put("/{id}/",
