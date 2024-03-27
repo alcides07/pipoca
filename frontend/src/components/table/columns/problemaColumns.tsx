@@ -1,29 +1,84 @@
+// import { ColumnDef } from "@tanstack/react-table";
+// import { iDataProblema } from "../../../interfaces/iProblema";
+// import { ArrowUpDown } from "lucide-react";
+// import { Button } from "@/components/ui/button";
+
+// export const problemaColumns: ColumnDef<iDataProblema>[] = [
+//   {
+//     accessorKey: "nome",
+//     header: ({ column }) => {
+//       return (
+//         <Button
+//           variant="ghost"
+//           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+//         >
+//           Nome
+//           <ArrowUpDown className="ml-2 h-4 w-4" />
+//         </Button>
+//       );
+//     },
+//   },
+//   {
+//     accessorKey: "usuario.username",
+//     header: "Criador",
+//   },
+//   {
+//     accessorKey: "privado",
+//     header: "privado",
+//   },
+// ];
+
 import { ColumnDef } from "@tanstack/react-table";
 import { iDataProblema } from "../../../interfaces/iProblema";
-import { ArrowUpDown } from "lucide-react";
+import { ArrowUpDown, Edit2, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export const problemaColumns: ColumnDef<iDataProblema>[] = [
-  {
-    accessorKey: "nome",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Nome
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      );
-    },
-  },
-  {
-    accessorKey: "usuario.username",
-    header: "Criador",
-  },
-  {
-    accessorKey: "privado",
-    header: "privado",
-  },
+	// ...
+	{
+		accessorKey: "nome",
+		header: ({ column }) => {
+			return (
+				<Button
+					variant="ghost"
+					onClick={() =>
+						column.toggleSorting(column.getIsSorted() === "asc")
+					}>
+					Nome
+					<ArrowUpDown className="ml-2 h-4 w-4" />
+				</Button>
+			);
+		},
+	},
+	{
+		accessorKey: "usuario.username",
+		header: "Criador",
+	},
+	{
+		accessorKey: "privado",
+		header: "privado",
+	},
+	{
+		id: "actions",
+		cell: ({ row }) => {
+			const problema = row.original;
+			return (
+				<div>
+					<Button
+						onClick={() => {
+							/* Adicione a lógica de resposta aqui */
+						}}>
+						<MessageCircle /> {/* Ícone de resposta */}
+					</Button>
+					<Button
+						onClick={() => {
+							/* Adicione a lógica de edição aqui */
+						}}>
+						<Edit2 /> {/* Ícone de edição */}
+					</Button>
+				</div>
+			);
+		},
+	},
+	// ...
 ];
