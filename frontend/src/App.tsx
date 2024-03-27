@@ -1,8 +1,9 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Dashboard from "./pages/dashboard";
-import ListarProblema from "./pages/listarProblema";
 import Header from "./components/header";
 import Login from "./pages/login";
+import Listar from "./pages/Problema/Listar";
+import Responder from "./pages/Problema/Responder/index";
 
 const linksHeader = [
   { nome: "Dashboard", link: "/" },
@@ -18,7 +19,9 @@ function App() {
         <Header options={linksHeader} />
         <Routes>
           <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/problemas" element={<ListarProblema />} />
+          <Route path="/problemas" element={<Listar />} />
+          <Route path="/problemas" element={<Listar />} />
+          <Route path="/problema/:id/resposta" element={<Responder />} />
           <Route path="/" element={<Login />} />
         </Routes>
       </BrowserRouter>
