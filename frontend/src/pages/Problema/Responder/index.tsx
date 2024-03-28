@@ -29,13 +29,20 @@ import {
   SelectContent,
   SelectGroup,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import linguagens from "../../../utils/linguagem";
 
 const FormSchema = z.object({
-  linguagem: z.string("Informe o seu código!"),
+  linguagem: z.string().nonempty("Selecione uma linguagem de programação!"),
+  resposta: z
+    .string()
+    .nonempty("Informe o seu código!")
+    .refine(
+      (val: string) => val.length >= 10,
+      "A resposta deve ter pelo menos 10 caracteres!"
+    ),
 });
 
 interface ExamplesLayoutProps {
@@ -46,13 +53,17 @@ function Responder({ children }: ExamplesLayoutProps) {
   const { id } = useParams<{ id: string }>();
   const [problema, setProblema] = useState<iDataProblema>();
   const [rows, setRows] = useState(1);
-  console.log("id", id);
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
+    defaultValues: {
+      linguagem: "",
+      resposta: "",
+    },
   });
 
   function onSubmit(data: z.infer<typeof FormSchema>) {
+    console.log("data", data);
     toast({
       title: "You submitted the following values:",
       description: (
@@ -128,26 +139,20 @@ function Responder({ children }: ExamplesLayoutProps) {
                         render={({ field }) => (
                           <FormItem>
                             <FormControl>
-                              <Select>
+                              <Select onValueChange={field.onChange}>
                                 <SelectTrigger className="w-full">
                                   <SelectValue placeholder="Selecione uma linguagem" />
                                 </SelectTrigger>
                                 <SelectContent>
                                   <SelectGroup>
-                                    <SelectLabel>Fruits</SelectLabel>
-                                    <SelectItem value="apple">Apple</SelectItem>
-                                    <SelectItem value="banana">
-                                      Banana
-                                    </SelectItem>
-                                    <SelectItem value="blueberry">
-                                      Blueberry
-                                    </SelectItem>
-                                    <SelectItem value="grapes">
-                                      Grapes
-                                    </SelectItem>
-                                    <SelectItem value="pineapple">
-                                      Pineapple
-                                    </SelectItem>
+                                    {linguagens.map((linguagem: any) => (
+                                      <SelectItem
+                                        key={linguagem}
+                                        value={linguagem}
+                                      >
+                                        {linguagem}
+                                      </SelectItem>
+                                    ))}
                                   </SelectGroup>
                                 </SelectContent>
                                 <FormMessage />
@@ -158,7 +163,7 @@ function Responder({ children }: ExamplesLayoutProps) {
                       />
                       <FormField
                         control={form.control}
-                        name="bio"
+                        name="resposta"
                         render={({ field }) => (
                           <FormItem>
                             <FormControl>
@@ -167,7 +172,7 @@ function Responder({ children }: ExamplesLayoutProps) {
                                 className="min-h-[17rem] text-ms"
                                 rows={rows}
                                 onInput={(e: any) => {
-                                  setRows(e.target.scrollHeight / 20); // Ajuste o divisor conforme necessário
+                                  setRows(e.target.scrollHeight / 20);
                                 }}
                                 {...field}
                               />
@@ -177,7 +182,7 @@ function Responder({ children }: ExamplesLayoutProps) {
                         )}
                       />
                       <Button type="submit" className="w-full">
-                        Submit
+                        Enviar
                       </Button>
                     </form>
                   </Form>
