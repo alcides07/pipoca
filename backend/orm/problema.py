@@ -553,4 +553,7 @@ async def get_problema_by_id(
     ):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED)
 
+    testes_exemplo = [teste for teste in db_problema.testes if teste.exemplo]
+    db_problema.testes = testes_exemplo
+
     return db_problema

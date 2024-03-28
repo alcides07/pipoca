@@ -111,6 +111,10 @@ class ProblemaReadFull(ProblemaBase):
         description=DECLARACAO_DESCRIPTION
     )
 
+    testes: list[ProblemaTesteReadFull] = Field(
+        description=TESTES_DESCRIPTION
+    )
+
     class ConfigDict:
         from_attributes = True
 
