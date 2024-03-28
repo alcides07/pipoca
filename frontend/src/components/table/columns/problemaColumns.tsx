@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 
 export const problemaColumns: ColumnDef<iDataProblema>[] = [
-  // ...
   {
     accessorKey: "nome",
     header: "Nome",
@@ -26,17 +25,16 @@ export const problemaColumns: ColumnDef<iDataProblema>[] = [
         <div className="w-5 flex flex-row gap-3">
           <Link to={`/problema/${problema.id}/responde/`}>
             <Button variant="outline" title="Responder">
-              <ClipboardPenLine /> {/* Ícone de resposta */}
+              <ClipboardPenLine />
             </Button>
           </Link>
           <Link to={`/editar/${problema.id}`}>
             <Button variant="outline" title="Editar">
-              <Edit2 /> {/* Ícone de edição */}
+              <Edit2 />
             </Button>
           </Link>
         </div>
       );
     },
   },
-  // ...
 ];
