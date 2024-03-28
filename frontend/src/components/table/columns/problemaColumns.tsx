@@ -1,84 +1,42 @@
-// import { ColumnDef } from "@tanstack/react-table";
-// import { iDataProblema } from "../../../interfaces/iProblema";
-// import { ArrowUpDown } from "lucide-react";
-// import { Button } from "@/components/ui/button";
-
-// export const problemaColumns: ColumnDef<iDataProblema>[] = [
-//   {
-//     accessorKey: "nome",
-//     header: ({ column }) => {
-//       return (
-//         <Button
-//           variant="ghost"
-//           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-//         >
-//           Nome
-//           <ArrowUpDown className="ml-2 h-4 w-4" />
-//         </Button>
-//       );
-//     },
-//   },
-//   {
-//     accessorKey: "usuario.username",
-//     header: "Criador",
-//   },
-//   {
-//     accessorKey: "privado",
-//     header: "privado",
-//   },
-// ];
-
 import { ColumnDef } from "@tanstack/react-table";
 import { iDataProblema } from "../../../interfaces/iProblema";
-import { ArrowUpDown, Edit2, MessageCircle } from "lucide-react";
+import { Edit2, ClipboardPenLine } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 
 export const problemaColumns: ColumnDef<iDataProblema>[] = [
-	// ...
-	{
-		accessorKey: "nome",
-		header: ({ column }) => {
-			return (
-				<Button
-					variant="ghost"
-					onClick={() =>
-						column.toggleSorting(column.getIsSorted() === "asc")
-					}>
-					Nome
-					<ArrowUpDown className="ml-2 h-4 w-4" />
-				</Button>
-			);
-		},
-	},
-	{
-		accessorKey: "usuario.username",
-		header: "Criador",
-	},
-	{
-		accessorKey: "privado",
-		header: "privado",
-	},
-	{
-		id: "actions",
-		cell: ({ row }) => {
-			const problema = row.original;
-			return (
-				<div>
-					<Button
-						onClick={() => {
-							/* Adicione a lógica de resposta aqui */
-						}}>
-						<MessageCircle /> {/* Ícone de resposta */}
-					</Button>
-					<Button
-						onClick={() => {
-							/* Adicione a lógica de edição aqui */
-						}}>
-						<Edit2 /> {/* Ícone de edição */}
-					</Button>
-				</div>
-			);
-		},
-	},
-	// ...
+  // ...
+  {
+    accessorKey: "nome",
+    header: "Nome",
+  },
+  {
+    accessorKey: "usuario.username",
+    header: "Criador",
+  },
+  {
+    accessorKey: "privado",
+    header: "privado",
+  },
+  {
+    id: "actions",
+    cell: ({ row }) => {
+      const problema = row.original;
+      return (
+        <div className="w-5 flex flex-row gap-3">
+          <Link to={`/resposta/${problema.id}`}>
+            <Button variant="outline" title="Responder">
+              <ClipboardPenLine /> {/* Ícone de resposta */}
+            </Button>
+          </Link>
+          <Link to={`/editar/${problema.id}`}>
+            <Button variant="outline" title="Editar">
+              <Edit2 /> {/* Ícone de edição */}
+            </Button>
+          </Link>
+        </div>
+      );
+    },
+  },
+  // ...
 ];
