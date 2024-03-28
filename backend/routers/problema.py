@@ -4,14 +4,15 @@ import zipfile
 import tempfile
 import xml.etree.ElementTree as ET
 from constants import DIRECTION_ORDER_BY_DESCRIPTION, FIELDS_ORDER_BY_DESCRIPTION
+from filters.arquivo import ArquivoFilter
 from filters.problemaTeste import ProblemaTesteFilter
 from routers.auth import oauth2_scheme
 from fastapi import APIRouter, Body, Depends, File, HTTPException, Path, Query, UploadFile, status
-from filters.problema import OrderByFieldsProblemaEnum, ProblemaFilter, search_fields_problema
+from filters.problema import OrderByFieldsProblemaEnum, ProblemaFilter
 from schemas.arquivo import ArquivoCreate, ArquivoReadFull, SecaoEnum
 from schemas.common.compilers import CompilersEnum
 from schemas.common.direction_order_by import DirectionOrderByEnum
-from schemas.declaracao import DeclaracaoCreate
+from schemas.declaracao import DeclaracaoCreate, DeclaracaoReadFull
 from schemas.idioma import IdiomaEnum
 from schemas.problemaResposta import ProblemaRespostaReadSimple
 from schemas.problemaTeste import ProblemaTesteCreate, ProblemaTesteReadFull, TipoTesteProblemaEnum
@@ -23,14 +24,12 @@ from schemas.verificadorTeste import VereditoVerificadorTesteEnum, VerificadorTe
 from utils.bytes_to_megabytes import bytes_to_megabytes
 from utils.language_parser import languages_parser
 from utils.errors import errors
-from models.problema import Problema
-from orm.common.index import get_all
 from dependencies.authenticated_user import get_authenticated_user
 from schemas.problema import ProblemaCreate, ProblemaCreateUpload, ProblemaReadFull, ProblemaReadSimple, ProblemaUpdatePartial, ProblemaUpdateTotal
 from schemas.common.pagination import PaginationSchema
 from dependencies.database import get_db
 from sqlalchemy.orm import Session
-from orm.problema import create_problema, create_problema_upload, get_all_problemas, get_arquivos_problema, get_problema_by_id, get_respostas_problema, get_tags_problema, get_testes_problema, get_validador_problema, get_verificador_problema, update_problema
+from orm.problema import create_problema, create_problema_upload, get_all_problemas, get_arquivos_problema, get_declaracoes_problema, get_problema_by_id, get_respostas_problema, get_tags_problema, get_testes_problema, get_validador_problema, get_verificador_problema, update_problema
 from schemas.common.response import ResponsePaginationSchema, ResponseUnitSchema
 
 PROBLEMA_ID_DESCRIPTION = "Identificador do problema"
@@ -75,42 +74,6 @@ async def read(
     )
 
 
-@router.get("/users/",
-            response_model=ResponsePaginationSchema[ProblemaReadSimple],
-            summary="Lista problemas pertencentes ao usuário autenticado",
-            )
-async def read_problemas_me(
-    db: Session = Depends(get_db),
-    pagination: PaginationSchema = Depends(),
-    filters: ProblemaFilter = Depends(),
-    token: str = Depends(oauth2_scheme),
-    sort: OrderByFieldsProblemaEnum = Query(
-        default=None,
-        description=FIELDS_ORDER_BY_DESCRIPTION
-    ),
-    direction: DirectionOrderByEnum = Query(
-        default=None,
-        description=DIRECTION_ORDER_BY_DESCRIPTION
-    )
-):
-    problemas, metadata = await get_all(
-        db=db,
-        model=Problema,
-        pagination=pagination,
-        token=token,
-        field_order_by=sort,
-        direction=direction,
-        filters=filters,
-        search_fields=search_fields_problema,
-        me_author=True
-    )
-
-    return ResponsePaginationSchema(
-        data=problemas,
-        metadata=metadata
-    )
-
-
 @router.get("/{id}/testes/",
             response_model=ResponsePaginationSchema[ProblemaTesteReadFull],
             summary="Lista testes pertencentes a um problema",
@@ -135,6 +98,32 @@ async def read_problema_id_testes(
 
     return ResponsePaginationSchema(
         data=testes,
+        metadata=metadata
+    )
+
+
+@router.get("/{id}/declaracoes/",
+            response_model=ResponsePaginationSchema[DeclaracaoReadFull],
+            summary="Lista declarações relacionadas a um problema",
+            responses={
+                404: errors[404]
+            }
+            )
+async def read_problema_id_declaracoess(
+    db: Session = Depends(get_db),
+    pagination: PaginationSchema = Depends(),
+    id: int = Path(description=PROBLEMA_ID_DESCRIPTION),
+    token: str = Depends(oauth2_scheme)
+):
+    declaracoes, metadata = await get_declaracoes_problema(
+        db=db,
+        id=id,
+        pagination=pagination,
+        token=token
+    )
+
+    return ResponsePaginationSchema(
+        data=declaracoes,
         metadata=metadata
     )
 
@@ -248,11 +237,13 @@ async def read_problema_id_arquivos(
     db: Session = Depends(get_db),
     pagination: PaginationSchema = Depends(),
     id: int = Path(description=PROBLEMA_ID_DESCRIPTION),
-    token: str = Depends(oauth2_scheme)
+    token: str = Depends(oauth2_scheme),
+    filters: ArquivoFilter = Depends()
 ):
     arquivos, metadata = await get_arquivos_problema(
         db=db,
         id=id,
+        filters=filters,
         pagination=pagination,
         token=token
     )
@@ -306,7 +297,7 @@ async def create(
     return ResponseUnitSchema(data=data)
 
 
-@router.post("/upload/",
+@router.post("/pacotes/",
              response_model=ResponseUnitSchema[ProblemaReadFull],
              status_code=201,
              summary="Cadastra um problema via pacote da plataforma Polygon",

@@ -59,7 +59,7 @@ def test_read_meus_dados_admin():
     token_admin = create_administrador_helper(database)
 
     response = client.get(
-        f"{URL_USER}/me/",
+        f"{URL_USER}/eu/",
         headers={
             "Authorization": f"Bearer {token_admin}",
         },
@@ -76,7 +76,7 @@ def test_read_meus_dados_user():
     _, token, _ = create_user_helper()
 
     response = client.get(
-        f"{URL_USER}/me/",
+        f"{URL_USER}/eu/",
         headers={
             "Authorization": f"Bearer {token}",
         },
@@ -121,6 +121,51 @@ def test_read_imagem_inexistente_user():
     user_id = response_user.json().get("data").get("id")
 
     response = client.get(
+        f"{URL_USER}/{user_id}/imagem/",
+        headers={
+            "Authorization": f"Bearer {token}",
+        },
+    )
+
+    assert response.status_code == 404
+
+    resume_dependencies()
+
+
+def test_delete_imagem_user():
+    remove_dependencies()
+
+    response_user, token, _ = create_user_helper()
+    user_id = response_user.json().get("data").get("id")
+
+    with open("./tests/integration/user.png", 'rb') as file:
+        client.post(
+            f"{URL_USER}/{user_id}/imagem/",
+            files={"imagem": file},
+            headers={
+                "Authorization": f"Bearer {token}",
+            },
+        )
+
+    response = client.delete(
+        f"{URL_USER}/{user_id}/imagem/",
+        headers={
+            "Authorization": f"Bearer {token}",
+        },
+    )
+
+    assert response.status_code == 204
+
+    resume_dependencies()
+
+
+def test_delete_imagem_inexistente_user():
+    remove_dependencies()
+
+    response_user, token, _ = create_user_helper()
+    user_id = response_user.json().get("data").get("id")
+
+    response = client.delete(
         f"{URL_USER}/{user_id}/imagem/",
         headers={
             "Authorization": f"Bearer {token}",
