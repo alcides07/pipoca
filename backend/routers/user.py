@@ -1,8 +1,16 @@
 from fastapi.responses import FileResponse
+from constants import DIRECTION_ORDER_BY_DESCRIPTION, FIELDS_ORDER_BY_DESCRIPTION
 from dependencies.authorization_user import is_admin
 from dependencies.is_admin import is_admin_dependencies
+from filters.problema import OrderByFieldsProblemaEnum, ProblemaFilter, search_fields_problema
+from filters.problemaResposta import OrderByFieldsProblemaRespostaEnum, search_fields_problema_resposta
+from models.problema import Problema
+from models.problemaResposta import ProblemaResposta
 from routers.auth import oauth2_scheme
-from fastapi import APIRouter, Body, Depends, HTTPException, Path, Response, UploadFile, status, File
+from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query, Response, UploadFile, status, File
+from schemas.common.direction_order_by import DirectionOrderByEnum
+from schemas.problema import ProblemaReadSimple
+from schemas.problemaResposta import ProblemaRespostaReadFull
 from utils.errors import errors
 from models.user import User
 from orm.common.index import delete_object, get_by_id, get_all
@@ -11,7 +19,7 @@ from schemas.user import UserCreate, UserReadFull, UserUpdatePartial, UserUpdate
 from schemas.common.pagination import PaginationSchema
 from dependencies.database import get_db
 from sqlalchemy.orm import Session
-from orm.user import create_imagem_user, create_user, get_imagem_user, update_user
+from orm.user import create_imagem_user, create_user, delete_imagem_user, get_imagem_user, update_user
 from schemas.common.response import ResponsePaginationSchema, ResponseUnitSchema
 from passlib.context import CryptContext
 
@@ -21,8 +29,8 @@ USER_ID_DESCRIPTION = "identificador do usuário"
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 router = APIRouter(
-    prefix="/users",
-    tags=["users"],
+    prefix="/usuarios",
+    tags=["usuários"],
 )
 
 
@@ -49,7 +57,7 @@ async def read(
     )
 
 
-@router.get("/me/",
+@router.get("/eu/",
             response_model=ResponseUnitSchema[UserReadFull],
             summary="Lista dados do usuário autenticado",
             dependencies=[Depends(get_authenticated_user)],
@@ -78,6 +86,76 @@ async def read_me(
 
     return ResponseUnitSchema(
         data=user
+    )
+
+
+@router.get("/problemas/",
+            response_model=ResponsePaginationSchema[ProblemaReadSimple],
+            summary="Lista problemas pertencentes ao usuário autenticado",
+            )
+async def read_problemas_me(
+    db: Session = Depends(get_db),
+    pagination: PaginationSchema = Depends(),
+    filters: ProblemaFilter = Depends(),
+    token: str = Depends(oauth2_scheme),
+    sort: OrderByFieldsProblemaEnum = Query(
+        default=None,
+        description=FIELDS_ORDER_BY_DESCRIPTION
+    ),
+    direction: DirectionOrderByEnum = Query(
+        default=None,
+        description=DIRECTION_ORDER_BY_DESCRIPTION
+    )
+):
+    problemas, metadata = await get_all(
+        db=db,
+        model=Problema,
+        pagination=pagination,
+        token=token,
+        field_order_by=sort,
+        direction=direction,
+        filters=filters,
+        search_fields=search_fields_problema,
+        me_author=True
+    )
+
+    return ResponsePaginationSchema(
+        data=problemas,
+        metadata=metadata
+    )
+
+
+@router.get("/problemasRespostas/",
+            response_model=ResponsePaginationSchema[ProblemaRespostaReadFull],
+            summary="Lista respostas fornecidas à problemas pelo usuário autenticado",
+            )
+async def read_problemas_respostas_me(
+    db: Session = Depends(get_db),
+    pagination: PaginationSchema = Depends(),
+    token: str = Depends(oauth2_scheme),
+    sort: OrderByFieldsProblemaRespostaEnum = Query(
+        default=None,
+        description=FIELDS_ORDER_BY_DESCRIPTION
+    ),
+    direction: DirectionOrderByEnum = Query(
+        default=None,
+        description=DIRECTION_ORDER_BY_DESCRIPTION
+    )
+):
+    problemas, metadata = await get_all(
+        db=db,
+        model=ProblemaResposta,
+        pagination=pagination,
+        token=token,
+        field_order_by=sort,
+        direction=direction,
+        search_fields=search_fields_problema_resposta,
+        me_author=True
+    )
+
+    return ResponsePaginationSchema(
+        data=problemas,
+        metadata=metadata
     )
 
 
@@ -177,6 +255,28 @@ async def upload_imagem(
     )
 
     return FileResponse(path=data)
+
+
+@router.delete("/{id}/imagem/",
+               status_code=204,
+               summary="Deleta a imagem de perfil de um usuário",
+               responses={
+                   404: errors[404]
+               }
+               )
+async def delete_image(
+        id: int = Path(description=USER_ID_DESCRIPTION),
+        db: Session = Depends(get_db),
+        token: str = Depends(oauth2_scheme)
+):
+    imagem = await delete_imagem_user(
+        db=db,
+        token=token,
+        id=id
+    )
+
+    if (imagem):
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.put("/{id}/",

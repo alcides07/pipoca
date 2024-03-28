@@ -3,6 +3,7 @@ from sqlalchemy import Column
 from dependencies.authenticated_user import get_authenticated_user
 from dependencies.authorization_user import is_admin, is_user
 from fastapi import HTTPException, status
+from filters.arquivo import ArquivoFilter
 from filters.problema import OrderByFieldsProblemaEnum, ProblemaFilter, search_fields_problema
 from filters.problemaTeste import ProblemaTesteFilter
 from models.problemaResposta import ProblemaResposta
@@ -326,7 +327,8 @@ async def get_arquivos_problema(
     db: Session,
     id: int,
     pagination: PaginationSchema,
-    token: str
+    token: str,
+    filters: ArquivoFilter
 ):
     db_problema = db.query(Problema).filter(Problema.id == id).first()
 
@@ -346,6 +348,7 @@ async def get_arquivos_problema(
 
         db_problema_arquivos, metadata = filter_collection(
             model=Arquivo,
+            filters=filters,
             pagination=pagination,
             query=query
         )
@@ -403,6 +406,43 @@ async def get_testes_problema(
         raise HTTPException(
             status.HTTP_500_INTERNAL_SERVER_ERROR,
             "Ocorreu um erro na busca pelos testes do problema!"
+        )
+
+
+async def get_declaracoes_problema(
+    db: Session,
+    id: int,
+    pagination: PaginationSchema,
+    token: str
+):
+    db_problema = db.query(Problema).filter(Problema.id == id).first()
+
+    if (not db_problema):
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND,
+            "O problema não foi encontrado!"
+        )
+
+    user = await get_authenticated_user(token, db)
+    if (is_user(user) and bool(db_problema.usuario_id != user.id)):
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED)
+
+    try:
+        query = db.query(Declaracao).filter(
+            Declaracao.problema_id == id)
+
+        db_problema_declaracoes, metadata = filter_collection(
+            model=Declaracao,
+            pagination=pagination,
+            query=query
+        )
+
+        return db_problema_declaracoes.all(), metadata
+
+    except SQLAlchemyError:
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            "Ocorreu um erro na busca pelas declarações do problema!"
         )
 
 
@@ -512,5 +552,8 @@ async def get_problema_by_id(
         bool(db_problema.privado == True)
     ):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED)
+
+    testes_exemplo = [teste for teste in db_problema.testes if teste.exemplo]
+    db_problema.testes = testes_exemplo
 
     return db_problema

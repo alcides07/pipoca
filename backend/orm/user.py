@@ -142,6 +142,46 @@ async def create_imagem_user(
     return caminho_imagem
 
 
+async def delete_imagem_user(
+    token: str,
+    db: Session,
+    id=id
+):
+    db_user = db.query(User).filter(User.id == id).first()
+
+    if (not db_user):
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND,
+            "O usuário não foi encontrado!"
+        )
+
+    user = await get_authenticated_user(db=db, token=token)
+    if (is_user(user) and db_user.id != user.id):
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED)
+
+    caminho_imagem = str(db_user.caminho_imagem)
+
+    if os.path.exists(caminho_imagem):
+        try:
+            os.remove(caminho_imagem)
+            db_user.caminho_imagem = None  # type: ignore
+            db.commit()
+            db.refresh(db_user)
+            return True
+
+        except SQLAlchemyError:
+            db.rollback()
+            raise HTTPException(
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+                "Ocorreu um erro na exclusão da imagem do usuário!"
+            )
+
+    raise HTTPException(
+        status.HTTP_404_NOT_FOUND,
+        "A imagem de perfil do usuário não foi encontrada!"
+    )
+
+
 async def get_imagem_user(
     db: Session,
     id=id
@@ -159,7 +199,7 @@ async def get_imagem_user(
     if (caminho_imagem is None or not os.path.exists(caminho_imagem)):
         raise HTTPException(
             status.HTTP_404_NOT_FOUND,
-            "A imagem de perfil do usuário solicitado não foi encontrada!"
+            "A imagem de perfil do usuário não foi encontrada!"
         )
 
     return caminho_imagem

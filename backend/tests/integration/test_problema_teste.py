@@ -6,7 +6,7 @@ from fastapi.testclient import TestClient
 from tests.config_test import remove_dependencies, resume_dependencies
 
 client = TestClient(app)
-URL_PROBLEMA_TESTE = "/problemaTestes"
+URL_PROBLEMA_TESTE = "/problemasTestes"
 
 
 def test_read_problema_teste_unit_sou_criador_do_problema():
