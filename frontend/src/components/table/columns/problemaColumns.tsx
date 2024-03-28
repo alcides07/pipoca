@@ -24,7 +24,7 @@ export const problemaColumns: ColumnDef<iDataProblema>[] = [
       const problema = row.original;
       return (
         <div className="w-5 flex flex-row gap-3">
-          <Link to={`/resposta/${problema.id}`}>
+          <Link to={`/problema/${problema.id}/responde/`}>
             <Button variant="outline" title="Responder">
               <ClipboardPenLine /> {/* Ícone de resposta */}
             </Button>
