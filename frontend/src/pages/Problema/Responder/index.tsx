@@ -1,3 +1,6 @@
+import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@/components/ui/scroll-area";
+
 interface ExamplesLayoutProps {
   children?: React.ReactNode;
 }
@@ -41,26 +44,32 @@ function Responder({ children }: ExamplesLayoutProps) {
         <ResizablePanel defaultSize={94}>
           <ResizablePanelGroup direction="horizontal" className="min-h-[200px]">
             <ResizablePanel defaultSize={60}>
-              <div className="flex h-full justify-center px-10">
-                {problema && problema.declaracoes[0] && (
-                  <div>
-                    <h2 className="text-3xl font-bold my-5">
-                      {problema.declaracoes[0].titulo}
-                    </h2>
-                    <p className="pb-5 text-justify">
-                      {problema.declaracoes[0].contextualizacao}
-                    </p>
-                    <div className="pb-5">
-                      <span className="text-ms font-bold">Entrada</span>
-                      <p>{problema.declaracoes[0].formatacao_entrada}</p>
+              <ScrollArea className="h-full w-full">
+                <div className="flex h-full justify-center overflow-y-auto px-10">
+                  {problema && problema.declaracoes[0] && (
+                    <div>
+                      <h2 className="text-3xl font-bold my-5">
+                        {problema.declaracoes[0].titulo}
+                      </h2>
+                      <Separator className="my-4" />
+
+                      <p className="pb-5 text-justify">
+                        {problema.declaracoes[0].contextualizacao}
+                      </p>
+                      <div className="pb-5">
+                        <span className="text-ms font-bold">Entrada</span>
+                        <p>{problema.declaracoes[0].formatacao_entrada}</p>
+                      </div>
+                      <div>
+                        <span className="text-ms font-bold">Saída</span>
+                        <p>{problema.declaracoes[0].formatacao_saida}</p>
+                      </div>
+                      <Separator className="my-4" />
+                      {/* crie aqui */}
                     </div>
-                    <div className="pb-5">
-                      <span className="text-ms font-bold">Saída</span>
-                      <p>{problema.declaracoes[0].formatacao_saida}</p>
-                    </div>
-                  </div>
-                )}
-              </div>
+                  )}
+                </div>
+              </ScrollArea>
             </ResizablePanel>
             <ResizableHandle disabled />
             <ResizablePanel defaultSize={40}>
