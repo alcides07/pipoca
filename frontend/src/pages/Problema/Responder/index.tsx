@@ -1,10 +1,5 @@
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
-
-interface ExamplesLayoutProps {
-  children?: React.ReactNode;
-}
-
 import {
   ResizableHandle,
   ResizablePanel,
@@ -15,11 +10,58 @@ import { useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { iDataProblema } from "@/interfaces/iProblema";
 
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+
+import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormMessage,
+} from "@/components/ui/form";
+import { Textarea } from "@/components/ui/textarea";
+import { toast } from "@/components/ui/use-toast";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+const FormSchema = z.object({
+  linguagem: z.string("Informe o seu código!"),
+});
+
+interface ExamplesLayoutProps {
+  children?: React.ReactNode;
+}
+
 function Responder({ children }: ExamplesLayoutProps) {
   const { id } = useParams<{ id: string }>();
   const [problema, setProblema] = useState<iDataProblema>();
-
+  const [rows, setRows] = useState(1);
   console.log("id", id);
+
+  const form = useForm<z.infer<typeof FormSchema>>({
+    resolver: zodResolver(FormSchema),
+  });
+
+  function onSubmit(data: z.infer<typeof FormSchema>) {
+    toast({
+      title: "You submitted the following values:",
+      description: (
+        <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
+          <code className="text-white">{JSON.stringify(data, null, 2)}</code>
+        </pre>
+      ),
+    });
+  }
 
   useEffect(() => {
     getProblem();
@@ -71,11 +113,76 @@ function Responder({ children }: ExamplesLayoutProps) {
                 </div>
               </ScrollArea>
             </ResizablePanel>
-            <ResizableHandle disabled />
+            <ResizableHandle withHandle />
             <ResizablePanel defaultSize={40}>
-              <div className="flex h-full items-center justify-center p-6">
-                <span className="font-semibold">Content</span>
-              </div>
+              <ScrollArea className="h-full w-full">
+                <div className="flex h-full justify-center p-6">
+                  <Form {...form}>
+                    <form
+                      onSubmit={form.handleSubmit(onSubmit)}
+                      className="w-full space-y-6"
+                    >
+                      <FormField
+                        control={form.control}
+                        name="linguagem"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormControl>
+                              <Select>
+                                <SelectTrigger className="w-full">
+                                  <SelectValue placeholder="Selecione uma linguagem" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectGroup>
+                                    <SelectLabel>Fruits</SelectLabel>
+                                    <SelectItem value="apple">Apple</SelectItem>
+                                    <SelectItem value="banana">
+                                      Banana
+                                    </SelectItem>
+                                    <SelectItem value="blueberry">
+                                      Blueberry
+                                    </SelectItem>
+                                    <SelectItem value="grapes">
+                                      Grapes
+                                    </SelectItem>
+                                    <SelectItem value="pineapple">
+                                      Pineapple
+                                    </SelectItem>
+                                  </SelectGroup>
+                                </SelectContent>
+                                <FormMessage />
+                              </Select>
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="bio"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormControl>
+                              <Textarea
+                                placeholder="Tell us a little bit about yourself"
+                                className="min-h-[17rem] text-ms"
+                                rows={rows}
+                                onInput={(e: any) => {
+                                  setRows(e.target.scrollHeight / 20); // Ajuste o divisor conforme necessário
+                                }}
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <Button type="submit" className="w-full">
+                        Submit
+                      </Button>
+                    </form>
+                  </Form>
+                </div>
+              </ScrollArea>
             </ResizablePanel>
           </ResizablePanelGroup>
         </ResizablePanel>
