@@ -1,12 +1,20 @@
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import FormLogin from "../login/components/formLogin";
 import FormRegister from "../login/components/formRegister";
 import { Toaster } from "@/components/ui/toaster";
 
-function CadastrarProblemas() {
+function CadastroProblem() {
   return (
     <div className="px-28">
       <div className="py-4">
@@ -51,4 +59,4 @@ function CadastrarProblemas() {
   );
 }
 
-export default CadastrarProblemas;
+export default CadastroProblem;
