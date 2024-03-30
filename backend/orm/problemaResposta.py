@@ -41,7 +41,7 @@ def get_arquivo_gerador(db_problema: Problema):
     return None
 
 
-def execute_teste_gerado(
+async def execute_teste_gerado(
     teste: ProblemaTeste,
     arquivo_gerador: Arquivo
 ):
@@ -109,10 +109,11 @@ def execute_teste_gerado(
     return stdout_logs_decode
 
 
-def execute_checker(
-        db_problema: Problema,
-        output_codigo_solucao: list[str],
-        output_codigo_user: list[str]
+async def execute_checker(
+    db_problema: Problema,
+    output_codigo_solucao: list[str],
+    output_codigo_user: list[str],
+    output_testes_gerados: List[str]
 ):
     codigo_verificador = db_problema.verificador.corpo
     linguagem_verificador: str = db_problema.verificador.linguagem
@@ -130,14 +131,11 @@ def execute_checker(
             response.raw.decode_content = True
             shutil.copyfileobj(response.raw, file)
 
-        arquivo_gerador: Arquivo | None = get_arquivo_gerador(db_problema)
-
         for i, teste in enumerate(db_problema.testes):
             teste_entrada = teste.entrada
 
-            if (teste.tipo == TipoTesteProblemaEnum.GERADO.value and arquivo_gerador != None):
-                teste_entrada = execute_teste_gerado(
-                    teste, arquivo_gerador)
+            if (teste.tipo == TipoTesteProblemaEnum.GERADO.value):
+                teste_entrada = output_testes_gerados[i]
 
             with open(os.path.join(temp_dir, f"{FILENAME_RUN}{extension_verificador}"), "w") as file:
                 file.write(codigo_verificador)
@@ -172,8 +170,8 @@ def execute_checker(
                 stderr_logs_decode = stderr_logs.decode()
 
                 if (stderr_logs_decode != ""):
-                    error = stderr_logs_decode.split()
-                    veredito.append(error[0].lower())
+                    veredito_mensagem = stderr_logs_decode.split()
+                    veredito.append(veredito_mensagem[0].lower())
 
                 container.stop()  # type: ignore
                 container.remove()  # type: ignore
@@ -187,7 +185,11 @@ def execute_checker(
     return veredito
 
 
-def execute_arquivo_solucao(db_problema: Problema, arquivo_solucao: Arquivo):
+async def execute_arquivo_solucao(
+    db_problema: Problema,
+    arquivo_solucao: Arquivo,
+    arquivo_gerador: Arquivo | None
+):
     linguagem = str(arquivo_solucao.linguagem)
     codigo = str(arquivo_solucao.corpo)
 
@@ -198,15 +200,29 @@ def execute_arquivo_solucao(db_problema: Problema, arquivo_solucao: Arquivo):
     WORKING_DIR = "/arquivo/testes/"
 
     output_codigo_solucao: List[str] = []
+    output_testes_gerados: List[str] = []
 
     with tempfile.TemporaryDirectory() as temp_dir:
         for teste in db_problema.testes:
+            teste_entrada = teste.entrada
+
+            if (teste.tipo == TipoTesteProblemaEnum.GERADO.value):
+                if (arquivo_gerador is None):
+                    raise HTTPException(
+                        status.HTTP_500_INTERNAL_SERVER_ERROR,
+                        "O arquivo gerador de testes não foi encontrado!"
+                    )
+
+                teste_entrada = await execute_teste_gerado(
+                    teste, arquivo_gerador)
+
+            output_testes_gerados.append(teste_entrada)
 
             with open(os.path.join(temp_dir, f"{FILENAME_RUN}{extension}"), "w") as file:
                 file.write(codigo)
 
             with open(os.path.join(temp_dir, INPUT_TEST_FILENAME), "w") as file:
-                file.write(teste.entrada)
+                file.write(teste_entrada)
 
             try:
                 client.images.pull(image)
@@ -248,12 +264,13 @@ def execute_arquivo_solucao(db_problema: Problema, arquivo_solucao: Arquivo):
                     "Ocorreu um erro no processamento do arquivo de solução oficial do problema!"
                 )
 
-        return output_codigo_solucao
+        return output_codigo_solucao, output_testes_gerados
 
 
-def execute_codigo_user(
+async def execute_codigo_user(
     db_problema: Problema,
-    problema_resposta: ProblemaRespostaCreate
+    problema_resposta: ProblemaRespostaCreate,
+    output_testes_gerados: List[str]
 ):
     codigo_user = problema_resposta.resposta
     codigo_user_linguagem = problema_resposta.linguagem
@@ -268,12 +285,16 @@ def execute_codigo_user(
 
     with tempfile.TemporaryDirectory() as temp_dir:
         for i, teste in enumerate(db_problema.testes):
+            teste_entrada = teste.entrada
+
+            if (teste.tipo == TipoTesteProblemaEnum.GERADO.value):
+                teste_entrada = output_testes_gerados[i]
 
             with open(os.path.join(temp_dir, f"{FILENAME_RUN}{extension}"), "w") as file:
                 file.write(codigo_user)
 
             with open(os.path.join(temp_dir, INPUT_TEST_FILENAME), "w") as file:
-                file.write(teste.entrada)
+                file.write(teste_entrada)
 
             try:
                 client.images.pull(image)
@@ -315,28 +336,33 @@ def execute_codigo_user(
         return output_codigo_user
 
 
-def execute_processo_resolucao(
+async def execute_processo_resolucao(
     problema_resposta: ProblemaRespostaCreate,
     db_problema: Problema
 ):
     arquivo_solucao = get_arquivo_solucao(db_problema)
-    output_codigo_solucao = execute_arquivo_solucao(
+    arquivo_gerador = get_arquivo_gerador(db_problema)
+
+    output_codigo_solucao, output_testes_gerados = await execute_arquivo_solucao(
         db_problema,
-        arquivo_solucao
+        arquivo_solucao,
+        arquivo_gerador
     )
 
-    output_codigo_user = execute_codigo_user(
+    output_codigo_user = await execute_codigo_user(
         db_problema,
-        problema_resposta
+        problema_resposta,
+        output_testes_gerados
     )
 
     if (isinstance(output_codigo_user, str)):
         return [], [], [], output_codigo_user
 
-    veredito = execute_checker(
+    veredito = await execute_checker(
         db_problema,
         output_codigo_solucao,
-        output_codigo_user
+        output_codigo_user,
+        output_testes_gerados
     )
     return veredito, output_codigo_user, output_codigo_solucao, None
 
@@ -365,7 +391,7 @@ async def create_problema_resposta(
             )
 
     try:
-        veredito, output_user, output_judge, erro = execute_processo_resolucao(
+        veredito, output_user, output_judge, erro = await execute_processo_resolucao(
             problema_resposta=problema_resposta,
             db_problema=db_problema
         )
