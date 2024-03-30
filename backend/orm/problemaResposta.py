@@ -3,7 +3,6 @@ import os
 import tempfile
 import requests
 import shutil
-import time
 from compilers import commands
 from typing import List
 from constants import FILENAME_RUN, INPUT_TEST_FILENAME, OUTPUT_JUDGE_FILENAME, OUTPUT_USER_FILENAME, URL_TEST_LIB
@@ -116,8 +115,6 @@ async def execute_checker(
     output_codigo_user: list[str],
     output_testes_gerados: List[str]
 ):
-    start_time = time.time()  # Marca o tempo de início
-
     codigo_verificador = db_problema.verificador.corpo
     linguagem_verificador: str = db_problema.verificador.linguagem
     extension_verificador: str = commands[linguagem_verificador]["extension"]
@@ -128,15 +125,15 @@ async def execute_checker(
     command = commands[linguagem_verificador]["run_checker"]
 
     with tempfile.TemporaryDirectory() as temp_dir:
+        client.images.pull(image)
+        volumes = {temp_dir: {
+            'bind': '/checker/testes/', 'mode': 'rw'}}
+
         with open(os.path.join(temp_dir, 'testlib.h'), 'wb') as file:
             response = requests.get(URL_TEST_LIB, stream=True)
             response.raise_for_status()
             response.raw.decode_content = True
             shutil.copyfileobj(response.raw, file)
-
-        client.images.pull(image)
-        volumes = {temp_dir: {
-            'bind': '/checker/testes/', 'mode': 'rw'}}
 
         with open(os.path.join(temp_dir, f"{FILENAME_RUN}{extension_verificador}"), "w") as file:
             file.write(codigo_verificador)
@@ -185,11 +182,6 @@ async def execute_checker(
     container.stop()  # type: ignore
     container.remove()  # type: ignore
 
-    end_time = time.time()  # Marca o tempo de término
-    elapsed_time = end_time - start_time  # Calcula o tempo decorrido
-    print(
-        f"execute_checker até retorno levou {elapsed_time} segundos para executar.")
-
     return veredito
 
 
@@ -198,8 +190,6 @@ async def execute_arquivo_solucao(
     arquivo_solucao: Arquivo,
     arquivo_gerador: Arquivo | None
 ):
-    start_time = time.time()  # Marca o tempo de início
-
     linguagem = str(arquivo_solucao.linguagem)
     codigo_solucao = str(arquivo_solucao.corpo)
 
@@ -213,7 +203,6 @@ async def execute_arquivo_solucao(
     output_testes_gerados: List[str] = []
 
     with tempfile.TemporaryDirectory() as temp_dir:
-
         client.images.pull(image)
         volumes = {temp_dir: {
             'bind': WORKING_DIR, 'mode': 'rw'}}
@@ -274,11 +263,6 @@ async def execute_arquivo_solucao(
         container.stop()  # type: ignore
         container.remove()  # type: ignore
 
-        end_time = time.time()  # Marca o tempo de término
-        elapsed_time = end_time - start_time  # Calcula o tempo decorrido
-        print(
-            f"execute_arquivo_solucao levou {elapsed_time} segundos para executar.")
-
         return output_codigo_solucao, output_testes_gerados
 
 
@@ -287,8 +271,6 @@ async def execute_codigo_user(
     problema_resposta: ProblemaRespostaCreate,
     output_testes_gerados: List[str]
 ):
-    start_time = time.time()  # Marca o tempo de início
-
     codigo_user = problema_resposta.resposta
     codigo_user_linguagem = problema_resposta.linguagem
 
@@ -350,11 +332,6 @@ async def execute_codigo_user(
         container.stop()  # type: ignore
         container.remove()  # type: ignore
 
-        end_time = time.time()  # Marca o tempo de término
-        elapsed_time = end_time - start_time  # Calcula o tempo decorrido
-        print(
-            f"execute_codigo_user levou {elapsed_time} segundos para executar.")
-
         return output_codigo_user
 
 
@@ -413,17 +390,10 @@ async def create_problema_resposta(
             )
 
     try:
-        start_time = time.time()  # Marca o tempo de início
-
         veredito, output_user, output_judge, erro = await execute_processo_resolucao(
             problema_resposta=problema_resposta,
             db_problema=db_problema
         )
-
-        end_time = time.time()  # Marca o tempo de término
-        elapsed_time = end_time - start_time  # Calcula o tempo decorrido
-        print(
-            f"tempo total até retorno levou {elapsed_time} segundos para executar.")
 
         db_problema_resposta = ProblemaResposta(
             **problema_resposta.model_dump(exclude=set(["problema", "usuario"])))
