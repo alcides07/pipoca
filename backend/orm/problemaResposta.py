@@ -41,7 +41,7 @@ def get_arquivo_gerador(db_problema: Problema):
     return None
 
 
-def execute_teste_gerado(
+async def execute_teste_gerado(
     teste: ProblemaTeste,
     arquivo_gerador: Arquivo
 ):
@@ -109,7 +109,7 @@ def execute_teste_gerado(
     return stdout_logs_decode
 
 
-def execute_checker(
+async def execute_checker(
     db_problema: Problema,
     output_codigo_solucao: list[str],
     output_codigo_user: list[str],
@@ -185,7 +185,7 @@ def execute_checker(
     return veredito
 
 
-def execute_arquivo_solucao(
+async def execute_arquivo_solucao(
     db_problema: Problema,
     arquivo_solucao: Arquivo,
     arquivo_gerador: Arquivo | None
@@ -213,7 +213,7 @@ def execute_arquivo_solucao(
                         "O arquivo gerador de testes não foi encontrado!"
                     )
 
-                teste_entrada = execute_teste_gerado(
+                teste_entrada = await execute_teste_gerado(
                     teste, arquivo_gerador)
 
             output_testes_gerados.append(teste_entrada)
@@ -267,7 +267,7 @@ def execute_arquivo_solucao(
         return output_codigo_solucao, output_testes_gerados
 
 
-def execute_codigo_user(
+async def execute_codigo_user(
     db_problema: Problema,
     problema_resposta: ProblemaRespostaCreate,
     output_testes_gerados: List[str]
@@ -336,20 +336,20 @@ def execute_codigo_user(
         return output_codigo_user
 
 
-def execute_processo_resolucao(
+async def execute_processo_resolucao(
     problema_resposta: ProblemaRespostaCreate,
     db_problema: Problema
 ):
     arquivo_solucao = get_arquivo_solucao(db_problema)
     arquivo_gerador = get_arquivo_gerador(db_problema)
 
-    output_codigo_solucao, output_testes_gerados = execute_arquivo_solucao(
+    output_codigo_solucao, output_testes_gerados = await execute_arquivo_solucao(
         db_problema,
         arquivo_solucao,
         arquivo_gerador
     )
 
-    output_codigo_user = execute_codigo_user(
+    output_codigo_user = await execute_codigo_user(
         db_problema,
         problema_resposta,
         output_testes_gerados
@@ -358,7 +358,7 @@ def execute_processo_resolucao(
     if (isinstance(output_codigo_user, str)):
         return [], [], [], output_codigo_user
 
-    veredito = execute_checker(
+    veredito = await execute_checker(
         db_problema,
         output_codigo_solucao,
         output_codigo_user,
@@ -391,7 +391,7 @@ async def create_problema_resposta(
             )
 
     try:
-        veredito, output_user, output_judge, erro = execute_processo_resolucao(
+        veredito, output_user, output_judge, erro = await execute_processo_resolucao(
             problema_resposta=problema_resposta,
             db_problema=db_problema
         )
