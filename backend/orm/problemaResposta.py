@@ -3,6 +3,7 @@ import os
 import tempfile
 import requests
 import shutil
+import time
 from compilers import commands
 from typing import List
 from constants import FILENAME_RUN, INPUT_TEST_FILENAME, OUTPUT_JUDGE_FILENAME, OUTPUT_USER_FILENAME, URL_TEST_LIB
@@ -115,6 +116,8 @@ async def execute_checker(
     output_codigo_user: list[str],
     output_testes_gerados: List[str]
 ):
+    start_time = time.time()  # Marca o tempo de início
+
     codigo_verificador = db_problema.verificador.corpo
     linguagem_verificador: str = db_problema.verificador.linguagem
     extension_verificador: str = commands[linguagem_verificador]["extension"]
@@ -131,14 +134,18 @@ async def execute_checker(
             response.raw.decode_content = True
             shutil.copyfileobj(response.raw, file)
 
+        client.images.pull(image)
+        volumes = {temp_dir: {
+            'bind': '/checker/testes/', 'mode': 'rw'}}
+
+        with open(os.path.join(temp_dir, f"{FILENAME_RUN}{extension_verificador}"), "w") as file:
+            file.write(codigo_verificador)
+
         for i, teste in enumerate(db_problema.testes):
             teste_entrada = teste.entrada
 
             if (teste.tipo == TipoTesteProblemaEnum.GERADO.value):
                 teste_entrada = output_testes_gerados[i]
-
-            with open(os.path.join(temp_dir, f"{FILENAME_RUN}{extension_verificador}"), "w") as file:
-                file.write(codigo_verificador)
 
             with open(os.path.join(temp_dir, INPUT_TEST_FILENAME), "w") as file:
                 file.write(teste_entrada)
@@ -150,10 +157,6 @@ async def execute_checker(
                 file.write(output_codigo_user[i])
 
             try:
-                client.images.pull(image)
-                volumes = {temp_dir: {
-                    'bind': '/checker/testes/', 'mode': 'rw'}}
-
                 container = client.containers.run(
                     image,
                     command,
@@ -173,14 +176,19 @@ async def execute_checker(
                     veredito_mensagem = stderr_logs_decode.split()
                     veredito.append(veredito_mensagem[0].lower())
 
-                container.stop()  # type: ignore
-                container.remove()  # type: ignore
-
             except DockerException:
                 raise HTTPException(
                     status.HTTP_500_INTERNAL_SERVER_ERROR,
                     "Ocorreu um erro no processo de comparação dos resultados!"
                 )
+
+    container.stop()  # type: ignore
+    container.remove()  # type: ignore
+
+    end_time = time.time()  # Marca o tempo de término
+    elapsed_time = end_time - start_time  # Calcula o tempo decorrido
+    print(
+        f"execute_checker até retorno levou {elapsed_time} segundos para executar.")
 
     return veredito
 
@@ -190,8 +198,10 @@ async def execute_arquivo_solucao(
     arquivo_solucao: Arquivo,
     arquivo_gerador: Arquivo | None
 ):
+    start_time = time.time()  # Marca o tempo de início
+
     linguagem = str(arquivo_solucao.linguagem)
-    codigo = str(arquivo_solucao.corpo)
+    codigo_solucao = str(arquivo_solucao.corpo)
 
     client = docker.from_env()
     image = commands[linguagem]["image"]
@@ -203,6 +213,14 @@ async def execute_arquivo_solucao(
     output_testes_gerados: List[str] = []
 
     with tempfile.TemporaryDirectory() as temp_dir:
+
+        client.images.pull(image)
+        volumes = {temp_dir: {
+            'bind': WORKING_DIR, 'mode': 'rw'}}
+
+        with open(os.path.join(temp_dir, f"{FILENAME_RUN}{extension}"), "w") as file:
+            file.write(codigo_solucao)
+
         for teste in db_problema.testes:
             teste_entrada = teste.entrada
 
@@ -218,17 +236,10 @@ async def execute_arquivo_solucao(
 
             output_testes_gerados.append(teste_entrada)
 
-            with open(os.path.join(temp_dir, f"{FILENAME_RUN}{extension}"), "w") as file:
-                file.write(codigo)
-
             with open(os.path.join(temp_dir, INPUT_TEST_FILENAME), "w") as file:
                 file.write(teste_entrada)
 
             try:
-                client.images.pull(image)
-                volumes = {temp_dir: {
-                    'bind': WORKING_DIR, 'mode': 'rw'}}
-
                 container = client.containers.run(
                     image,
                     command,
@@ -246,11 +257,7 @@ async def execute_arquivo_solucao(
 
                 stdout_logs_decode = stdout_logs.decode()
                 stderr_logs_decode = stderr_logs.decode()
-
                 output_codigo_solucao.append(stdout_logs_decode)
-
-                container.stop()  # type: ignore
-                container.remove()  # type: ignore
 
                 if (stderr_logs_decode != ""):
                     raise HTTPException(
@@ -264,6 +271,14 @@ async def execute_arquivo_solucao(
                     "Ocorreu um erro no processamento do arquivo de solução oficial do problema!"
                 )
 
+        container.stop()  # type: ignore
+        container.remove()  # type: ignore
+
+        end_time = time.time()  # Marca o tempo de término
+        elapsed_time = end_time - start_time  # Calcula o tempo decorrido
+        print(
+            f"execute_arquivo_solucao levou {elapsed_time} segundos para executar.")
+
         return output_codigo_solucao, output_testes_gerados
 
 
@@ -272,6 +287,8 @@ async def execute_codigo_user(
     problema_resposta: ProblemaRespostaCreate,
     output_testes_gerados: List[str]
 ):
+    start_time = time.time()  # Marca o tempo de início
+
     codigo_user = problema_resposta.resposta
     codigo_user_linguagem = problema_resposta.linguagem
 
@@ -284,23 +301,23 @@ async def execute_codigo_user(
     output_codigo_user: List[str] = []
 
     with tempfile.TemporaryDirectory() as temp_dir:
+        client.images.pull(image)
+        volumes = {temp_dir: {
+            'bind': WORKING_DIR, 'mode': 'rw'}}
+
+        with open(os.path.join(temp_dir, f"{FILENAME_RUN}{extension}"), "w") as file:
+            file.write(codigo_user)
+
         for i, teste in enumerate(db_problema.testes):
             teste_entrada = teste.entrada
 
             if (teste.tipo == TipoTesteProblemaEnum.GERADO.value):
                 teste_entrada = output_testes_gerados[i]
 
-            with open(os.path.join(temp_dir, f"{FILENAME_RUN}{extension}"), "w") as file:
-                file.write(codigo_user)
-
             with open(os.path.join(temp_dir, INPUT_TEST_FILENAME), "w") as file:
                 file.write(teste_entrada)
 
             try:
-                client.images.pull(image)
-                volumes = {temp_dir: {
-                    'bind': WORKING_DIR, 'mode': 'rw'}}
-
                 container = client.containers.run(
                     image,
                     command,
@@ -321,9 +338,6 @@ async def execute_codigo_user(
 
                 output_codigo_user.append(stdout_logs_decode)
 
-                container.stop()  # type: ignore
-                container.remove()  # type: ignore
-
                 if (stderr_logs_decode != ""):
                     return f"Erro em tempo de execução no teste {i+1}"
 
@@ -332,6 +346,14 @@ async def execute_codigo_user(
                     status.HTTP_500_INTERNAL_SERVER_ERROR,
                     "Ocorreu um erro no processamento do código do usuário!"
                 )
+
+        container.stop()  # type: ignore
+        container.remove()  # type: ignore
+
+        end_time = time.time()  # Marca o tempo de término
+        elapsed_time = end_time - start_time  # Calcula o tempo decorrido
+        print(
+            f"execute_codigo_user levou {elapsed_time} segundos para executar.")
 
         return output_codigo_user
 
@@ -391,10 +413,17 @@ async def create_problema_resposta(
             )
 
     try:
+        start_time = time.time()  # Marca o tempo de início
+
         veredito, output_user, output_judge, erro = await execute_processo_resolucao(
             problema_resposta=problema_resposta,
             db_problema=db_problema
         )
+
+        end_time = time.time()  # Marca o tempo de término
+        elapsed_time = end_time - start_time  # Calcula o tempo decorrido
+        print(
+            f"tempo total até retorno levou {elapsed_time} segundos para executar.")
 
         db_problema_resposta = ProblemaResposta(
             **problema_resposta.model_dump(exclude=set(["problema", "usuario"])))
