@@ -63,7 +63,8 @@ class ProblemaResposta(Base):
         Integer,
         ForeignKey(
             'problemas.id',
-            name="problema_respostas_problema_id_fkey"
+            name="problema_respostas_problema_id_fkey",
+            ondelete="SET NULL"
         )
     )
     problema = relationship(
@@ -78,7 +79,8 @@ class ProblemaResposta(Base):
         Integer,
         ForeignKey(
             "users.id",
-            name="problema_respostas_usuario_id_fkey"
+            name="problema_respostas_usuario_id_fkey",
+            ondelete="SET NULL"
         )
     )
     usuario = relationship(
