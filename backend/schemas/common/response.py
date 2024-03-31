@@ -21,6 +21,16 @@ class ResponseUnitSchema(BaseModel, Generic[T]):
     )
 
 
+class ResponseDataWithMessageSchema(BaseModel, Generic[T]):
+    data: T = Field(
+        description="Objeto retornado"
+    )
+
+    message: str = Field(
+        description="Mensagem de feedback acerca do retorno"
+    )
+
+
 class ResponseMessageSchema(BaseModel):
     message: str = Field(
         description="Mensagem de feedback acerca do retorno"
