@@ -6,17 +6,25 @@ T = TypeVar('T')
 
 
 class ResponsePaginationSchema(BaseModel, Generic[T]):
-    metadata: MetadataSchema | None = None
-    data: List[T] | None = None
+    metadata: MetadataSchema = Field(
+        description="Metadados acerca da resposta"
+    )
+
+    data: List[T] = Field(
+        description="Lista de objetos retornados"
+    )
 
 
 class ResponseUnitSchema(BaseModel, Generic[T]):
-    data: T | None = None
+    data: T = Field(
+        description="Objeto retornado"
+    )
 
 
-class ResponseMessageSchema(BaseModel, Generic[T]):
-    data: T | List[T] | None = None
-    message: str | None = None
+class ResponseMessageSchema(BaseModel):
+    message: str = Field(
+        description="Mensagem de feedback acerca do retorno"
+    )
 
 
 class ResponseValidationSchema(BaseModel):
