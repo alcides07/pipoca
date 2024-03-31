@@ -9,8 +9,7 @@ from models.user import User
 from schemas.user import UserCreate, UserUpdatePartial, UserUpdateTotal
 from passlib.context import CryptContext
 from decouple import config
-from jose import JWTError, jwt
-from datetime import datetime, timezone
+from jose import ExpiredSignatureError, JWTError, jwt
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -222,16 +221,6 @@ async def activate_account(
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
 
-        expire_timestamp: float | None = payload.get("exp")
-        current_time = datetime.now(timezone.utc)
-        current_timestamp = int(current_time.timestamp())
-
-        if (expire_timestamp and current_timestamp > expire_timestamp):
-            raise HTTPException(
-                status.HTTP_401_UNAUTHORIZED,
-                "O link de ativação de conta expirou!"
-            )
-
         username = payload.get("sub")
         if username is None:
             raise credentials_exception
@@ -245,6 +234,12 @@ async def activate_account(
         db.refresh(db_user)
 
         return True
+
+    except ExpiredSignatureError:
+        raise HTTPException(
+            status.HTTP_401_UNAUTHORIZED,
+            "O link de ativação de conta expirou!"
+        )
 
     except JWTError:
         raise credentials_exception
