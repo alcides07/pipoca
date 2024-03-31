@@ -20,9 +20,11 @@ from schemas.common.pagination import PaginationSchema
 from dependencies.database import get_db
 from sqlalchemy.orm import Session
 from orm.user import create_imagem_user, create_user, delete_imagem_user, get_imagem_user, update_user
-from schemas.common.response import ResponsePaginationSchema, ResponseUnitSchema
+from schemas.common.response import ResponseMessageSchema, ResponsePaginationSchema, ResponseUnitSchema
 from passlib.context import CryptContext
-
+from utils.create_token import create_token
+from datetime import timedelta
+from utils.send_email import send_email
 
 USER_ID_DESCRIPTION = "identificador do usuário"
 
@@ -205,13 +207,12 @@ async def read_id(
 
 
 @router.post("/",
-             response_model=ResponseUnitSchema[UserReadFull],
+             response_model=ResponseMessageSchema,
              status_code=201,
              summary="Cadastra um usuário",
              responses={
                  400: errors[400],
                  422: errors[422],
-
              }
              )
 def create(
@@ -219,8 +220,30 @@ def create(
     db: Session = Depends(get_db),
 ):
     data = create_user(db=db, user=user)
+    MINUTES = 15
+    access_token_expires = timedelta(minutes=MINUTES)
+    token = create_token(
+        data={
+            "sub": data.username
+        },
+        expires_delta=access_token_expires
+    )
 
-    return ResponseUnitSchema(data=data)
+    url_ativacao = f"http://localhost:8000/auth/ativacao/?codigo={token}"
+
+    send_email(
+        remetente="plataformapipoca@gmail.com",
+        destinatario=user.email,
+        assunto="Ativação de conta",
+        corpo=f'''
+        <p>Olá {data.username}, o link de ativação ficará disponível por <b>{MINUTES} minutos</b>.</p>
+        <span>Para confirmar o seu endereço de e-mail, por favor clique <a href="{url_ativacao}">aqui</a>.</span>
+        ''',
+    )
+
+    return ResponseMessageSchema(
+        message="Uma confirmação foi enviada para o e-mail fornecido!",
+    )
 
 
 @router.post("/{id}/imagem/",
