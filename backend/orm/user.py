@@ -3,11 +3,14 @@ from dependencies.authenticated_user import get_authenticated_user
 from dependencies.authorization_user import is_user
 from sqlalchemy.exc import SQLAlchemyError
 from fastapi import HTTPException, UploadFile, status
-from orm.common.index import get_by_key_value_exists
+from orm.common.index import get_by_key_value, get_by_key_value_exists
 from sqlalchemy.orm import Session
 from models.user import User
 from schemas.user import UserCreate, UserUpdatePartial, UserUpdateTotal
 from passlib.context import CryptContext
+from decouple import config
+from jose import JWTError, jwt
+from datetime import datetime, timezone
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -203,3 +206,45 @@ async def get_imagem_user(
         )
 
     return caminho_imagem
+
+
+async def activate_account(
+    token: str,
+    db: Session
+):
+    credentials_exception = HTTPException(
+        status.HTTP_401_UNAUTHORIZED,
+        "Não foi possível validar a conta do usuário!",
+    )
+    SECRET_KEY = str(config("SECRET_KEY"))
+    ALGORITHM = str(config("ALGORITHM"))
+
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+
+        expire_timestamp: float | None = payload.get("exp")
+        current_time = datetime.now(timezone.utc)
+        current_timestamp = int(current_time.timestamp())
+
+        if (expire_timestamp and current_timestamp > expire_timestamp):
+            raise HTTPException(
+                status.HTTP_401_UNAUTHORIZED,
+                "O link de ativação de conta expirou!"
+            )
+
+        username = payload.get("sub")
+        if username is None:
+            raise credentials_exception
+
+        db_user = get_by_key_value(db, User, "username", username)
+        if db_user is None:
+            raise credentials_exception
+
+        db_user.ativa = True
+        db.commit()
+        db.refresh(db_user)
+
+        return True
+
+    except JWTError:
+        raise credentials_exception
