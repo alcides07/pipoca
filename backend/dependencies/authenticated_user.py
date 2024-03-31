@@ -28,7 +28,10 @@ async def get_authenticated_user(token: str = Depends(oauth2_scheme), db: Sessio
         current_timestamp = int(current_time.timestamp())
 
         if (expire_timestamp and current_timestamp > expire_timestamp):
-            raise credentials_exception
+            raise HTTPException(
+                status.HTTP_401_UNAUTHORIZED,
+                "A sessão do usuário expirou!"
+            )
 
         username: str | None = (payload.get("sub"))
         if username is None:
