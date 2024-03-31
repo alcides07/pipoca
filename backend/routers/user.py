@@ -20,7 +20,7 @@ from schemas.common.pagination import PaginationSchema
 from dependencies.database import get_db
 from sqlalchemy.orm import Session
 from orm.user import create_imagem_user, create_user, delete_imagem_user, get_imagem_user, update_user
-from schemas.common.response import ResponseMessageSchema, ResponsePaginationSchema, ResponseUnitSchema
+from schemas.common.response import ResponseDataWithMessageSchema, ResponsePaginationSchema, ResponseUnitSchema
 from passlib.context import CryptContext
 from utils.create_token import create_token
 from datetime import timedelta
@@ -207,7 +207,7 @@ async def read_id(
 
 
 @router.post("/",
-             response_model=ResponseMessageSchema,
+             response_model=ResponseDataWithMessageSchema[UserReadFull],
              status_code=201,
              summary="Cadastra um usuário",
              responses={
@@ -233,7 +233,7 @@ def create(
 
     send_email(
         remetente="plataformapipoca@gmail.com",
-        destinatario=user.email,
+        destinatario=str(data.email),
         assunto="Ativação de conta",
         corpo=f'''
         <p>Olá {data.username}, o link de ativação ficará disponível por <b>{MINUTES} minutos</b>.</p>
@@ -241,7 +241,8 @@ def create(
         ''',
     )
 
-    return ResponseMessageSchema(
+    return ResponseDataWithMessageSchema(
+        data=data,
         message="Uma confirmação foi enviada para o e-mail fornecido!",
     )
 
