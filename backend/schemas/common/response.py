@@ -16,7 +16,8 @@ class ResponsePaginationSchema(BaseModel, Generic[T]):
 
 
 class ResponseUnitSchema(BaseModel, Generic[T]):
-    data: T = Field(
+    data: T | None = Field(
+        default=None,
         description="Objeto retornado"
     )
 
