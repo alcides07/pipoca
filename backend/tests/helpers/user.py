@@ -29,9 +29,10 @@ def create_user_helper():
         json=JSON_USER
     )
 
-    if (activate_account_user_helper(JSON_USER["username"])):
-        token_login = login_user_helper(value, password)
-        return response, token_login, JSON_USER
+    activate_account_user_helper(JSON_USER["username"])
+
+    token_login = login_user_helper(value, password)
+    return response, token_login, JSON_USER
 
 
 def activate_account_user_helper(username: str):
@@ -46,8 +47,6 @@ def activate_account_user_helper(username: str):
     client.get(
         f"{URL_AUTH}/ativacao/?codigo={token_ativacao}",
     )
-
-    return True
 
 
 def login_user_helper(username, password):
