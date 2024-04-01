@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
+from pydantic import EmailStr
 from models.administrador import Administrador
 from schemas.common.response import ResponseMessageSchema
 from utils.create_token import create_token
@@ -109,3 +110,38 @@ async def ativacao(
         return ResponseMessageSchema(
             message="A conta do usuário foi ativada com sucesso!",
         )
+
+
+@router.post("/ativacao/reenvio/",
+             summary="Reenvia um e-mail de ativação da conta de um usuário",
+             response_model=ResponseMessageSchema,
+             status_code=200,
+             responses={
+                 422: errors[422],
+                 400: errors[400],
+                 404: errors[404]
+             }
+             )
+async def ativacao_reenvio(
+    email: EmailStr = Body(
+        description="E-mail do usuário"
+    ),
+    db: Session = Depends(get_db)
+):
+    from orm.user import create_token_ativacao_conta_and_send_email, verify_conta_user_resend_email
+
+    await verify_conta_user_resend_email(
+        email=email,
+        db=db
+    )
+
+    await create_token_ativacao_conta_and_send_email(
+        data_token={
+            "sub": email
+        },
+        destinatario=str(email)
+    )
+
+    return ResponseMessageSchema(
+        message="Uma nova confirmação foi enviada para o e-mail fornecido!",
+    )
