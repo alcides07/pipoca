@@ -1,4 +1,5 @@
 import os
+from datetime import timedelta
 from dependencies.authenticated_user import get_authenticated_user
 from dependencies.authorization_user import is_user
 from sqlalchemy.exc import SQLAlchemyError
@@ -10,6 +11,8 @@ from schemas.user import UserCreate, UserUpdatePartial, UserUpdateTotal
 from passlib.context import CryptContext
 from decouple import config
 from jose import ExpiredSignatureError, JWTError, jwt
+from utils.create_token import create_token
+from utils.send_email import send_email
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -221,11 +224,11 @@ async def activate_account(
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
 
-        username = payload.get("sub")
-        if username is None:
+        email = payload.get("sub")
+        if email is None:
             raise credentials_exception
 
-        db_user = get_by_key_value(db, User, "username", username)
+        db_user = get_by_key_value(db, User, "email", email)
         if db_user is None:
             raise credentials_exception
 
@@ -243,3 +246,50 @@ async def activate_account(
 
     except JWTError:
         raise credentials_exception
+
+
+async def create_token_ativacao_conta_and_send_email(
+    data_token: dict,
+    destinatario: str,
+):
+    EXPIRE_MINUTES = 15
+    access_token_expires = timedelta(minutes=EXPIRE_MINUTES)
+    token = create_token(
+        data=data_token,
+        expires_delta=access_token_expires
+    )
+
+    url_ativacao = f"http://localhost:8000/auth/ativacao/?codigo={token}"
+
+    send_email(
+        remetente="plataformapipoca@gmail.com",
+        destinatario=str(destinatario),
+        assunto="Ativação de conta",
+        corpo=f'''
+        <p>O link de ativação ficará disponível por <b>{EXPIRE_MINUTES} minutos</b>.</p>
+        <span>Para confirmar o seu endereço de e-mail, por favor clique <a href="{url_ativacao}">aqui</a>.</span>
+        ''',
+    )
+
+    return
+
+
+async def verify_conta_user_resend_email(
+    email: str,
+    db: Session
+):
+    db_user = db.query(User).filter(User.email == email).first()
+
+    if (not db_user):
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND,
+            "O usuário com o e-mail fornecido não foi encontrado!"
+        )
+
+    if (bool(db_user.ativa)):
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            "A conta do usuário já está ativa!"
+        )
+
+    return
