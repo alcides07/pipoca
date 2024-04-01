@@ -29,17 +29,17 @@ def create_user_helper():
         json=JSON_USER
     )
 
-    activate_account_user_helper(JSON_USER["username"])
+    activate_account_user_helper(JSON_USER["email"])
 
     token_login = login_user_helper(value, password)
     return response, token_login, JSON_USER
 
 
-def activate_account_user_helper(username: str):
+def activate_account_user_helper(email: str):
     access_token_expires = timedelta(minutes=5)
     token_ativacao = create_token(
         data={
-            "sub": username
+            "sub": email
         },
         expires_delta=access_token_expires
     )

@@ -325,8 +325,8 @@ def test_update_full_user_username_exists():
         URL_USER,
         json=user_repeat
     )
-    username_repeat = user_repeat_response.json().get("data").get("username")
-    activate_account_user_helper(username_repeat)
+    email_repeat = user_repeat_response.json().get("data").get("email")
+    activate_account_user_helper(email_repeat)
 
     assert user_repeat_response.status_code == 201
 
