@@ -7,7 +7,7 @@ services:
     build:
       context: ./
       dockerfile: ./Dockerfile
-    command: bash -c "uvicorn main:app --host 0.0.0.0 --reload"
+    command: bash -c "alembic upgrade head && uvicorn main:app --host 0.0.0.0 --reload"
     volumes:
       - imagens-perfil-user:/API/backend/static/users/profile/
     ports:
