@@ -236,7 +236,7 @@ def create(
         destinatario=str(data.email),
         assunto="Ativação de conta",
         corpo=f'''
-        <p>Olá {data.username}, o link de ativação ficará disponível por <b>{MINUTES} minutos</b>.</p>
+        <p>O link de ativação ficará disponível por <b>{MINUTES} minutos</b>.</p>
         <span>Para confirmar o seu endereço de e-mail, por favor clique <a href="{url_ativacao}">aqui</a>.</span>
         ''',
     )
