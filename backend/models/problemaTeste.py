@@ -42,7 +42,8 @@ class ProblemaTeste(Base):
         Integer,
         ForeignKey(
             'problemas.id',
-            name="problema_testes_problema_id_fkey"
+            name="problema_testes_problema_id_fkey",
+            ondelete="CASCADE"
         )
     )
     problema = relationship(

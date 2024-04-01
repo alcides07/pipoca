@@ -7,7 +7,7 @@ from fastapi.testclient import TestClient
 client = TestClient(app)
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-URL_USER = "/users"
+URL_USER = "/usuarios"
 URL_AUTH = "/auth"
 
 

@@ -8,6 +8,8 @@ services:
       context: ./
       dockerfile: ./Dockerfile
     command: bash -c "alembic upgrade head && uvicorn main:app --host 0.0.0.0 --reload"
+    volumes:
+      - imagens-perfil-user:/API/backend/static/users/profile/
     ports:
       - "8000:8000"
     depends_on:
@@ -22,3 +24,6 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
     ports:
       - "5432:5432"
+
+volumes:
+  imagens-perfil-user:

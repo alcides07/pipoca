@@ -69,7 +69,7 @@ def test_read_meus_problemas_user():
     _, token_user, _ = create_user_helper()
 
     response_problema_user = client.get(
-        f"{URL_PROBLEMA}/users/",
+        "/usuarios/problemas/",
         headers={
             "Authorization": f"Bearer {token_user}",
         },
@@ -303,6 +303,43 @@ def test_read_problemas_tags_de_nao_autor_by_problema_id_privado_user():
         f"{URL_PROBLEMA}/{problema_id}/tags/",
         headers={
             "Authorization": f"Bearer {token_user}",
+        },
+    )
+
+    assert response.status_code == 401
+
+    resume_dependencies()
+
+
+def test_read_problemas_declaracoes_com_autor():
+    remove_dependencies()
+
+    response_problema_criado, token_criador_problema = create_problema_user_helper()
+    problema_id = response_problema_criado.json().get("data").get("id")
+
+    response = client.get(
+        f"{URL_PROBLEMA}/{problema_id}/declaracoes/",
+        headers={
+            "Authorization": f"Bearer {token_criador_problema}",
+        },
+    )
+
+    assert response.status_code == 200
+
+    resume_dependencies()
+
+
+def test_read_problemas_declaracoes_com_nao_autor():
+    remove_dependencies()
+
+    response_problema_criado, _ = create_problema_user_helper()
+    problema_id = response_problema_criado.json().get("data").get("id")
+    _, token, _ = create_user_helper()
+
+    response = client.get(
+        f"{URL_PROBLEMA}/{problema_id}/declaracoes/",
+        headers={
+            "Authorization": f"Bearer {token}",
         },
     )
 
@@ -590,9 +627,9 @@ def test_upload_problema_user():
 
     _, token, _ = create_user_helper()
 
-    with open("./tests/integration/multiplication_problem.zip", 'rb') as file:
+    with open("./tests/integration/example_problem.zip", 'rb') as file:
         response = client.post(
-            f"{URL_PROBLEMA}/upload/",
+            f"{URL_PROBLEMA}/pacotes/",
             files={"pacote": file},
             data={"privado": "true"},
             headers={
@@ -611,9 +648,9 @@ def test_upload_problema_admin():
     database = next(get_db_test())
     token = create_administrador_helper(database)
 
-    with open("./tests/integration/multiplication_problem.zip", 'rb') as file:
+    with open("./tests/integration/example_problem.zip", 'rb') as file:
         response = client.post(
-            f"{URL_PROBLEMA}/upload/",
+            f"{URL_PROBLEMA}/pacotes/",
             files={"pacote": file},
             data={"privado": "true"},
             headers={
