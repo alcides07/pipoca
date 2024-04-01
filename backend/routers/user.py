@@ -19,12 +19,9 @@ from schemas.user import UserCreate, UserReadFull, UserUpdatePartial, UserUpdate
 from schemas.common.pagination import PaginationSchema
 from dependencies.database import get_db
 from sqlalchemy.orm import Session
-from orm.user import create_imagem_user, create_user, delete_imagem_user, get_imagem_user, update_user
+from orm.user import create_imagem_user, create_token_ativacao_conta_and_send_email, create_user, delete_imagem_user, get_imagem_user, update_user
 from schemas.common.response import ResponseDataWithMessageSchema, ResponsePaginationSchema, ResponseUnitSchema
 from passlib.context import CryptContext
-from utils.create_token import create_token
-from datetime import timedelta
-from utils.send_email import send_email
 
 USER_ID_DESCRIPTION = "identificador do usuário"
 
@@ -215,30 +212,16 @@ async def read_id(
                  422: errors[422],
              }
              )
-def create(
+async def create(
     user: UserCreate = Body(description="Dados do usuário"),
     db: Session = Depends(get_db),
 ):
     data = create_user(db=db, user=user)
-    MINUTES = 15
-    access_token_expires = timedelta(minutes=MINUTES)
-    token = create_token(
-        data={
-            "sub": data.username
+    await create_token_ativacao_conta_and_send_email(
+        data_token={
+            "sub": data.email
         },
-        expires_delta=access_token_expires
-    )
-
-    url_ativacao = f"http://localhost:8000/auth/ativacao/?codigo={token}"
-
-    send_email(
-        remetente="plataformapipoca@gmail.com",
-        destinatario=str(data.email),
-        assunto="Ativação de conta",
-        corpo=f'''
-        <p>O link de ativação ficará disponível por <b>{MINUTES} minutos</b>.</p>
-        <span>Para confirmar o seu endereço de e-mail, por favor clique <a href="{url_ativacao}">aqui</a>.</span>
-        ''',
+        destinatario=str(data.email)
     )
 
     return ResponseDataWithMessageSchema(
