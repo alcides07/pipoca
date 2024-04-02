@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/card";
 import problemaService from "@/service/api/problemaService";
 import { iProblema } from "@/interfaces/iProblema";
+import { Separator } from "@/components/ui/separator";
 
 const profileFormSchema = z.object({
 	privado: z.boolean().default(false).optional(),
@@ -115,13 +116,14 @@ function FormCadastro() {
 
 	return (
 		<Card>
-			<CardHeader>
+			<CardHeader className="">
 				<CardTitle>Cadastro de Problema</CardTitle>
 				<CardDescription>
 					Preencha o formulário para cadastrar um problema.
 				</CardDescription>
 			</CardHeader>
 			<CardContent>
+				<Separator className="my-4" />
 				<Form {...form}>
 					<form
 						onSubmit={form.handleSubmit(onSubmit)}
