@@ -1,6 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useFieldArray, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { useState } from "react";
 
 import {
   Form,
@@ -22,6 +23,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import problemaService from "@/service/api/problemaService";
+import { iProblema } from "@/interfaces/iProblema";
 
 const profileFormSchema = z.object({
   privado: z.boolean().default(false).optional(),
@@ -74,12 +77,14 @@ const profileFormSchema = z.object({
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
-export default function FormCadastro() {
+function FormCadastro() {
+  const [problema, setProblema] = useState<iProblema>();
+
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
       nome: "",
-      privado: true,
+      privado: false,
       nome_arquivo_entrada: "",
       nome_arquivo_saida: "",
       tempo_limite: 0,
@@ -88,19 +93,19 @@ export default function FormCadastro() {
     mode: "onChange",
   });
 
-  const { fields, append } = useFieldArray({
-    name: "urls",
-    control: form.control,
-  });
-
-  function onSubmit(data: ProfileFormValues) {
-    toast({
-      title: "You submitted the following values:",
-      description: (
-        <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-          <code className="text-white">{JSON.stringify(data, null, 2)}</code>
-        </pre>
-      ),
+  async function onSubmit(data: ProfileFormValues) {
+    await problemaService.createProblema(data).then((response) => {
+      setProblema(response);
+      console.log(response);
+      // console.log("data", data);
+      toast({
+        title: "You submitted the following values:",
+        description: (
+          <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
+            <code className="text-white">{JSON.stringify(data, null, 2)}</code>
+          </pre>
+        ),
+      });
     });
   }
 
@@ -112,7 +117,7 @@ export default function FormCadastro() {
           Preencha o formulário para cadastrar um problema.
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-2">
+      <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
             <FormField
@@ -223,3 +228,4 @@ export default function FormCadastro() {
     </Card>
   );
 }
+export default FormCadastro;

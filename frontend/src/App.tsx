@@ -3,8 +3,7 @@ import Dashboard from "./pages/dashboard";
 import ListarProblemas from "./pages/Problemas/listarProblemas";
 import Header from "./components/header";
 import Login from "./pages/login";
-// import CadastrarProblemas from "./pages/Problemas/cadastrarProblemas";
-import FormCadastro from "./pages/Problemas/CadastroProblema/components/formCadastro";
+import CadastroProblema from "./pages/Problemas/CadastroProblema";
 
 const linksHeader = [
   { nome: "Dashboard", link: "/" },
@@ -21,7 +20,7 @@ function App() {
         <Routes>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/problemas" element={<ListarProblemas />} />
-          <Route path="/problemas/cadastro" element={<FormCadastro />} />
+          <Route path="/problemas/cadastro" element={<CadastroProblema />} />
           <Route path="/" element={<Login />} />
         </Routes>
       </BrowserRouter>

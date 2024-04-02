@@ -1,5 +1,5 @@
 import { ColumnDef } from "@tanstack/react-table";
-import { iDataProblema } from "../../../interfaces/iProblema";
+import { iDataProblema } from "../../../interfaces/iProblemas";
 import { ArrowUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 

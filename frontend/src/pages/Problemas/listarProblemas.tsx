@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import problemaService from "../../service/api/problemaService";
-import { iDataProblema } from "../../interfaces/iProblema";
+import { iDataProblema } from "../../interfaces/iProblemas";
 import { DataTable } from "../../components/table";
 import { problemaColumns } from "@/components/table/columns/problemaColumns";
 

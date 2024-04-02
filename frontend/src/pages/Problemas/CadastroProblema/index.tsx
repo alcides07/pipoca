@@ -1,23 +1,14 @@
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import FormLogin from "../login/components/formLogin";
-import FormRegister from "../login/components/formRegister";
-import { Toaster } from "@/components/ui/toaster";
+// import { Card, CardContent } from "@/components/ui/card";
+// import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+// import FormLogin from "../login/components/formLogin";
+// import FormRegister from "../login/components/formRegister";
+// import { Toaster } from "@/components/ui/toaster";
+import FormCadastro from "./components/formCadastro";
 
-function CadastroProblem() {
+function CadastroProblema() {
   return (
-    <div className="px-28">
-      <div className="py-4">
+    <div className="mx-28 my-5">
+      {/* <div className="py-4">
         <p className="text-2xl font-bold">Cadastro de problema</p>
       </div>
       <Tabs className="w-full">
@@ -54,9 +45,10 @@ function CadastroProblem() {
           </CardContent>
         </Card>
       </Tabs>
-      <Toaster />
+      <Toaster /> */}
+      <FormCadastro />
     </div>
   );
 }
 
-export default CadastroProblem;
+export default CadastroProblema;
