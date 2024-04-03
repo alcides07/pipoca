@@ -26,6 +26,8 @@ import {
 import problemaService from "@/service/api/problemaService";
 import { Separator } from "@/components/ui/separator";
 import { useParams } from "react-router-dom";
+import { useToast } from "@/components/ui/use-toast";
+import { Progress } from "@/components/ui/progress";
 
 const profileFormSchema = z.object({
   privado: z.boolean().default(false).optional(),
@@ -79,9 +81,10 @@ const profileFormSchema = z.object({
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
 function FormCadastroTabs() {
-  // const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const [problema, setProblema] = useState<any>();
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     getProblema();
@@ -91,34 +94,51 @@ function FormCadastroTabs() {
     await problemaService.getProblemaById(id).then((response) => {
       setProblema(response.data);
       console.log(response);
-      console.log("data", response.data);
+      console.log("data no tab", response.data);
+      setLoading(false);
+      form.reset({
+        nome: response.data.nome,
+        privado: response.data.privado,
+        nome_arquivo_entrada: response.data.nome_arquivo_entrada,
+        nome_arquivo_saida: response.data.nome_arquivo_saida,
+        tempo_limite: response.data.tempo_limite,
+        memoria_limite: response.data.memoria_limite,
+      });
     });
   }
 
+  console.log("estado", problema);
+
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
-    defaultValues: {
-      nome: "",
-      privado: false,
-      nome_arquivo_entrada: "",
-      nome_arquivo_saida: "",
-      tempo_limite: 0,
-      memoria_limite: 0,
-    },
     mode: "onChange",
   });
 
   async function onSubmit(data: ProfileFormValues) {
-    await problemaService.createProblema(data).then((response: any) => {
-      console.log("data", response.data);
-      console.log("data1", response.data.id);
-      // navigate(`/problema/${response.data.id}`);
+    const p: ProfileFormValues = {
+      nome: data.nome,
+      privado: data.privado,
+      nome_arquivo_entrada: data.nome_arquivo_entrada,
+      nome_arquivo_saida: data.nome_arquivo_saida,
+      tempo_limite: data.tempo_limite,
+      memoria_limite: data.memoria_limite,
+    };
+
+    await problemaService.updateProblema(id, p).then((response: any) => {
+      console.log("data na atualização", response.data);
+      toast({
+        title: "Sucesso.",
+        description: "Problema atualizado!",
+        duration: 3000,
+      });
     });
   }
 
-  return (
+  return loading ? (
+    <Progress data-state="loading" className="w-full" />
+  ) : (
     <Card>
-      <CardHeader className="">
+      <CardHeader>
         <CardTitle>Cadastro de Problema</CardTitle>
         <CardDescription>
           Preencha o formulário para cadastrar um problema.
