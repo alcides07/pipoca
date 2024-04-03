@@ -1,6 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { useState, useEffect } from "react";
 
 import {
   Form,
@@ -24,7 +25,7 @@ import {
 } from "@/components/ui/card";
 import problemaService from "@/service/api/problemaService";
 import { Separator } from "@/components/ui/separator";
-import { useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 
 const profileFormSchema = z.object({
   privado: z.boolean().default(false).optional(),
@@ -77,9 +78,22 @@ const profileFormSchema = z.object({
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
-function FormCadastro() {
-  //   const [problema, setProblema] = useState<iProblema>();
-  const navigate = useNavigate();
+function FormCadastroTabs() {
+  // const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
+  const [problema, setProblema] = useState<any>();
+
+  useEffect(() => {
+    getProblema();
+  }, []);
+
+  async function getProblema() {
+    await problemaService.getProblemaById(id).then((response) => {
+      setProblema(response.data);
+      console.log(response);
+      console.log("data", response.data);
+    });
+  }
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
@@ -95,19 +109,10 @@ function FormCadastro() {
   });
 
   async function onSubmit(data: ProfileFormValues) {
-    await problemaService.createProblema(data).then((response) => {
-      console.log("id", response.data.data.id);
-      console.log("Entrei aqui");
-      navigate(`/problema/${response.data.data.id}`);
-
-      toast({
-        title: "You submitted the following values:",
-        description: (
-          <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-            <code className="text-white">{JSON.stringify(data, null, 2)}</code>
-          </pre>
-        ),
-      });
+    await problemaService.createProblema(data).then((response: any) => {
+      console.log("data", response.data);
+      console.log("data1", response.data.id);
+      // navigate(`/problema/${response.data.id}`);
     });
   }
 
@@ -231,4 +236,4 @@ function FormCadastro() {
     </Card>
   );
 }
-export default FormCadastro;
+export default FormCadastroTabs;
