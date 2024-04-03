@@ -7,10 +7,11 @@ import FormCadastroTabs from "@/pages/Problemas/CadastroProblema/components/form
 function TabsProblema() {
   console.log("Entrei aqui em TabsProblema");
   return (
-    <div className="px-28 h-[90vh]">
-      <div className="py-4">
-        <p className="text-2xl font-bold">Cadastro de problema</p>
-      </div>
+    // <div className="px-28 h-[90vh]">
+    // <div className="py-4">
+    //   <p className="text-2xl font-bold">Cadastro de problema</p>
+    // </div>
+    <div>
       <Tabs defaultValue="problema" className="w-full">
         <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="problema">Problema</TabsTrigger>

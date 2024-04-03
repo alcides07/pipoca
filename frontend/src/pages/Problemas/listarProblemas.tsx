@@ -31,7 +31,7 @@ function ListarProblemas() {
   }
 
   return (
-    <div className="px-28">
+    <div>
       <div className="py-4">
         <p className="text-2xl font-bold">Problemas</p>
       </div>
