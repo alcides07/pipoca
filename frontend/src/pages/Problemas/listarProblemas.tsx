@@ -27,7 +27,7 @@ function ListarProblemas() {
   }
 
   function cadastraProblema(): void {
-    navigate("/problemas/cadastro");
+    navigate("/problema/cadastro");
   }
 
   return (
