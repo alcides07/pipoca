@@ -120,14 +120,24 @@ function FormCadastroTabs() {
       memoria_limite: data.memoria_limite,
     };
 
-    await problemaService.updateProblema(id, p).then((response: any) => {
-      console.log("data na atualização", response.data);
-      toast({
-        title: "Sucesso.",
-        description: "Problema atualizado!",
-        duration: 3000,
+    await problemaService
+      .updateProblema(id, p)
+      .then((response: any) => {
+        console.log("data na atualização", response.data);
+        toast({
+          title: "Sucesso.",
+          description: "Problema atualizado!",
+          duration: 3000,
+        });
+      })
+      .catch(() => {
+        toast({
+          variant: "destructive",
+          title: "Erro.",
+          description: "A atualização do problema falhou. Tente novamente!.",
+          duration: 3000,
+        });
       });
-    });
   }
 
   return loading ? (
