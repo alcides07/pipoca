@@ -12,7 +12,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { toast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -94,8 +93,6 @@ function FormCadastroTabs() {
   async function getProblema() {
     await problemaService.getProblemaById(id).then((response) => {
       setProblema(response.data);
-      console.log(response);
-      console.log("data no tab", response.data);
       setLoading(false);
       form.reset({
         nome: response.data.nome,
@@ -107,8 +104,6 @@ function FormCadastroTabs() {
       });
     });
   }
-
-  console.log("estado", problema);
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
