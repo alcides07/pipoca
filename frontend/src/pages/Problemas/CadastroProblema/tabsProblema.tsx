@@ -1,16 +1,11 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
 import { Toaster } from "@/components/ui/toaster";
 import FormLogin from "@/pages/login/components/formLogin";
 import FormRegister from "@/pages/login/components/formRegister";
 import FormCadastroTabs from "@/pages/Problemas/CadastroProblema/components/formCadastroTabs";
+
 function TabsProblema() {
-  console.log("Entrei aqui em TabsProblema");
   return (
-    // <div className="px-28 h-[90vh]">
-    // <div className="py-4">
-    //   <p className="text-2xl font-bold">Cadastro de problema</p>
-    // </div>
     <div>
       <Tabs defaultValue="problema" className="w-full">
         <TabsList className="grid w-full grid-cols-6">
@@ -39,7 +34,6 @@ function TabsProblema() {
         <TabsContent value="testes">
           <FormRegister />
         </TabsContent>
-        {/* </div> */}
       </Tabs>
       <Toaster />
     </div>
