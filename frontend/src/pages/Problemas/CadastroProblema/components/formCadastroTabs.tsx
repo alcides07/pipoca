@@ -87,6 +87,7 @@ function FormCadastroTabs() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    window.scrollTo(0, 0);
     getProblema();
   }, []);
 
