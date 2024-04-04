@@ -32,22 +32,21 @@ export default function Header({ options }: HeaderProps): JSX.Element {
   }
 
   return (
-    <div>
-      <Card className="rounded-none px-28">
-        <CardContent className="px-0 py-3 flex justify-between">
-          <div className="font-bold flex items-center text-2xl">
-            <Popcorn />
-            PIPOCA
-          </div>
-          <div>
-            <NavigationMenu>
-              <NavigationMenuList className="gap-6">
-                {options &&
-                  options.map((option) => (
-                    <NavigationMenuItem key={option.nome}>
-                      <Link
-                        to={option.link}
-                        className={`
+    <Card className="rounded-none px-28">
+      <CardContent className="px-0 py-3 flex justify-between">
+        <div className="font-bold flex items-center text-2xl">
+          <Popcorn />
+          PIPOCA
+        </div>
+        <div>
+          <NavigationMenu>
+            <NavigationMenuList className="gap-6">
+              {options &&
+                options.map((option) => (
+                  <NavigationMenuItem key={option.nome}>
+                    <Link
+                      to={option.link}
+                      className={`
                           ${navigationMenuTriggerStyle()}
                           ${
                             location.pathname === option.link ||
@@ -56,30 +55,29 @@ export default function Header({ options }: HeaderProps): JSX.Element {
                               : ""
                           }
                         `}
-                      >
-                        {option.nome}
-                      </Link>
-                    </NavigationMenuItem>
-                  ))}
-              </NavigationMenuList>
-            </NavigationMenu>
-          </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Avatar>
-                <AvatarImage src="https://github.com/shadcn.png" />
-                <AvatarFallback>CN</AvatarFallback>
-              </Avatar>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-25">
-              <DropdownMenuItem>
-                <LogOut className="mr-2 h-4 w-4" />
-                <button onClick={handleLogout}>Sair</button>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </CardContent>
-      </Card>
-    </div>
+                    >
+                      {option.nome}
+                    </Link>
+                  </NavigationMenuItem>
+                ))}
+            </NavigationMenuList>
+          </NavigationMenu>
+        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Avatar>
+              <AvatarImage src="https://github.com/shadcn.png" />
+              <AvatarFallback>CN</AvatarFallback>
+            </Avatar>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-25">
+            <DropdownMenuItem>
+              <LogOut className="mr-2 h-4 w-4" />
+              <button onClick={handleLogout}>Sair</button>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </CardContent>
+    </Card>
   );
 }

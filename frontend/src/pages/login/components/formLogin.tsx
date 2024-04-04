@@ -30,7 +30,7 @@ const formSchema = z.object({
   }),
 });
 
-function FormLogin() {
+function FormLogin({ onLogin }: any) {
   const navigate = useNavigate();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -57,6 +57,7 @@ function FormLogin() {
           console.log("token", response.data.access_token);
           localStorage.setItem("access_token", response.data.access_token);
           navigate("/dashboard");
+          onLogin();
         }
       })
       .catch((error) => {
@@ -64,7 +65,7 @@ function FormLogin() {
       });
   }
   return (
-    <Card>
+    <Card className="w-full">
       <CardHeader>
         <CardTitle>Login</CardTitle>
         <CardDescription>
@@ -81,7 +82,7 @@ function FormLogin() {
                 <FormItem>
                   <FormLabel>Nome</FormLabel>
                   <FormControl>
-                    <Input placeholder="" {...field} />
+                    <Input placeholder="" {...field} autoComplete="username" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -94,7 +95,11 @@ function FormLogin() {
                 <FormItem>
                   <FormLabel>Senha</FormLabel>
                   <FormControl>
-                    <Input type="password" {...field} />
+                    <Input
+                      type="password"
+                      {...field}
+                      autoComplete="current-password"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
