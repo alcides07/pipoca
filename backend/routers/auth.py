@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from passlib.context import CryptContext
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import jwt
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from decouple import config
 
 
@@ -21,7 +21,7 @@ TOKEN_EXPIRE_MINUTES = float(config("TOKEN_EXPIRE_MINUTES"))
 
 def create_token(data: dict, expires_delta: timedelta):
     to_encode = data.copy()
-    expire = datetime.utcnow() + expires_delta
+    expire = datetime.now(timezone.utc) + expires_delta
     expire_timestamp = int(expire.timestamp())
     to_encode.update({"exp": expire_timestamp})
     SECRET_KEY = str(config("SECRET_KEY"))
@@ -69,9 +69,9 @@ async def login(
         db, form_data.username, form_data.password)
     if not user:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Erro. Credenciais inválidas!",
-            headers={"WWW-Authenticate": "Bearer"},
+            status.HTTP_401_UNAUTHORIZED,
+            "Credenciais inválidas!",
+            {"WWW-Authenticate": "Bearer"},
         )
     access_token_expires = timedelta(minutes=TOKEN_EXPIRE_MINUTES)
     access_token = create_token(

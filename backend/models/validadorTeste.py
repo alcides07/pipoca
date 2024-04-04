@@ -1,5 +1,4 @@
-from schemas.validadorTeste import VereditoValidadorTesteEnum
-from sqlalchemy import CheckConstraint, Column, ForeignKey, Integer, String, Enum
+from sqlalchemy import CheckConstraint, Column, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 from database import Base
 
@@ -26,7 +25,7 @@ class ValidadorTeste(Base):
     )
 
     veredito = Column(
-        Enum(VereditoValidadorTesteEnum),
+        String,
         nullable=False
     )
 

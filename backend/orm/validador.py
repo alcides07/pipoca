@@ -21,12 +21,14 @@ async def create_validador(
     ).first()
 
     if (not db_problema):
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail="Problema não encontrado!")
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND,
+            "O problema não foi encontrado!"
+        )
 
     user = await get_authenticated_user(token=token, db=db)
     if (is_user(user) and db_problema.usuario_id != user.id):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED)
 
     try:
         db_validador = Validador(
@@ -53,7 +55,10 @@ async def create_validador(
 
     except SQLAlchemyError:
         db.rollback()
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            "Ocorreu um erro na criação do validador!"
+        )
 
 
 async def get_testes_validador(
@@ -65,12 +70,15 @@ async def get_testes_validador(
     db_validador = db.query(Validador).filter(Validador.id == id).first()
 
     if (not db_validador):
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND,
+            "O validador não foi encontrado!"
+        )
 
     user = await get_authenticated_user(token, db)
 
     if (is_user(user) and db_validador.problema.usuario_id != user.id):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED)
 
     try:
         query = db.query(ValidadorTeste).filter(
@@ -85,7 +93,10 @@ async def get_testes_validador(
         return db_validador_testes.all(), metadata
 
     except SQLAlchemyError:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            "Ocorreu um erro na busca pelos testes do validador!"
+        )
 
 
 async def update_validador(
@@ -97,7 +108,10 @@ async def update_validador(
     db_validador = db.query(Validador).filter(Validador.id == id).first()
 
     if (not db_validador):
-        raise HTTPException(status.HTTP_404_NOT_FOUND)
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND,
+            "O validador não foi encontrado!"
+        )
 
     user = await get_authenticated_user(token, db)
     if (is_user(user) and user.id != db_validador.problema.usuario_id):
@@ -116,4 +130,7 @@ async def update_validador(
 
     except SQLAlchemyError:
         db.rollback()
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            "Ocorreu um erro na atualização do validador!"
+        )

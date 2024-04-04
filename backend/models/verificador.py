@@ -24,7 +24,6 @@ class Verificador(Base):
         nullable=False,
     )
 
-    # Talvez Enum em breve
     linguagem = Column(
         String,
         nullable=False,
