@@ -42,7 +42,7 @@ const formSchema = z.object({
 });
 
 interface FormRegisterProps {
-  onSuccess: () => void;
+  onSuccess?: () => void;
 }
 
 function FormRegister({ onSuccess }: FormRegisterProps) {

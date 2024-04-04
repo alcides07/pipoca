@@ -1,22 +1,18 @@
 import { iTag } from "./iTag";
-import { iTestes } from "./iTeste";
-import { iValidador } from "./iValidador";
-import { iVerificador } from "./iVerificador";
 
-export interface iProblemas {
-  metadata: iMetadataProblemas;
-  data: iDataProblema[];
+interface Declaracoes {
+  titulo: string;
+  idioma: string;
+  contextualizacao: string;
+  formatacao_entrada: string;
+  formatacao_saida: string;
+  observacao: string;
+  tutorial: string;
+  id: number;
+  problema_id: number;
 }
 
-interface iMetadataProblemas {
-  count: number;
-  limit: number;
-  offset: number;
-  search_fields: string[];
-  total: number;
-}
-
-export interface iDataProblema {
+export interface iProblema {
   nome: string;
   privado: boolean;
   nome_arquivo_entrada: string;
@@ -29,25 +25,6 @@ export interface iDataProblema {
     id: number;
   };
   tags: iTag[];
-  declaracoes: iDeclaracoesProblema[];
   criado_em: string;
-  arquivos: iArquivosProblema[];
-  validador: iValidador;
-  verificador: iVerificador;
-  testes: iTestes[];
-}
-
-interface iDeclaracoesProblema {
-  titulo: string;
-  idioma: string;
-  id: number;
-  problema_id: number;
-}
-
-interface iArquivosProblema {
-  nome: string;
-  secao: string;
-  status: string;
-  id: number;
-  problema_id: number;
+  declaracoes: Declaracoes[];
 }
