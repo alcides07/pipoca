@@ -78,7 +78,6 @@ const profileFormSchema = z.object({
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
 function FormCadastro() {
-  //   const [problema, setProblema] = useState<iProblema>();
   const navigate = useNavigate();
 
   const form = useForm<ProfileFormValues>({
@@ -95,16 +94,22 @@ function FormCadastro() {
   });
 
   async function onSubmit(data: ProfileFormValues) {
-    await problemaService.createProblema(data).then((response) => {
-      console.log("id", response.data.data.id);
-      console.log("Entrei aqui");
-      navigate(`/problema/${response.data.data.id}`);
-
-      toast({
-        title: "Sucesso",
-        description: "Problema criado!",
+    await problemaService
+      .createProblema(data)
+      .then((response) => {
+        navigate(`/problema/${response.data.data.id}`);
+        toast({
+          title: "Sucesso",
+          description: "Problema criado!",
+        });
+      })
+      .catch(() => {
+        toast({
+          variant: "destructive",
+          title: "Erro.",
+          description: "O cadastro de problema falhou. Tente novamente!.",
+        });
       });
-    });
   }
 
   return (
