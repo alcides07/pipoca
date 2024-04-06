@@ -2,6 +2,7 @@ import { iTag } from "./iTag";
 import { iTestes } from "./iTeste";
 import { iValidador } from "./iValidador";
 import { iVerificador } from "./iVerificador";
+import { iDeclaracoesProblema } from "./iDeclaracao";
 
 export interface iProblemas {
   metadata: iMetadataProblemas;
@@ -35,13 +36,6 @@ export interface iDataProblema {
   validador: iValidador;
   verificador: iVerificador;
   testes: iTestes[];
-}
-
-interface iDeclaracoesProblema {
-  titulo: string;
-  idioma: string;
-  id: number;
-  problema_id: number;
 }
 
 interface iArquivosProblema {
