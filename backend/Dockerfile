@@ -23,4 +23,4 @@ COPY constants.py .
 COPY main.py .
 COPY alembic.ini .
 
-USER user
+# USER user
