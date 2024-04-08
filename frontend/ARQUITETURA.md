@@ -28,8 +28,6 @@ A maior parte do projeto reside no diretório `src` e pode ser visualizada abaix
 
 │                   ├── index.tsx       # Página central de uma funcionalidade
 
-│                   ├── styles.css      # Arquivo de estilização de uma funcionalidade
-
 │       ├── interfaces                  # Definição das interfaces da aplicação
 
 │           ├── models                  # Interfaces de entidades a fim de popular os componentes
