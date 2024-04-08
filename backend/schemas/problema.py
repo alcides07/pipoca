@@ -186,3 +186,25 @@ class ProblemaUpdatePartial(BaseModel):
         le=1024,
         description="Memória limite do problema (em megabytes)"
     )
+
+
+class ProblemaIntegridade(BaseModel):
+    declaracoes: bool = Field(
+        description=DECLARACAO_DESCRIPTION
+    )
+
+    arquivos: bool = Field(
+        description=ARQUIVOS_DESCRIPTION
+    )
+
+    testes: bool = Field(
+        description=TESTES_DESCRIPTION
+    )
+
+    verificador: bool = Field(
+        description=VERIFICADOR_DESCRIPTION
+    )
+
+    validador: bool = Field(
+        description=VALIDADOR_DESCRIPTION
+    )
