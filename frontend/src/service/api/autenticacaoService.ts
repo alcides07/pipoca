@@ -1,5 +1,5 @@
 import axiosInstance from "../axiosInstance";
-import { iLogin, iRegister } from "../../interfaces/iAutenticacao";
+import { iLogin, iRegister } from "../../interfaces/services/iAutenticacao";
 
 class AutenticacaoService {
 	async login(data: iLogin) {
@@ -12,7 +12,7 @@ class AutenticacaoService {
 	}
 
 	async register(data: iRegister) {
-		const response = await axiosInstance.post("/users", data, {
+		const response = await axiosInstance.post("/usuarios", data, {
 			headers: {
 				"Content-Type": "application/json",
 			},
