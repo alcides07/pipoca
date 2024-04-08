@@ -1,8 +1,7 @@
+import io
+import tarfile
 import docker
 import os
-import tempfile
-import requests
-import shutil
 from compilers import commands
 from typing import List
 from constants import FILENAME_RUN, INPUT_TEST_FILENAME, OUTPUT_JUDGE_FILENAME, OUTPUT_USER_FILENAME, URL_TEST_LIB
@@ -19,6 +18,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from models.problema import Problema
 from docker.errors import DockerException
 from schemas.problemaTeste import TipoTesteProblemaEnum
+from utils.get_testlib import get_test_lib
 
 
 def get_arquivo_solucao(
@@ -46,65 +46,101 @@ async def execute_teste_gerado(
     arquivo_gerador: Arquivo
 ):
     linguagem_gerador: str = arquivo_gerador.linguagem  # type: ignore
-    extension_gerador: str = commands[linguagem_gerador]["extension"]
+    extensao_gerador: str = commands[linguagem_gerador]["extension"]
 
     client = docker.from_env()
     image = commands[linguagem_gerador]["image"]
-    command = commands[linguagem_gerador]["run_gerador"]
     WORKING_DIR = "/problema/gerador/"
 
     teste_entrada = " ".join(teste.entrada.split()[1:])
+    client.images.pull(image)
+    volume = client.volumes.create("runners-gerador")
+    command = commands[linguagem_gerador]["run_gerador"]
 
-    with tempfile.TemporaryDirectory() as temp_dir:
-        with open(os.path.join(temp_dir, 'testlib.h'), 'wb') as file:
-            response = requests.get(URL_TEST_LIB, stream=True)
-            response.raise_for_status()
-            response.raw.decode_content = True
-            shutil.copyfileobj(response.raw, file)
+    TEMP_TESTLIB = "/tmp/testlib"
+    TEMP_ARQUIVO_GERADOR = "/tmp/arquivo-gerador"
+    TEMP_TESTE_GERADOR = "/tmp/teste-gerador"
 
-        with open(os.path.join(temp_dir, f"{FILENAME_RUN}{extension_gerador}"), "w") as file:
-            file.write(str(arquivo_gerador.corpo))
+    volumes = {
+        volume.name: {  # type: ignore
+            'bind': WORKING_DIR,
+            'mode': 'rw'
+        }
+    }
 
-        with open(os.path.join(temp_dir, INPUT_TEST_FILENAME), "w") as file:
-            file.write(teste_entrada)
+    with open(TEMP_TESTLIB, 'w') as file:
+        response = get_test_lib()
+        file.write(response)
 
-        try:
-            client.images.pull(image)
-            volumes = {temp_dir: {
-                'bind': WORKING_DIR, 'mode': 'rw'}}
+    with open(TEMP_ARQUIVO_GERADOR, 'w') as file:
+        file.write(str(arquivo_gerador.corpo))
 
-            container = client.containers.run(
-                image,
-                command,
-                detach=True,
-                volumes=volumes,
-                working_dir=WORKING_DIR
-            )
+    with open(TEMP_TESTE_GERADOR, 'w') as file:
+        file.write(teste_entrada)
 
-            container.wait()  # type: ignore
+    try:
+        container = client.containers.create(
+            image,
+            command,
+            detach=True,
+            volumes=volumes,
+            working_dir=WORKING_DIR
+        )
 
-            stdout_logs = container.logs(  # type: ignore
-                stdout=True, stderr=False)
-            stderr_logs = container.logs(  # type: ignore
-                stdout=False, stderr=True)
+        tarstream = io.BytesIO()
+        tar = tarfile.TarFile(fileobj=tarstream, mode='w')
 
-            stdout_logs_decode = stdout_logs.decode()
-            stderr_logs_decode = stderr_logs.decode()
+        tar.add(
+            name=TEMP_TESTLIB,
+            arcname=f'{WORKING_DIR}/testlib.h'
+        )
+        tar.add(
+            name=TEMP_TESTE_GERADOR,
+            arcname=f'{WORKING_DIR}/{INPUT_TEST_FILENAME}'
+        )
+        tar.add(
+            name=TEMP_ARQUIVO_GERADOR,
+            arcname=f'{WORKING_DIR}/{FILENAME_RUN}{extensao_gerador}'
+        )
 
-            container.stop()  # type: ignore
-            container.remove()  # type: ignore
+        tar.close()
 
-            if (stderr_logs_decode != ""):
-                raise HTTPException(
-                    status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    "O arquivo gerador de testes do problema possui alguma falha!"
-                )
+        container.put_archive(  # type: ignore
+            '/',
+            tarstream.getvalue()
+        )
 
-        except DockerException:
+        container.start()  # type: ignore
+
+        container.wait()  # type: ignore
+
+        stdout_logs = container.logs(  # type: ignore
+            stdout=True, stderr=False)
+        stderr_logs = container.logs(  # type: ignore
+            stdout=False, stderr=True)
+
+        stdout_logs_decode = stdout_logs.decode()
+        stderr_logs_decode = stderr_logs.decode()
+
+        if (stderr_logs_decode != ""):
             raise HTTPException(
                 status.HTTP_500_INTERNAL_SERVER_ERROR,
-                "Ocorreu um erro na execução dos testes gerados!"
+                "O arquivo gerador de testes do problema possui alguma falha!"
             )
+
+    except DockerException:
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            "Ocorreu um erro na execução dos testes gerados!"
+        )
+
+    finally:
+        container.stop()  # type: ignore
+        container.remove()  # type: ignore
+        os.remove(TEMP_TESTLIB)
+        os.remove(TEMP_ARQUIVO_GERADOR)
+        os.remove(TEMP_TESTE_GERADOR)
+        volume.remove()  # type: ignore
 
     return stdout_logs_decode
 
@@ -117,51 +153,93 @@ async def execute_checker(
 ):
     codigo_verificador = db_problema.verificador.corpo
     linguagem_verificador: str = db_problema.verificador.linguagem
-    extension_verificador: str = commands[linguagem_verificador]["extension"]
+    extensao_verificador: str = commands[linguagem_verificador]["extension"]
     veredito: list[str] = []
 
     client = docker.from_env()
     image = commands[linguagem_verificador]["image"]
+    WORKING_DIR = "/checker/testes/"
+    TEMP_TESTLIB = "/tmp/testlib"
+    TEMP_VERIFICADOR = "/tmp/verificador"
+    TEMP_TESTE_PROBLEMA = "/tmp/teste-problema"
+    TEMP_SAIDA_JUIZ = "/tmp/saida-juiz"
+    TEMP_SAIDA_USUARIO = "/tmp/saida-usuario"
+
+    client.images.pull(image)
+    volume = client.volumes.create("runners-verificador")
     command = commands[linguagem_verificador]["run_checker"]
 
-    with tempfile.TemporaryDirectory() as temp_dir:
-        client.images.pull(image)
-        volumes = {temp_dir: {
-            'bind': '/checker/testes/', 'mode': 'rw'}}
+    volumes = {
+        volume.name: {  # type: ignore
+            'bind': WORKING_DIR,
+            'mode': 'rw'
+        }
+    }
 
-        with open(os.path.join(temp_dir, 'testlib.h'), 'wb') as file:
-            response = requests.get(URL_TEST_LIB, stream=True)
-            response.raise_for_status()
-            response.raw.decode_content = True
-            shutil.copyfileobj(response.raw, file)
+    with open(TEMP_TESTLIB, 'w') as file:
+        response = get_test_lib()
+        file.write(response)
 
-        with open(os.path.join(temp_dir, f"{FILENAME_RUN}{extension_verificador}"), "w") as file:
-            file.write(codigo_verificador)
+    with open(TEMP_VERIFICADOR, 'w') as file:
+        file.write(codigo_verificador)
 
+    try:
         for i, teste in enumerate(db_problema.testes):
             teste_entrada = teste.entrada
 
             if (teste.tipo == TipoTesteProblemaEnum.GERADO.value):
                 teste_entrada = output_testes_gerados[i]
 
-            with open(os.path.join(temp_dir, INPUT_TEST_FILENAME), "w") as file:
-                file.write(teste_entrada)
-
-            with open(os.path.join(temp_dir, OUTPUT_JUDGE_FILENAME), "w") as file:
-                file.write(output_codigo_solucao[i])
-
-            with open(os.path.join(temp_dir, OUTPUT_USER_FILENAME), "w") as file:
-                file.write(output_codigo_user[i])
-
             try:
-                container = client.containers.run(
+                container = client.containers.create(
                     image,
                     command,
                     detach=True,
                     volumes=volumes,
-                    working_dir='/checker/testes/'
+                    working_dir=WORKING_DIR
                 )
 
+                with open(TEMP_TESTE_PROBLEMA, 'w') as file:
+                    file.write(teste_entrada)
+
+                with open(TEMP_SAIDA_USUARIO, 'w') as file:
+                    file.write(output_codigo_user[i])
+
+                with open(TEMP_SAIDA_JUIZ, 'w') as file:
+                    file.write(output_codigo_solucao[i])
+
+                tarstream = io.BytesIO()
+                tar = tarfile.TarFile(fileobj=tarstream, mode='w')
+
+                tar.add(
+                    name=TEMP_TESTLIB,
+                    arcname=f'{WORKING_DIR}/testlib.h'
+                )
+                tar.add(
+                    name=TEMP_SAIDA_JUIZ,
+                    arcname=f'{WORKING_DIR}/{OUTPUT_JUDGE_FILENAME}'
+                )
+                tar.add(
+                    name=TEMP_SAIDA_USUARIO,
+                    arcname=f'{WORKING_DIR}/{OUTPUT_USER_FILENAME}'
+                )
+                tar.add(
+                    name=TEMP_VERIFICADOR,
+                    arcname=f'{WORKING_DIR}/{FILENAME_RUN}{extensao_verificador}'
+                )
+                tar.add(
+                    name=TEMP_TESTE_PROBLEMA,
+                    arcname=f'{WORKING_DIR}/{INPUT_TEST_FILENAME}'
+                )
+
+                tar.close()
+
+                container.put_archive(  # type: ignore
+                    '/',
+                    tarstream.getvalue()
+                )
+
+                container.start()  # type: ignore
                 container.wait()  # type: ignore
 
                 stderr_logs = container.logs(  # type: ignore
@@ -179,10 +257,122 @@ async def execute_checker(
                     "Ocorreu um erro no processo de comparação dos resultados!"
                 )
 
-    container.stop()  # type: ignore
-    container.remove()  # type: ignore
+            finally:
+                container.stop()  # type: ignore
+                container.remove()  # type: ignore
+
+    finally:
+        os.remove(TEMP_VERIFICADOR)
+        os.remove(TEMP_TESTE_PROBLEMA)
+        os.remove(TEMP_SAIDA_USUARIO)
+        os.remove(TEMP_SAIDA_JUIZ)
+        os.remove(TEMP_TESTLIB)
+        volume.remove()  # type: ignore
 
     return veredito
+
+
+async def execute_codigo_user(
+    db_problema: Problema,
+    problema_resposta: ProblemaRespostaCreate,
+    output_testes_gerados: List[str]
+):
+    codigo_user = problema_resposta.resposta
+    linguagem = problema_resposta.linguagem
+    extension = commands[linguagem.value]["extension"]
+
+    client = docker.from_env()
+    image = commands[linguagem.value]["image"]
+    WORKING_DIR = "/user/submission/"
+    TEMP_CODIGO_USER = "/tmp/codigo-user"
+    TEMP_TESTE_USUARIO = "/tmp/teste-usuario"
+
+    client.images.pull(image)
+    volume = client.volumes.create("runners-codigo-user")
+    command = commands[linguagem]["run_test"]
+
+    volumes = {
+        volume.name: {  # type: ignore
+            'bind': WORKING_DIR,
+            'mode': 'rw'
+        }
+    }
+
+    with open(TEMP_CODIGO_USER, 'w') as file:
+        file.write(codigo_user)
+
+    output_codigo_user: List[str] = []
+
+    try:
+        for i, teste in enumerate(db_problema.testes):
+            teste_entrada = teste.entrada
+
+            if (teste.tipo == TipoTesteProblemaEnum.GERADO.value):
+                teste_entrada = output_testes_gerados[i]
+
+            try:
+                container = client.containers.create(
+                    image=image,
+                    command=command,
+                    detach=True,
+                    volumes=volumes,
+                    working_dir=WORKING_DIR
+                )
+
+                with open(TEMP_TESTE_USUARIO, 'w') as file:
+                    file.write(teste_entrada)
+
+                tarstream = io.BytesIO()
+                tar = tarfile.TarFile(fileobj=tarstream, mode='w')
+
+                tar.add(
+                    name=TEMP_CODIGO_USER,
+                    arcname=f'{WORKING_DIR}/{FILENAME_RUN}{extension}'
+                )
+                tar.add(
+                    name=TEMP_TESTE_USUARIO,
+                    arcname=f'{WORKING_DIR}/{INPUT_TEST_FILENAME}'
+                )
+
+                tar.close()
+
+                container.put_archive(  # type: ignore
+                    '/',
+                    tarstream.getvalue()
+                )
+
+                container.start()  # type: ignore
+                container.wait()  # type: ignore
+
+                stdout_logs = container.logs(  # type: ignore
+                    stdout=True, stderr=False)
+                stderr_logs = container.logs(  # type: ignore
+                    stdout=False, stderr=True)
+
+                stdout_logs_decode = stdout_logs.decode()
+                stderr_logs_decode = stderr_logs.decode()
+
+                output_codigo_user.append(stdout_logs_decode)
+
+                if (stderr_logs_decode != ""):
+                    return f"Erro em tempo de execução no teste {i+1}"
+
+            except DockerException:
+                raise HTTPException(
+                    status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    "Ocorreu um erro no processamento do código do usuário!"
+                )
+
+            finally:
+                container.stop()  # type: ignore
+                container.remove()  # type: ignore
+
+    finally:
+        os.remove(TEMP_CODIGO_USER)
+        os.remove(TEMP_TESTE_USUARIO)
+        volume.remove()  # type: ignore
+
+    return output_codigo_user
 
 
 async def execute_arquivo_solucao(
@@ -190,26 +380,34 @@ async def execute_arquivo_solucao(
     arquivo_solucao: Arquivo,
     arquivo_gerador: Arquivo | None
 ):
-    linguagem = str(arquivo_solucao.linguagem)
     codigo_solucao = str(arquivo_solucao.corpo)
+    linguagem = str(arquivo_solucao.linguagem)
+    extension = commands[linguagem]["extension"]
 
     client = docker.from_env()
     image = commands[linguagem]["image"]
     command = commands[linguagem]["run_test"]
-    extension = commands[linguagem]["extension"]
     WORKING_DIR = "/arquivo/testes/"
+    TEMP_SOLUCAO = "/tmp/solucao"
+    TEMP_TESTE_SOLUCAO = "/tmp/teste-solucao"
+
+    client.images.pull(image)
+    volume = client.volumes.create("runners-solucao")
+
+    volumes = {
+        volume.name: {  # type: ignore
+            'bind': WORKING_DIR,
+            'mode': 'rw'
+        }
+    }
+
+    with open(TEMP_SOLUCAO, 'w') as file:
+        file.write(codigo_solucao)
 
     output_codigo_solucao: List[str] = []
     output_testes_gerados: List[str] = []
 
-    with tempfile.TemporaryDirectory() as temp_dir:
-        client.images.pull(image)
-        volumes = {temp_dir: {
-            'bind': WORKING_DIR, 'mode': 'rw'}}
-
-        with open(os.path.join(temp_dir, f"{FILENAME_RUN}{extension}"), "w") as file:
-            file.write(codigo_solucao)
-
+    try:
         for teste in db_problema.testes:
             teste_entrada = teste.entrada
 
@@ -225,18 +423,38 @@ async def execute_arquivo_solucao(
 
             output_testes_gerados.append(teste_entrada)
 
-            with open(os.path.join(temp_dir, INPUT_TEST_FILENAME), "w") as file:
-                file.write(teste_entrada)
-
             try:
-                container = client.containers.run(
-                    image,
-                    command,
+                container = client.containers.create(
+                    image=image,
+                    command=command,
                     detach=True,
                     volumes=volumes,
                     working_dir=WORKING_DIR
                 )
 
+                with open(TEMP_TESTE_SOLUCAO, 'w') as file:
+                    file.write(teste_entrada)
+
+                tarstream = io.BytesIO()
+                tar = tarfile.TarFile(fileobj=tarstream, mode='w')
+
+                tar.add(
+                    name=TEMP_SOLUCAO,
+                    arcname=f'{WORKING_DIR}/{FILENAME_RUN}{extension}'
+                )
+                tar.add(
+                    name=TEMP_TESTE_SOLUCAO,
+                    arcname=f'{WORKING_DIR}/{INPUT_TEST_FILENAME}'
+                )
+
+                tar.close()
+
+                container.put_archive(  # type: ignore
+                    '/',
+                    tarstream.getvalue()
+                )
+
+                container.start()  # type: ignore
                 container.wait()  # type: ignore
 
                 stdout_logs = container.logs(  # type: ignore
@@ -260,79 +478,16 @@ async def execute_arquivo_solucao(
                     "Ocorreu um erro no processamento do arquivo de solução oficial do problema!"
                 )
 
-        container.stop()  # type: ignore
-        container.remove()  # type: ignore
+            finally:
+                container.stop()  # type: ignore
+                container.remove()  # type: ignore
 
-        return output_codigo_solucao, output_testes_gerados
+    finally:
+        os.remove(TEMP_SOLUCAO)
+        os.remove(TEMP_TESTE_SOLUCAO)
+        volume.remove()  # type: ignore
 
-
-async def execute_codigo_user(
-    db_problema: Problema,
-    problema_resposta: ProblemaRespostaCreate,
-    output_testes_gerados: List[str]
-):
-    codigo_user = problema_resposta.resposta
-    codigo_user_linguagem = problema_resposta.linguagem
-
-    client = docker.from_env()
-    image = commands[codigo_user_linguagem.value]["image"]
-    command = commands[codigo_user_linguagem.value]["run_test"]
-    extension = commands[codigo_user_linguagem.value]["extension"]
-    WORKING_DIR = "/user/submission/"
-
-    output_codigo_user: List[str] = []
-
-    with tempfile.TemporaryDirectory() as temp_dir:
-        client.images.pull(image)
-        volumes = {temp_dir: {
-            'bind': WORKING_DIR, 'mode': 'rw'}}
-
-        with open(os.path.join(temp_dir, f"{FILENAME_RUN}{extension}"), "w") as file:
-            file.write(codigo_user)
-
-        for i, teste in enumerate(db_problema.testes):
-            teste_entrada = teste.entrada
-
-            if (teste.tipo == TipoTesteProblemaEnum.GERADO.value):
-                teste_entrada = output_testes_gerados[i]
-
-            with open(os.path.join(temp_dir, INPUT_TEST_FILENAME), "w") as file:
-                file.write(teste_entrada)
-
-            try:
-                container = client.containers.run(
-                    image,
-                    command,
-                    detach=True,
-                    volumes=volumes,
-                    working_dir=WORKING_DIR
-                )
-
-                container.wait()  # type: ignore
-
-                stdout_logs = container.logs(  # type: ignore
-                    stdout=True, stderr=False)
-                stderr_logs = container.logs(  # type: ignore
-                    stdout=False, stderr=True)
-
-                stdout_logs_decode = stdout_logs.decode()
-                stderr_logs_decode = stderr_logs.decode()
-
-                output_codigo_user.append(stdout_logs_decode)
-
-                if (stderr_logs_decode != ""):
-                    return f"Erro em tempo de execução no teste {i+1}"
-
-            except DockerException:
-                raise HTTPException(
-                    status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    "Ocorreu um erro no processamento do código do usuário!"
-                )
-
-        container.stop()  # type: ignore
-        container.remove()  # type: ignore
-
-        return output_codigo_user
+    return output_codigo_solucao, output_testes_gerados
 
 
 async def execute_processo_resolucao(
