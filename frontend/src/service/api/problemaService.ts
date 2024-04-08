@@ -11,12 +11,12 @@ class ProblemaService {
     console.log(response);
     return response;
   }
-  async getProblemaById(id: string) {
+  async getProblemaById(id: number) {
     const response = await axiosInstance.get(`/problemas/${id}`);
     return response.data;
   }
 
-  async updateProblema(id: string, data: any) {
+  async updateProblema(id: number, data: any) {
     const response = await axiosInstance.put(`/problemas/${id}`, data);
     return response.data;
   }

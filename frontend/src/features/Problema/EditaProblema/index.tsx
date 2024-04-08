@@ -24,9 +24,9 @@ import {
 } from "@/components/ui/card";
 import problemaService from "@/service/api/problemaService";
 import { Separator } from "@/components/ui/separator";
-import { useParams } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import { Progress } from "@/components/ui/progress";
+import { useParams } from "react-router-dom";
 
 const profileFormSchema = z.object({
   privado: z.boolean().default(false).optional(),
@@ -79,18 +79,24 @@ const profileFormSchema = z.object({
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
-function FormCadastroTabs() {
-  const { id } = useParams<{ id: string }>();
+// interface EditaProblemaProps {
+//   id?: number;
+// }
+
+function EditaProblema() {
+  const { id } = useParams<{ id: number }>();
   const [problema, setProblema] = useState<any>();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     window.scrollTo(0, 0);
-    getProblema();
+    if (id) {
+      getProblema(id);
+    }
   }, []);
 
-  async function getProblema() {
+  async function getProblema(id: number) {
     await problemaService.getProblemaById(id).then((response) => {
       setProblema(response.data);
       setLoading(false);
@@ -262,4 +268,4 @@ function FormCadastroTabs() {
     </Card>
   );
 }
-export default FormCadastroTabs;
+export default EditaProblema;

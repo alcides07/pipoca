@@ -3,8 +3,9 @@ import Dashboard from "./features/Dashboard";
 import Header from "./components/header";
 import Login from "./features/Login";
 import Problema from "./features/Problema";
-// import CadastroProblema from "./pages/Problemas/CadastroProblema";
-// import TabsProblema from "./pages/Problemas/CadastroProblema/tabsProblema";
+import CadastroProblema from "./features/Problema/CadastroProblema";
+import EditaProblema from "./features/Problema/EditaProblema";
+import TabsProblema from "./features/Problema/tabsProblema.tsx";
 import React, { useState, useEffect, useRef } from "react";
 const linksHeader = [
   { nome: "Dashboard", link: "/" },
@@ -13,7 +14,11 @@ const linksHeader = [
   { nome: "Torneios", link: "#" },
 ];
 
-function Container({ children }) {
+interface ContainerProps {
+  children: React.ReactNode;
+}
+
+function Container({ children }: ContainerProps) {
   const ref = useRef(null);
   const [isOverflowing, setIsOverflowing] = useState(false);
 
@@ -55,8 +60,9 @@ function RoutesWithHeader() {
         <Routes>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/problemas" element={<Problema />} />
-          {/* <Route path="/problema/cadastro" element={<CadastroProblema />} />
-          <Route path="/problema/:id" element={<TabsProblema />} /> */}
+          <Route path="/problema/cadastro" element={<CadastroProblema />} />
+          <Route path="/problema/:id" element={<TabsProblema />} />
+          <Route path="/problema/editar/:id" element={<EditaProblema />} />
           <Route path="/" element={<Login onLogin={handleLogin} />} />
         </Routes>
       </Container>
