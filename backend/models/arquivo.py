@@ -41,7 +41,8 @@ class Arquivo(Base):
         Integer,
         ForeignKey(
             'problemas.id',
-            name="arquivos_problema_id_fkey"
+            name="arquivos_problema_id_fkey",
+            ondelete="CASCADE"
         )
     )
     problema = relationship(

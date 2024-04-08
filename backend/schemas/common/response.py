@@ -7,11 +7,11 @@ T = TypeVar('T')
 
 class ResponsePaginationSchema(BaseModel, Generic[T]):
     metadata: MetadataSchema | None = None
-    data: T | List[T] | None = None
+    data: List[T] | None = None
 
 
 class ResponseUnitSchema(BaseModel, Generic[T]):
-    data: T | List[T] | None = None
+    data: T | None = None
 
 
 class ResponseMessageSchema(BaseModel, Generic[T]):
