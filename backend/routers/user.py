@@ -89,42 +89,6 @@ async def read_me(
     )
 
 
-@router.get("/problemas/",
-            response_model=ResponsePaginationSchema[ProblemaReadSimple],
-            summary="Lista problemas pertencentes ao usuário autenticado",
-            )
-async def read_problemas_me(
-    db: Session = Depends(get_db),
-    pagination: PaginationSchema = Depends(),
-    filters: ProblemaFilter = Depends(),
-    token: str = Depends(oauth2_scheme),
-    sort: OrderByFieldsProblemaEnum = Query(
-        default=None,
-        description=FIELDS_ORDER_BY_DESCRIPTION
-    ),
-    direction: DirectionOrderByEnum = Query(
-        default=None,
-        description=DIRECTION_ORDER_BY_DESCRIPTION
-    )
-):
-    problemas, metadata = await get_all(
-        db=db,
-        model=Problema,
-        pagination=pagination,
-        token=token,
-        field_order_by=sort,
-        direction=direction,
-        filters=filters,
-        search_fields=search_fields_problema,
-        me_author=True
-    )
-
-    return ResponsePaginationSchema(
-        data=problemas,
-        metadata=metadata
-    )
-
-
 @router.get("/problemasRespostas/",
             response_model=ResponsePaginationSchema[ProblemaRespostaReadFull],
             summary="Lista respostas fornecidas à problemas pelo usuário autenticado",
