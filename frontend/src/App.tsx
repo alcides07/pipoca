@@ -1,8 +1,8 @@
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import Dashboard from "./features/Dashboard";
-// import ListarProblemas from "./pages/Problemas/listarProblemas";
 import Header from "./components/header";
 import Login from "./features/Login";
+import Problema from "./features/Problema";
 // import CadastroProblema from "./pages/Problemas/CadastroProblema";
 // import TabsProblema from "./pages/Problemas/CadastroProblema/tabsProblema";
 import React, { useState, useEffect, useRef } from "react";
@@ -54,8 +54,8 @@ function RoutesWithHeader() {
       <Container>
         <Routes>
           <Route path="/dashboard" element={<Dashboard />} />
-          {/* <Route path="/problemas" element={<ListarProblemas />} />
-          <Route path="/problema/cadastro" element={<CadastroProblema />} />
+          <Route path="/problemas" element={<Problema />} />
+          {/* <Route path="/problema/cadastro" element={<CadastroProblema />} />
           <Route path="/problema/:id" element={<TabsProblema />} /> */}
           <Route path="/" element={<Login onLogin={handleLogin} />} />
         </Routes>

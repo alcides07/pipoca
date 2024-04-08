@@ -1,17 +1,16 @@
 import { useEffect, useState } from "react";
-import problemaService from "../../service/api/problemaService";
-import { iDataProblema } from "../../interfaces/iProblemas";
-import { DataTable } from "../../components/table";
+import problemaService from "@/service/api/problemaService";
+import { iDataProblema } from "@/interfaces/iProblemas";
+import { DataTable } from "@/components/table";
 import { problemaColumns } from "@/components/table/columns/problemaColumns";
-
 import { Button } from "@/components/ui/button";
-
 import { Card, CardContent } from "@/components/ui/card";
 import { Toaster } from "@/components/ui/toaster";
-import BotaoImporte from "./components/botaoImporte";
 import { useNavigate } from "react-router-dom";
+import React from "react";
+import ImportaProblema from "../CadastroProblema/components/importaProblema";
 
-function ListarProblemas() {
+function ListaProblema() {
   const [problemas, setProblemas] = useState<iDataProblema[]>([]);
   const navigate = useNavigate();
 
@@ -39,8 +38,7 @@ function ListarProblemas() {
         <div>
           <DataTable columns={problemaColumns} data={problemas}>
             <Button onClick={cadastraProblema}>Cadastrar</Button>
-
-            <BotaoImporte handleProblem={handleProblem} />
+            <ImportaProblema handleProblem={handleProblem} />
           </DataTable>
         </div>
       ) : (
@@ -51,7 +49,7 @@ function ListarProblemas() {
               <p>Você pode registrar um problema agora!</p>
               <div className="flex flex-col gap-3 m-5">
                 <Button onClick={cadastraProblema}>Cadastrar</Button>
-                <BotaoImporte handleProblem={handleProblem} />
+                <ImportaProblema handleProblem={handleProblem} />
               </div>
             </div>
           </CardContent>
@@ -62,4 +60,4 @@ function ListarProblemas() {
   );
 }
 
-export default ListarProblemas;
+export default ListaProblema;

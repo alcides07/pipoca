@@ -31,9 +31,7 @@ const FormSchema = z.object({
   pacote: z.instanceof(FileList),
 });
 
-export default function BotaoImporte({
-  handleProblem,
-}: () => void): JSX.Element {
+function importaProblema({ handleProblem }: () => void): JSX.Element {
   const [isOpen, setIsOpen] = useState(false);
 
   const form = useForm<z.infer<typeof FormSchema>>({
@@ -130,3 +128,5 @@ export default function BotaoImporte({
     </AlertDialog>
   );
 }
+
+export default importaProblema;
