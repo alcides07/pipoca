@@ -69,20 +69,6 @@ class ProblemaReadSimple(ProblemaBase):
         description="Data e horário de criação do problema"
     )
 
-    arquivos: list[ArquivoReadSimple] = Field(
-        description=ARQUIVOS_DESCRIPTION
-    )
-
-    verificador: Optional[VerificadorReadSimple] = Field(
-        default=None,
-        description=VERIFICADOR_DESCRIPTION
-    )
-
-    validador: Optional[ValidadorReadSimple] = Field(
-        default=None,
-        description=VALIDADOR_DESCRIPTION
-    )
-
     testes: list[ProblemaTesteReadSimple] = Field(
         description=TESTES_DESCRIPTION
     )
