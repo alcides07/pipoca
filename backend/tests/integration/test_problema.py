@@ -481,6 +481,49 @@ def test_read_problemas_testes_de_admin_by_problema_id_user():
     resume_dependencies()
 
 
+def test_read_integridade_problema_com_dono():
+    remove_dependencies()
+
+    response_problema_user, token_criador_problema = create_problema_user_helper()
+    id_problema = response_problema_user.json().get("data").get("id")
+
+    response = client.get(
+        f"{URL_PROBLEMA}/{id_problema}/integridade/",
+        headers={
+            "Authorization": f"Bearer {token_criador_problema}",
+        },
+
+    )
+
+    assert response.status_code == 200
+
+    resume_dependencies()
+
+
+def test_read_integridade_falsa_de_problema_com_dono():
+    remove_dependencies()
+
+    response_problema_user, token_criador_problema = create_problema_user_helper()
+    id_problema = response_problema_user.json().get("data").get("id")
+
+    response = client.get(
+        f"{URL_PROBLEMA}/{id_problema}/integridade/",
+        headers={
+            "Authorization": f"Bearer {token_criador_problema}",
+        },
+    )
+    response_json = response.json().get("data")
+
+    assert response.status_code == 200
+    assert response_json.get("declaracoes") is False
+    assert response_json.get("arquivos") is False
+    assert response_json.get("testes") is False
+    assert response_json.get("verificador") is False
+    assert response_json.get("validador") is False
+
+    resume_dependencies()
+
+
 def test_create_problema_user():
     remove_dependencies()
 
