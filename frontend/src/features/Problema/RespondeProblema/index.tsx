@@ -5,7 +5,7 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
-import problemaService from "@/service/api/problemaService";
+import problemaService from "@/services/models/problemaService";
 import { useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { iDataProblema } from "@/interfaces/iProblema";
@@ -45,11 +45,11 @@ const FormSchema = z.object({
     ),
 });
 
-interface ExamplesLayoutProps {
+interface RespondeProblemaProps {
   children?: React.ReactNode;
 }
 
-function Responder({ children }: ExamplesLayoutProps) {
+function RespondeProblema({ children }: RespondeProblemaProps) {
   const { id } = useParams<{ id: string }>();
   const [problema, setProblema] = useState<iDataProblema>();
   const [rows, setRows] = useState(1);
@@ -86,7 +86,7 @@ function Responder({ children }: ExamplesLayoutProps) {
   }
 
   return (
-    <div className="mx-28 my-5 overflow-hidden rounded-[0.5rem] border bg-background shadow-md md:shadow-xl">
+    <div className="overflow-hidden rounded-[0.5rem] border bg-background shadow-md md:shadow-xl">
       <ResizablePanelGroup direction="vertical" className="min-h-[80vh]">
         <ResizablePanel defaultSize={6}>
           <div className="flex h-full items-center justify-center p-2">
@@ -118,7 +118,6 @@ function Responder({ children }: ExamplesLayoutProps) {
                         <p>{problema.declaracoes[0].formatacao_saida}</p>
                       </div>
                       <Separator className="my-4" />
-                      {/* crie aqui */}
                     </div>
                   )}
                 </div>
@@ -196,4 +195,4 @@ function Responder({ children }: ExamplesLayoutProps) {
   );
 }
 
-export default Responder;
+export default RespondeProblema;
