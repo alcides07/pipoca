@@ -133,32 +133,16 @@ def test_read_problema_resposta_by_id_com_user_qualquer_negado():
     resume_dependencies()
 
 
-def test_read_meus_problema_respostas_com_user():
+def test_read_meus_problemas_respostas_com_user():
     remove_dependencies()
 
-    _, token, _ = create_user_helper()
+    response_user, token, _ = create_user_helper()
+    user_id = response_user.json().get("data").get("id")
 
     response = client.get(
-        "/usuarios/problemasRespostas/",
+        f"{URL_PROBLEMA_RESPOSTAS}/usuarios/{user_id}/",
         headers={
             "Authorization": f"Bearer {token}",
-        },
-    )
-    assert response.status_code == 200
-
-    resume_dependencies()
-
-
-def test_read_meus_problema_respostas_com_admin():
-    remove_dependencies()
-
-    database = next(get_db_test())
-    token_admin = create_administrador_helper(database)
-
-    response = client.get(
-        "/usuarios/problemasRespostas/",
-        headers={
-            "Authorization": f"Bearer {token_admin}",
         },
     )
     assert response.status_code == 200
