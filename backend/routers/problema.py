@@ -157,7 +157,7 @@ async def read_problema_id_tags(
 
 @router.get("/usuarios/{id}/",
             response_model=ResponsePaginationSchema[ProblemaReadSimple],
-            summary="Lista problemas pertencentes ao usuário autenticado",
+            summary="Lista problemas pertencentes a um usuário",
             )
 async def read_problemas_me(
     db: Session = Depends(get_db),
