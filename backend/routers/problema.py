@@ -26,11 +26,11 @@ from utils.bytes_to_megabytes import bytes_to_megabytes
 from utils.language_parser import languages_parser
 from utils.errors import errors
 from dependencies.authenticated_user import get_authenticated_user
-from schemas.problema import ProblemaCreate, ProblemaCreateUpload, ProblemaReadFull, ProblemaReadSimple, ProblemaUpdatePartial, ProblemaUpdateTotal
+from schemas.problema import ProblemaCreate, ProblemaCreateUpload, ProblemaReadFull, ProblemaReadSimple, ProblemaIntegridade, ProblemaUpdatePartial, ProblemaUpdateTotal
 from schemas.common.pagination import PaginationSchema
 from dependencies.database import get_db
 from sqlalchemy.orm import Session
-from orm.problema import create_problema, create_problema_upload, get_all_problemas, get_arquivos_problema, get_declaracoes_problema, get_meus_problemas, get_problema_by_id, get_respostas_problema, get_tags_problema, get_testes_problema, get_validador_problema, get_verificador_problema, update_problema
+from orm.problema import create_problema, create_problema_upload, get_all_problemas, get_arquivos_problema, get_declaracoes_problema, get_meus_problemas, get_problema_by_id, get_respostas_problema, get_integridade_problema, get_tags_problema, get_testes_problema, get_validador_problema, get_verificador_problema, update_problema
 from schemas.common.response import ResponsePaginationSchema, ResponseUnitSchema
 
 PROBLEMA_ID_DESCRIPTION = "Identificador do problema"
@@ -210,6 +210,29 @@ async def read_problema_id_validador(
 
     return ResponseUnitSchema(
         data=validador
+    )
+
+
+@router.get("/{id}/integridade/",
+            response_model=ResponseUnitSchema[ProblemaIntegridade],
+            summary="Lista o status do preenchimento ou ausência das partes que compõem um problema",
+            responses={
+                404: errors[404]
+            }
+            )
+async def read_problema_status(
+    db: Session = Depends(get_db),
+    id: int = Path(description=PROBLEMA_ID_DESCRIPTION),
+    token: str = Depends(oauth2_scheme)
+):
+    status = await get_integridade_problema(
+        db=db,
+        id=id,
+        token=token
+    )
+
+    return ResponseUnitSchema(
+        data=status
     )
 
 

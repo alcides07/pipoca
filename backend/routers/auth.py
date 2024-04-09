@@ -80,7 +80,8 @@ async def login(
     data = UserLoginOut(
         access_token=access_token,
         token_type="bearer",
-        username=user.username
+        username=user.username,
+        id=user.id
     )
 
     return data

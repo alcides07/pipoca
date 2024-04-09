@@ -22,7 +22,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from models.arquivo import Arquivo
 from models.declaracao import Declaracao
 from models.problema import Problema
-from schemas.problema import ProblemaCreate, ProblemaCreateUpload, ProblemaUpdatePartial, ProblemaUpdateTotal
+from schemas.problema import ProblemaCreate, ProblemaCreateUpload, ProblemaIntegridade, ProblemaUpdatePartial, ProblemaUpdateTotal
 from models.relationships.problema_tag import problema_tag_relationship
 
 
@@ -594,3 +594,31 @@ async def get_meus_problemas(
     )
 
     return db_problemas.all(), metadata
+
+
+async def get_integridade_problema(
+    db: Session,
+    id: int,
+    token: str
+):
+    db_problema = db.query(Problema).filter(Problema.id == id).first()
+
+    if (not db_problema):
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND,
+            "O problema não foi encontrado!"
+        )
+
+    user = await get_authenticated_user(token, db)
+    if (is_user(user) and bool(db_problema.usuario_id != user.id)):
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED)
+
+    data = ProblemaIntegridade(
+        declaracoes=len(db_problema.declaracoes) > 0,
+        arquivos=len(db_problema.arquivos) > 0,
+        testes=len(db_problema.testes) > 0,
+        verificador=db_problema.verificador is not None,
+        validador=db_problema.validador is not None
+    )
+
+    return data
