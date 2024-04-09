@@ -18,7 +18,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import AutenticacaoService from "@/service/api/autenticacaoService";
+import AutenticacaoService from "@/services/models/autenticacaoService";
 import { useNavigate } from "react-router-dom";
 
 const formSchema = z.object({

@@ -22,7 +22,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import problemaService from "@/service/api/problemaService";
+import problemaService from "@/services/models/problemaService";
 import { Separator } from "@/components/ui/separator";
 import { useNavigate } from "react-router-dom";
 
