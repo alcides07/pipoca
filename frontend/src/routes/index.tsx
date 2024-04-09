@@ -4,6 +4,7 @@ import Header from "@/components/header";
 import Login from "@/features/Login";
 import Problema from "@/features/Problema";
 import CadastraProblema from "@/features/Problema/CadastraProblema";
+import RespondeProblema from "@/features/Problema/RespondeProblema";
 import EditaProblema from "@/features/Problema/EditaProblema";
 import TabsProblema from "@/features/Problema/tabsProblema.tsx";
 import React, { useState } from "react";
@@ -34,6 +35,7 @@ function Rotas() {
           <Route path="/problemas" element={<Problema />} />
           <Route path="/problema/cadastro" element={<CadastraProblema />} />
           <Route path="/problema/:id" element={<TabsProblema />} />
+          <Route path="/problema/:id/responde" element={<RespondeProblema />} />
           <Route path="/problema/editar/:id" element={<EditaProblema />} />
           <Route path="/" element={<Login onLogin={handleLogin} />} />
         </Routes>
