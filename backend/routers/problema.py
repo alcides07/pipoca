@@ -9,6 +9,7 @@ from filters.problemaTeste import ProblemaTesteFilter
 from routers.auth import oauth2_scheme
 from fastapi import APIRouter, Body, Depends, File, HTTPException, Path, Query, UploadFile, status
 from filters.problema import OrderByFieldsProblemaEnum, ProblemaFilter
+from routers.user import USER_ID_DESCRIPTION
 from schemas.arquivo import ArquivoCreate, ArquivoReadFull, SecaoEnum
 from schemas.common.compilers import CompilersEnum
 from schemas.common.direction_order_by import DirectionOrderByEnum
@@ -29,7 +30,7 @@ from schemas.problema import ProblemaCreate, ProblemaCreateUpload, ProblemaReadF
 from schemas.common.pagination import PaginationSchema
 from dependencies.database import get_db
 from sqlalchemy.orm import Session
-from orm.problema import create_problema, create_problema_upload, get_all_problemas, get_arquivos_problema, get_declaracoes_problema, get_problema_by_id, get_respostas_problema, get_integridade_problema, get_tags_problema, get_testes_problema, get_validador_problema, get_verificador_problema, update_problema
+from orm.problema import create_problema, create_problema_upload, get_all_problemas, get_arquivos_problema, get_declaracoes_problema, get_meus_problemas, get_problema_by_id, get_respostas_problema, get_integridade_problema, get_tags_problema, get_testes_problema, get_validador_problema, get_verificador_problema, update_problema
 from schemas.common.response import ResponsePaginationSchema, ResponseUnitSchema
 
 PROBLEMA_ID_DESCRIPTION = "Identificador do problema"
@@ -150,6 +151,41 @@ async def read_problema_id_tags(
 
     return ResponsePaginationSchema(
         data=tags,
+        metadata=metadata
+    )
+
+
+@router.get("/usuarios/{id}/",
+            response_model=ResponsePaginationSchema[ProblemaReadSimple],
+            summary="Lista problemas pertencentes a um usuário",
+            )
+async def read_problemas_me(
+    db: Session = Depends(get_db),
+    pagination: PaginationSchema = Depends(),
+    filters: ProblemaFilter = Depends(),
+    token: str = Depends(oauth2_scheme),
+    sort: OrderByFieldsProblemaEnum = Query(
+        default=None,
+        description=FIELDS_ORDER_BY_DESCRIPTION
+    ),
+    direction: DirectionOrderByEnum = Query(
+        default=None,
+        description=DIRECTION_ORDER_BY_DESCRIPTION
+    ),
+    id: int = Path(description=USER_ID_DESCRIPTION)
+):
+    problemas, metadata = await get_meus_problemas(
+        db=db,
+        pagination=pagination,
+        token=token,
+        field_order_by=sort,
+        direction=direction,
+        filters=filters,
+        id=id
+    )
+
+    return ResponsePaginationSchema(
+        data=problemas,
         metadata=metadata
     )
 

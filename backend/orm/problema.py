@@ -9,6 +9,7 @@ from filters.problemaTeste import ProblemaTesteFilter
 from models.problemaResposta import ProblemaResposta
 from models.problemaTeste import ProblemaTeste
 from models.tag import Tag
+from models.user import User
 from models.validador import Validador
 from models.validadorTeste import ValidadorTeste
 from models.verificador import Verificador
@@ -557,6 +558,42 @@ async def get_problema_by_id(
     db_problema.testes = testes_exemplo
 
     return db_problema
+
+
+async def get_meus_problemas(
+        db: Session,
+        pagination: PaginationSchema,
+        token: str,
+        field_order_by: OrderByFieldsProblemaEnum,
+        direction: DirectionOrderByEnum,
+        filters: ProblemaFilter,
+        id: int
+):
+    db_user = db.query(User).filter(User.id == id).first()
+
+    if (not db_user):
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND,
+            "O usuário não foi encontrado!"
+        )
+
+    user = await get_authenticated_user(token, db)
+    if (is_user(user) and bool(user.id != db_user.id)):
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED)
+
+    query = db.query(Problema)
+
+    db_problemas, metadata = filter_collection(
+        model=Problema,
+        pagination=pagination,
+        filters=filters,
+        query=query,
+        direction=direction,
+        field_order_by=field_order_by,
+        search_fields=search_fields_problema
+    )
+
+    return db_problemas.all(), metadata
 
 
 async def get_integridade_problema(

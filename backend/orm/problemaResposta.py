@@ -8,10 +8,15 @@ from constants import FILENAME_RUN, INPUT_TEST_FILENAME, OUTPUT_JUDGE_FILENAME, 
 from dependencies.authenticated_user import get_authenticated_user
 from dependencies.authorization_user import is_admin, is_user
 from fastapi import HTTPException, status
+from filters.problemaResposta import OrderByFieldsProblemaRespostaEnum, search_fields_problema_resposta
 from models.arquivo import Arquivo
 from models.problemaResposta import ProblemaResposta
 from models.problemaTeste import ProblemaTeste
+from models.user import User
+from orm.common.index import filter_collection
 from schemas.arquivo import SecaoEnum
+from schemas.common.direction_order_by import DirectionOrderByEnum
+from schemas.common.pagination import PaginationSchema
 from schemas.problemaResposta import ProblemaRespostaCreate
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
@@ -617,3 +622,37 @@ async def get_problema_resposta_by_id(
             status.HTTP_500_INTERNAL_SERVER_ERROR,
             "Ocorreu um erro na busca pela resposta!"
         )
+
+
+async def get_meus_problemas_respostas(
+        db: Session,
+        pagination: PaginationSchema,
+        token: str,
+        field_order_by: OrderByFieldsProblemaRespostaEnum,
+        direction: DirectionOrderByEnum,
+        id: int
+):
+    db_user = db.query(User).filter(User.id == id).first()
+
+    if (not db_user):
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND,
+            "O usuário não foi encontrado!"
+        )
+
+    user = await get_authenticated_user(token, db)
+    if (is_user(user) and bool(user.id != db_user.id)):
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED)
+
+    query = db.query(ProblemaResposta)
+
+    db_problemas_respostas, metadata = filter_collection(
+        model=ProblemaResposta,
+        pagination=pagination,
+        query=query,
+        direction=direction,
+        field_order_by=field_order_by,
+        search_fields=search_fields_problema_resposta
+    )
+
+    return db_problemas_respostas.all(), metadata

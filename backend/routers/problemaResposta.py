@@ -3,11 +3,12 @@ from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
 from dependencies.is_admin import is_admin_dependencies
 from filters.problemaResposta import OrderByFieldsProblemaRespostaEnum, search_fields_problema_resposta
 from models.problemaResposta import ProblemaResposta
-from orm.problemaResposta import create_problema_resposta, get_problema_resposta_by_id
+from orm.problemaResposta import create_problema_resposta, get_meus_problemas_respostas, get_problema_resposta_by_id
 from routers.auth import oauth2_scheme
 from dependencies.authenticated_user import get_authenticated_user
 from dependencies.database import get_db
 from orm.common.index import get_all
+from routers.user import USER_ID_DESCRIPTION
 from schemas.common.direction_order_by import DirectionOrderByEnum
 from schemas.common.pagination import PaginationSchema
 from schemas.common.response import ResponsePaginationSchema, ResponseUnitSchema
@@ -52,6 +53,39 @@ async def read(
 
     return ResponsePaginationSchema(
         data=respostas_problema,
+        metadata=metadata
+    )
+
+
+@router.get("/usuarios/{id}/",
+            response_model=ResponsePaginationSchema[ProblemaRespostaReadFull],
+            summary="Lista respostas fornecidas à problemas por um usuário",
+            )
+async def read_problemas_respostas_me(
+    db: Session = Depends(get_db),
+    pagination: PaginationSchema = Depends(),
+    token: str = Depends(oauth2_scheme),
+    sort: OrderByFieldsProblemaRespostaEnum = Query(
+        default=None,
+        description=FIELDS_ORDER_BY_DESCRIPTION
+    ),
+    direction: DirectionOrderByEnum = Query(
+        default=None,
+        description=DIRECTION_ORDER_BY_DESCRIPTION
+    ),
+    id: int = Path(description=USER_ID_DESCRIPTION)
+):
+    problemas_respostas, metadata = await get_meus_problemas_respostas(
+        db=db,
+        pagination=pagination,
+        token=token,
+        field_order_by=sort,
+        direction=direction,
+        id=id
+    )
+
+    return ResponsePaginationSchema(
+        data=problemas_respostas,
         metadata=metadata
     )
 
