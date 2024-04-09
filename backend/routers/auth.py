@@ -77,5 +77,10 @@ async def login(
     access_token = create_token(
         data={"sub": user.username}, expires_delta=access_token_expires
     )
-    data = UserLoginOut(access_token=access_token, token_type="bearer")
+    data = UserLoginOut(
+        access_token=access_token,
+        token_type="bearer",
+        username=user.username
+    )
+
     return data
