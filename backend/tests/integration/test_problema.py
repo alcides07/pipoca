@@ -66,10 +66,11 @@ def test_read_problemas_user():
 def test_read_meus_problemas_user():
     remove_dependencies()
 
-    _, token_user, _ = create_user_helper()
+    response_user, token_user, _ = create_user_helper()
+    user_id = response_user.json().get("data").get("id")
 
     response_problema_user = client.get(
-        "/usuarios/problemas/",
+        f"{URL_PROBLEMA}/usuarios/{user_id}/",
         headers={
             "Authorization": f"Bearer {token_user}",
         },
