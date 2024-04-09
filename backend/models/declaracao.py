@@ -45,7 +45,8 @@ class Declaracao(Base):
         Integer,
         ForeignKey(
             'problemas.id',
-            name="declaracoes_problema_id_fkey"
+            name="declaracoes_problema_id_fkey",
+            ondelete="CASCADE"
         )
     )
     problema = relationship(

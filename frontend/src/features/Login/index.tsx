@@ -4,7 +4,7 @@ import FormLogin from "./components/formLogin";
 import FormRegister from "./components/formRegister";
 import { Toaster } from "@/components/ui/toaster";
 
-function Login() {
+function Login({ onLogin }: any) {
   const [activeTab, setActiveTab] = useState("login");
 
   const handleRegisterSuccess = () => {
@@ -12,8 +12,8 @@ function Login() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen">
-      <Tabs value={activeTab} className="w-[400px]">
+    <>
+      <Tabs value={activeTab} className="w-[400px] min-h-auto ">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="login" onClick={() => setActiveTab("login")}>
             Login
@@ -26,14 +26,14 @@ function Login() {
           </TabsTrigger>
         </TabsList>
         <TabsContent value="login">
-          <FormLogin />
+          <FormLogin onLogin={onLogin} />
         </TabsContent>
         <TabsContent value="cadastro">
           <FormRegister onSuccess={handleRegisterSuccess} />
         </TabsContent>
       </Tabs>
       <Toaster />
-    </div>
+    </>
   );
 }
 

@@ -18,7 +18,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import AutenticacaoService from "@/service/api/autenticacaoService";
+import AutenticacaoService from "@/services/models/autenticacaoService";
 import { useToast } from "@/components/ui/use-toast";
 import { Toaster } from "@/components/ui/toaster";
 
@@ -42,7 +42,7 @@ const formSchema = z.object({
 });
 
 interface FormRegisterProps {
-  onSuccess: () => void;
+  onSuccess?: () => void;
 }
 
 function FormRegister({ onSuccess }: FormRegisterProps) {

@@ -1,7 +1,6 @@
 import { iTag } from "./iTag";
 import { iTestes } from "./iTeste";
-import { iValidador } from "./iValidador";
-import { iVerificador } from "./iVerificador";
+import { iDeclaracao } from "./iDeclaracao";
 
 export interface iProblemas {
   metadata: iMetadataProblemas;
@@ -12,8 +11,8 @@ interface iMetadataProblemas {
   count: number;
   limit: number;
   offset: number;
-  search_fields: string[];
   total: number;
+  search_fields: string[];
 }
 
 export interface iDataProblema {
@@ -29,25 +28,7 @@ export interface iDataProblema {
     id: number;
   };
   tags: iTag[];
-  declaracoes: iDeclaracoesProblema[];
+  declaracoes: iDeclaracao[];
   criado_em: string;
-  arquivos: iArquivosProblema[];
-  validador: iValidador;
-  verificador: iVerificador;
   testes: iTestes[];
-}
-
-interface iDeclaracoesProblema {
-  titulo: string;
-  idioma: string;
-  id: number;
-  problema_id: number;
-}
-
-interface iArquivosProblema {
-  nome: string;
-  secao: string;
-  status: string;
-  id: number;
-  problema_id: number;
 }

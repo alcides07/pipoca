@@ -10,7 +10,8 @@ problema_tag_relationship = Table(
         Integer,
         ForeignKey(
             'problemas.id',
-            name="problema_tag_problema_id_fkey"
+            name="problema_tag_problema_id_fkey",
+            ondelete="CASCADE"
         )
     ),
 
@@ -19,7 +20,8 @@ problema_tag_relationship = Table(
         Integer,
         ForeignKey(
             'tags.id',
-            name="problema_tag_tag_id_fkey"
+            name="problema_tag_tag_id_fkey",
+            ondelete="CASCADE"
         )
     )
 )
