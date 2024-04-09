@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 client = TestClient(app)
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-URL_AUTH = "/auth"
+URL_AUTH = "/autenticacao"
 
 
 def create_administrador_helper(db: Session):
