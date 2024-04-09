@@ -151,6 +151,8 @@ def test_read_meus_problemas_respostas_com_user():
 
 
 def test_read_meus_problemas_respostas_para_problema_especifico():
+    remove_dependencies()
+
     _, token_user_criador_problema, _ = create_user_helper()
     response_usuario, token_user_resposta, _ = create_user_helper()
     id_usuario = response_usuario.json().get("data").get("id")
