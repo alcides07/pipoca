@@ -624,7 +624,7 @@ async def get_problema_resposta_by_id(
         )
 
 
-async def get_meus_problemas_respostas(
+async def get_problemas_respostas_by_user(
         db: Session,
         pagination: PaginationSchema,
         token: str,
@@ -645,6 +645,50 @@ async def get_meus_problemas_respostas(
         raise HTTPException(status.HTTP_401_UNAUTHORIZED)
 
     query = db.query(ProblemaResposta)
+
+    db_problemas_respostas, metadata = filter_collection(
+        model=ProblemaResposta,
+        pagination=pagination,
+        query=query,
+        direction=direction,
+        field_order_by=field_order_by,
+        search_fields=search_fields_problema_resposta
+    )
+
+    return db_problemas_respostas.all(), metadata
+
+
+async def get_problema_id_respostas_by_user(
+        db: Session,
+        pagination: PaginationSchema,
+        token: str,
+        field_order_by: OrderByFieldsProblemaRespostaEnum,
+        direction: DirectionOrderByEnum,
+        id_problema: int,
+        id_usuario: int
+):
+    db_user = db.query(User).filter(User.id == id_usuario).first()
+    db_problema = db.query(Problema).filter(Problema.id == id_problema).first()
+
+    if (not db_user):
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND,
+            "O usuário não foi encontrado!"
+        )
+
+    if (not db_problema):
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND,
+            "O problema não foi encontrado!"
+        )
+
+    user = await get_authenticated_user(token, db)
+    if (is_user(user) and bool(user.id != db_user.id)):
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED)
+
+    query = db.query(ProblemaResposta).filter(
+        ProblemaResposta.problema_id == id_problema
+    )
 
     db_problemas_respostas, metadata = filter_collection(
         model=ProblemaResposta,
