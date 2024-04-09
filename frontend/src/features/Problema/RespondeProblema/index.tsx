@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/select";
 import linguagens from "../../../utils/linguagem";
 import { iRespondeProblema } from "@/interfaces/services/iRespondeProblema";
+import { Toaster } from "@/components/ui/toaster";
 
 const FormSchema = z.object({
 	linguagem: z.string().nonempty("Selecione uma linguagem de programação!"),
@@ -76,6 +77,8 @@ function RespondeProblema({ children }: RespondeProblemaProps) {
 			.then((response) => {
 				console.log("responta", response.data);
 				if (response.data.erro) {
+					console.log("Com erro", response.data.erro);
+
 					toast({
 						title: "Erro.",
 						description: response.data.erro,
@@ -257,6 +260,7 @@ function RespondeProblema({ children }: RespondeProblemaProps) {
 					</ResizablePanelGroup>
 				</ResizablePanel>
 			</ResizablePanelGroup>
+			<Toaster />
 		</div>
 	);
 }
