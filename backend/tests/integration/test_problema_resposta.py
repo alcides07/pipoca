@@ -167,7 +167,7 @@ def test_read_meus_problemas_respostas_para_problema_especifico():
     )
     assert response_problema.status_code == 201
 
-    id_problema = response_problema.json().get("data").get("id")
+    id_problema = response_problema.json().get("data").get("problema_id")
 
     response = client.get(
         f"{URL_PROBLEMA_RESPOSTAS}/problemas/{id_problema}/usuarios/{id_usuario}/",
