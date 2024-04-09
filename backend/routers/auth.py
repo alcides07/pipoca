@@ -14,7 +14,7 @@ from decouple import config
 
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="autenticacao")
 ALGORITHM = str(config("ALGORITHM"))
 TOKEN_EXPIRE_MINUTES = float(config("TOKEN_EXPIRE_MINUTES"))
 
@@ -49,8 +49,8 @@ def verify_password(password, hashed_password):
 
 
 router = APIRouter(
-    prefix="/auth",
-    tags=["auth"],
+    prefix="/autenticacao",
+    tags=["autenticação"],
 )
 
 
