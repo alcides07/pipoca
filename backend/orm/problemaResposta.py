@@ -280,7 +280,7 @@ async def execute_checker(
 async def execute_codigo_user(
     db_problema: Problema,
     problema_resposta: ProblemaRespostaCreate,
-    output_testes_gerados: List[str]
+    arquivo_gerador: Arquivo | None
 ):
     codigo_user = problema_resposta.resposta
     linguagem = problema_resposta.linguagem
@@ -307,13 +307,24 @@ async def execute_codigo_user(
         file.write(codigo_user)
 
     output_codigo_user: List[str] = []
+    output_testes_gerados: List[str] = []
 
     try:
         for i, teste in enumerate(db_problema.testes):
             teste_entrada = teste.entrada
 
             if (teste.tipo == TipoTesteProblemaEnum.GERADO.value):
-                teste_entrada = output_testes_gerados[i]
+                if (arquivo_gerador is None):
+                    raise HTTPException(
+                        status.HTTP_500_INTERNAL_SERVER_ERROR,
+                        "O arquivo gerador de testes não foi encontrado!"
+                    )
+
+                teste_entrada = await execute_teste_gerado(
+                    teste, arquivo_gerador
+                )
+
+            output_testes_gerados.append(teste_entrada)
 
             try:
                 container = client.containers.create(
@@ -360,7 +371,7 @@ async def execute_codigo_user(
                 output_codigo_user.append(stdout_logs_decode)
 
                 if (stderr_logs_decode != ""):
-                    return f"Erro em tempo de execução no teste {i+1}"
+                    return f"Erro em tempo de execução no teste {i+1}", []
 
             except DockerException:
                 raise HTTPException(
@@ -377,13 +388,13 @@ async def execute_codigo_user(
         os.remove(TEMP_TESTE_USUARIO)
         volume.remove()  # type: ignore
 
-    return output_codigo_user
+    return output_codigo_user, output_testes_gerados
 
 
 async def execute_arquivo_solucao(
     db_problema: Problema,
     arquivo_solucao: Arquivo,
-    arquivo_gerador: Arquivo | None
+    output_testes_gerados: List[str]
 ):
     codigo_solucao = str(arquivo_solucao.corpo)
     linguagem = str(arquivo_solucao.linguagem)
@@ -410,23 +421,13 @@ async def execute_arquivo_solucao(
         file.write(codigo_solucao)
 
     output_codigo_solucao: List[str] = []
-    output_testes_gerados: List[str] = []
 
     try:
-        for teste in db_problema.testes:
+        for i, teste in enumerate(db_problema.testes):
             teste_entrada = teste.entrada
 
             if (teste.tipo == TipoTesteProblemaEnum.GERADO.value):
-                if (arquivo_gerador is None):
-                    raise HTTPException(
-                        status.HTTP_500_INTERNAL_SERVER_ERROR,
-                        "O arquivo gerador de testes não foi encontrado!"
-                    )
-
-                teste_entrada = await execute_teste_gerado(
-                    teste, arquivo_gerador)
-
-            output_testes_gerados.append(teste_entrada)
+                teste_entrada = output_testes_gerados[i]
 
             try:
                 container = client.containers.create(
@@ -492,7 +493,7 @@ async def execute_arquivo_solucao(
         os.remove(TEMP_TESTE_SOLUCAO)
         volume.remove()  # type: ignore
 
-    return output_codigo_solucao, output_testes_gerados
+    return output_codigo_solucao
 
 
 async def execute_processo_resolucao(
@@ -502,20 +503,20 @@ async def execute_processo_resolucao(
     arquivo_solucao = get_arquivo_solucao(db_problema)
     arquivo_gerador = get_arquivo_gerador(db_problema)
 
-    output_codigo_solucao, output_testes_gerados = await execute_arquivo_solucao(
-        db_problema,
-        arquivo_solucao,
-        arquivo_gerador
-    )
-
-    output_codigo_user = await execute_codigo_user(
+    output_codigo_user, output_testes_gerados = await execute_codigo_user(
         db_problema,
         problema_resposta,
-        output_testes_gerados
+        arquivo_gerador
     )
 
     if (isinstance(output_codigo_user, str)):
         return [], [], [], output_codigo_user
+
+    output_codigo_solucao = await execute_arquivo_solucao(
+        db_problema,
+        arquivo_solucao,
+        output_testes_gerados
+    )
 
     veredito = await execute_checker(
         db_problema,
