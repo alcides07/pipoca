@@ -1,6 +1,7 @@
 import tarfile
 import io
 import os
+import tempfile
 import docker
 from typing import Optional
 from docker.errors import DockerException
@@ -645,8 +646,6 @@ async def execute_arquivo_solucao_com_testes_exemplo(
     image = commands[linguagem]["image"]
     command = commands[linguagem]["run_test"]
     WORKING_DIR = "/arquivo/testes/"
-    TEMP_SOLUCAO = "/tmp/solucao"
-    TEMP_TESTE_SOLUCAO = "/tmp/teste-solucao"
 
     client.images.pull(image)
     volume = client.volumes.create()
@@ -658,69 +657,68 @@ async def execute_arquivo_solucao_com_testes_exemplo(
         }
     }
 
-    with open(TEMP_SOLUCAO, 'w') as file:
-        file.write(codigo_solucao)
+    with tempfile.NamedTemporaryFile() as temp_solucao, tempfile.NamedTemporaryFile() as temp_teste_solucao:
+        temp_solucao.write(codigo_solucao.encode())
+        temp_teste_solucao.write(teste.encode())
 
-    try:
-        container = client.containers.create(
-            image=image,
-            command=command,
-            detach=True,
-            volumes=volumes,
-            working_dir=WORKING_DIR
-        )
+        temp_solucao.seek(0)
+        temp_teste_solucao.seek(0)
 
-        with open(TEMP_TESTE_SOLUCAO, 'w') as file:
-            file.write(teste)
-
-        tarstream = io.BytesIO()
-        tar = tarfile.TarFile(fileobj=tarstream, mode='w')
-
-        tar.add(
-            name=TEMP_SOLUCAO,
-            arcname=f'{WORKING_DIR}/{FILENAME_RUN}{extension}'
-        )
-        tar.add(
-            name=TEMP_TESTE_SOLUCAO,
-            arcname=f'{WORKING_DIR}/{INPUT_TEST_FILENAME}'
-        )
-
-        tar.close()
-
-        container.put_archive(  # type: ignore
-            '/',
-            tarstream.getvalue()
-        )
-
-        container.start()  # type: ignore
-        container.wait()  # type: ignore
-
-        stdout_logs = container.logs(  # type: ignore
-            stdout=True, stderr=False)
-        stderr_logs = container.logs(  # type: ignore
-            stdout=False, stderr=True)
-
-        stdout_logs_decode = stdout_logs.decode()
-        stderr_logs_decode = stderr_logs.decode()
-
-        if (stderr_logs_decode != ""):
-            raise HTTPException(
-                status.HTTP_500_INTERNAL_SERVER_ERROR,
-                "O arquivo de solução oficial do problema possui alguma falha!"
+        try:
+            container = client.containers.create(
+                image=image,
+                command=command,
+                detach=True,
+                volumes=volumes,
+                working_dir=WORKING_DIR
             )
 
-    except DockerException:
-        raise HTTPException(
-            status.HTTP_500_INTERNAL_SERVER_ERROR,
-            "Ocorreu um erro no processamento do arquivo de solução oficial do problema!"
-        )
+            tarstream = io.BytesIO()
+            tar = tarfile.TarFile(fileobj=tarstream, mode='w')
 
-    finally:
-        container.stop()  # type: ignore
-        container.remove()  # type: ignore
-        os.remove(TEMP_SOLUCAO)
-        os.remove(TEMP_TESTE_SOLUCAO)
-        volume.remove()  # type: ignore
+            tar.add(
+                name=temp_solucao.name,
+                arcname=f'{WORKING_DIR}/{FILENAME_RUN}{extension}'
+            )
+            tar.add(
+                name=temp_teste_solucao.name,
+                arcname=f'{WORKING_DIR}/{INPUT_TEST_FILENAME}'
+            )
+
+            tar.close()
+
+            container.put_archive(  # type: ignore
+                '/',
+                tarstream.getvalue()
+            )
+
+            container.start()  # type: ignore
+            container.wait()  # type: ignore
+
+            stdout_logs = container.logs(  # type: ignore
+                stdout=True, stderr=False)
+            stderr_logs = container.logs(  # type: ignore
+                stdout=False, stderr=True)
+
+            stdout_logs_decode = stdout_logs.decode()
+            stderr_logs_decode = stderr_logs.decode()
+
+            if (stderr_logs_decode != ""):
+                raise HTTPException(
+                    status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    "O arquivo de solução oficial do problema possui alguma falha!"
+                )
+
+        except DockerException:
+            raise HTTPException(
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+                "Ocorreu um erro no processamento do arquivo de solução oficial do problema!"
+            )
+
+        finally:
+            container.stop()  # type: ignore
+            container.remove()  # type: ignore
+            volume.remove()  # type: ignore
 
     return stdout_logs_decode
 
