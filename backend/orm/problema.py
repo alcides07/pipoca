@@ -636,7 +636,7 @@ async def get_integridade_problema(
 
 async def execute_arquivo_solucao_com_testes_exemplo(
     arquivo_solucao: Arquivo,
-    teste: str
+    testes: list[str]
 ):
     codigo_solucao = str(arquivo_solucao.corpo)
     linguagem = str(arquivo_solucao.linguagem)
@@ -657,12 +657,9 @@ async def execute_arquivo_solucao_com_testes_exemplo(
         }
     }
 
-    with tempfile.NamedTemporaryFile() as temp_solucao, tempfile.NamedTemporaryFile() as temp_teste_solucao:
-        temp_solucao.write(codigo_solucao.encode())
-        temp_teste_solucao.write(teste.encode())
+    testes_executados: list[ProblemaTesteExecutado] = []
 
-        temp_solucao.seek(0)
-        temp_teste_solucao.seek(0)
+    with tempfile.NamedTemporaryFile() as temp_solucao, tempfile.NamedTemporaryFile() as temp_teste_solucao:
 
         try:
             container = client.containers.create(
@@ -673,41 +670,55 @@ async def execute_arquivo_solucao_com_testes_exemplo(
                 working_dir=WORKING_DIR
             )
 
-            tarstream = io.BytesIO()
-            tar = tarfile.TarFile(fileobj=tarstream, mode='w')
+            for teste in testes:
+                temp_solucao.write(codigo_solucao.encode())
+                temp_teste_solucao.write(teste.encode())
 
-            tar.add(
-                name=temp_solucao.name,
-                arcname=f'{WORKING_DIR}/{FILENAME_RUN}{extension}'
-            )
-            tar.add(
-                name=temp_teste_solucao.name,
-                arcname=f'{WORKING_DIR}/{INPUT_TEST_FILENAME}'
-            )
+                temp_solucao.seek(0)
+                temp_teste_solucao.seek(0)
 
-            tar.close()
+                tarstream = io.BytesIO()
+                tar = tarfile.TarFile(fileobj=tarstream, mode='w')
 
-            container.put_archive(  # type: ignore
-                '/',
-                tarstream.getvalue()
-            )
-
-            container.start()  # type: ignore
-            container.wait()  # type: ignore
-
-            stdout_logs = container.logs(  # type: ignore
-                stdout=True, stderr=False)
-            stderr_logs = container.logs(  # type: ignore
-                stdout=False, stderr=True)
-
-            stdout_logs_decode = stdout_logs.decode()
-            stderr_logs_decode = stderr_logs.decode()
-
-            if (stderr_logs_decode != ""):
-                raise HTTPException(
-                    status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    "O arquivo de solução oficial do problema possui alguma falha!"
+                tar.add(
+                    name=temp_solucao.name,
+                    arcname=f'{WORKING_DIR}/{FILENAME_RUN}{extension}'
                 )
+                tar.add(
+                    name=temp_teste_solucao.name,
+                    arcname=f'{WORKING_DIR}/{INPUT_TEST_FILENAME}'
+                )
+
+                tar.close()
+
+                container.put_archive(  # type: ignore
+                    '/',
+                    tarstream.getvalue()
+                )
+
+                container.start()  # type: ignore
+                container.wait()  # type: ignore
+
+                stdout_logs = container.logs(  # type: ignore
+                    stdout=True, stderr=False)
+                stderr_logs = container.logs(  # type: ignore
+                    stdout=False, stderr=True)
+
+                stdout_logs_decode = stdout_logs.decode()
+                stderr_logs_decode = stderr_logs.decode()
+
+                if (stderr_logs_decode != ""):
+                    raise HTTPException(
+                        status.HTTP_500_INTERNAL_SERVER_ERROR,
+                        "O arquivo de solução oficial do problema possui alguma falha!"
+                    )
+
+                teste_executado = ProblemaTesteExecutado(
+                    entrada=teste,
+                    saida=stdout_logs_decode
+                )
+
+                testes_executados.append(teste_executado)
 
         except DockerException:
             raise HTTPException(
@@ -720,7 +731,7 @@ async def execute_arquivo_solucao_com_testes_exemplo(
             container.remove()  # type: ignore
             volume.remove()  # type: ignore
 
-    return stdout_logs_decode
+    return testes_executados
 
 
 async def get_testes_exemplo_de_problema_executados(
@@ -752,7 +763,7 @@ async def get_testes_exemplo_de_problema_executados(
             ProblemaTeste.problema_id == id).filter(ProblemaTeste.exemplo == True).all()
 
         arquivo_gerador: Arquivo | None = get_arquivo_gerador(db_problema)
-        testes_executados: list[ProblemaTesteExecutado] = []
+        entradas_testes: list[str] = []
 
         for teste in testes_exemplo:
             teste_entrada = str(teste.entrada)
@@ -768,17 +779,12 @@ async def get_testes_exemplo_de_problema_executados(
                     teste, arquivo_gerador
                 )
 
-            teste_saida = await execute_arquivo_solucao_com_testes_exemplo(
-                teste=teste_entrada,
-                arquivo_solucao=arquivo_solucao
-            )
+            entradas_testes.append(teste_entrada)
 
-            teste_executado = ProblemaTesteExecutado(
-                entrada=teste_entrada,
-                saida=teste_saida
-            )
-
-            testes_executados.append(teste_executado)
+        testes_executados = await execute_arquivo_solucao_com_testes_exemplo(
+            testes=entradas_testes,
+            arquivo_solucao=arquivo_solucao
+        )
 
         return testes_executados
 
