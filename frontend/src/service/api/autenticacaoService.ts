@@ -3,7 +3,7 @@ import { iLogin, iRegister } from "../../interfaces/iAutenticacao";
 
 class AutenticacaoService {
 	async login(data: iLogin) {
-		const response = await axiosInstance.post("/auth", data, {
+		const response = await axiosInstance.post("/autenticacao", data, {
 			headers: {
 				"Content-Type": "application/x-www-form-urlencoded",
 			},
@@ -12,7 +12,7 @@ class AutenticacaoService {
 	}
 
 	async register(data: iRegister) {
-		const response = await axiosInstance.post("/users", data, {
+		const response = await axiosInstance.post("/usuarios", data, {
 			headers: {
 				"Content-Type": "application/json",
 			},
