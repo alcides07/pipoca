@@ -32,3 +32,11 @@ export interface iDataProblema {
 	criado_em: string;
 	testes: iTestes[];
 }
+
+export interface iIntegridade {
+	declaracoes: boolean;
+	arquivos: boolean;
+	testes: boolean;
+	verificador: boolean;
+	validador: boolean;
+}

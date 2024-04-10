@@ -21,6 +21,13 @@ class ProblemaService {
 		return response.data;
 	}
 
+	async integridadeProblema(id: number) {
+		const response = await axiosInstance.get(
+			`/problemas/${id}/integridade/`
+		);
+		return response.data;
+	}
+
 	async uploadFile(formData: FormData) {
 		const response = await axiosInstance.post(
 			`/problemas/pacotes/`,
