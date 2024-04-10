@@ -16,7 +16,7 @@ from schemas.common.direction_order_by import DirectionOrderByEnum
 from schemas.declaracao import DeclaracaoCreate, DeclaracaoReadFull
 from schemas.idioma import IdiomaEnum
 from schemas.problemaResposta import ProblemaRespostaReadSimple
-from schemas.problemaTeste import ProblemaTesteCreate, ProblemaTesteReadFull, TipoTesteProblemaEnum
+from schemas.problemaTeste import ProblemaTesteCreate, ProblemaTesteExecutado, ProblemaTesteReadFull, TipoTesteProblemaEnum
 from schemas.tag import TagRead
 from schemas.validador import ValidadorCreate, ValidadorReadFull
 from schemas.validadorTeste import ValidadorTesteCreate, VereditoValidadorTesteEnum
@@ -30,8 +30,8 @@ from schemas.problema import ProblemaCreate, ProblemaCreateUpload, ProblemaReadF
 from schemas.common.pagination import PaginationSchema
 from dependencies.database import get_db
 from sqlalchemy.orm import Session
-from orm.problema import create_problema, create_problema_upload, get_all_problemas, get_arquivos_problema, get_declaracoes_problema, get_meus_problemas, get_problema_by_id, get_respostas_problema, get_integridade_problema, get_tags_problema, get_testes_problema, get_validador_problema, get_verificador_problema, update_problema
-from schemas.common.response import ResponsePaginationSchema, ResponseUnitSchema
+from orm.problema import create_problema, create_problema_upload, get_all_problemas, get_arquivos_problema, get_declaracoes_problema, get_meus_problemas, get_problema_by_id, get_respostas_problema, get_integridade_problema, get_tags_problema, get_testes_exemplo_de_problema_executados, get_testes_problema, get_validador_problema, get_verificador_problema, update_problema
+from schemas.common.response import ResponseListSchema, ResponsePaginationSchema, ResponseUnitSchema
 
 PROBLEMA_ID_DESCRIPTION = "Identificador do problema"
 
@@ -100,6 +100,29 @@ async def read_problema_id_testes(
     return ResponsePaginationSchema(
         data=testes,
         metadata=metadata
+    )
+
+
+@router.get("/{id}/testesExemplos/execucao/",
+            response_model=ResponseListSchema[ProblemaTesteExecutado],
+            summary="Lista testes de exemplo de um problema após execução",
+            responses={
+                404: errors[404]
+            }
+            )
+async def read_problema_id_testes_exemplo_executados(
+    db: Session = Depends(get_db),
+    id: int = Path(description=PROBLEMA_ID_DESCRIPTION),
+    token: str = Depends(oauth2_scheme)
+):
+    testes = await get_testes_exemplo_de_problema_executados(
+        db=db,
+        id=id,
+        token=token
+    )
+
+    return ResponseListSchema(
+        data=testes
     )
 
 
