@@ -525,6 +525,39 @@ def test_read_integridade_falsa_de_problema_com_dono():
     resume_dependencies()
 
 
+def test_read_testes_exemplo_executados():
+    remove_dependencies()
+
+    _, token, _ = create_user_helper()
+
+    with open("./tests/integration/example_problem.zip", 'rb') as file:
+        response_problema = client.post(
+            f"{URL_PROBLEMA}/pacotes/",
+            files={"pacote": file},
+            data={"privado": "true"},
+            headers={
+                "Authorization": f"Bearer {token}",
+            },
+        )
+
+    assert response_problema.status_code == 201
+    id_problema = response_problema.json().get("data").get("id")
+    print("id : ", id_problema)
+
+    response = client.get(
+        f"{URL_PROBLEMA}/{id_problema}/testesExemplosExecutados/",
+        headers={
+            "Authorization": f"Bearer {token}",
+        },
+    )
+    data = response.json().get("data")
+
+    assert response.status_code == 200
+    assert data != []
+
+    resume_dependencies()
+
+
 def test_create_problema_user():
     remove_dependencies()
 
