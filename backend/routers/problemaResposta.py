@@ -18,8 +18,8 @@ from utils.errors import errors
 PROBLEMA_RESPOSTA_ID_DESCRIPTION = "Identificador da resposta de um problema"
 
 router = APIRouter(
-    prefix="/problemaRespostas",
-    tags=["problemaRespostas"],
+    prefix="/problemasRespostas",
+    tags=["problemasRespostas"],
     dependencies=[Depends(get_authenticated_user)]
 )
 
@@ -52,40 +52,6 @@ async def read(
 
     return ResponsePaginationSchema(
         data=respostas_problema,
-        metadata=metadata
-    )
-
-
-@router.get("/users/",
-            response_model=ResponsePaginationSchema[ProblemaRespostaReadFull],
-            summary="Lista respostas fornecidas à problemas pelo usuário autenticado",
-            )
-async def read_problemas_respostas_me(
-    db: Session = Depends(get_db),
-    pagination: PaginationSchema = Depends(),
-    token: str = Depends(oauth2_scheme),
-    sort: OrderByFieldsProblemaRespostaEnum = Query(
-        default=None,
-        description=FIELDS_ORDER_BY_DESCRIPTION
-    ),
-    direction: DirectionOrderByEnum = Query(
-        default=None,
-        description=DIRECTION_ORDER_BY_DESCRIPTION
-    )
-):
-    problemas, metadata = await get_all(
-        db=db,
-        model=ProblemaResposta,
-        pagination=pagination,
-        token=token,
-        field_order_by=sort,
-        direction=direction,
-        search_fields=search_fields_problema_resposta,
-        me_author=True
-    )
-
-    return ResponsePaginationSchema(
-        data=problemas,
         metadata=metadata
     )
 

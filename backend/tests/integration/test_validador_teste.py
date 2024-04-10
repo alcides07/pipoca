@@ -8,7 +8,7 @@ from tests.helpers.validador import create_validador_helper
 
 
 client = TestClient(app)
-URL_VALIDADOR_TESTES = "/validadorTestes"
+URL_VALIDADOR_TESTES = "/validadoresTestes"
 
 
 def test_read_validador_testes_user():
