@@ -72,9 +72,9 @@ function FormLogin({ onLogin }: any) {
           Realize login para ter acesso ao sistema Pipoca!
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-2">
+      <CardContent>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-2">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
               name="username"
@@ -105,7 +105,10 @@ function FormLogin({ onLogin }: any) {
                 </FormItem>
               )}
             />
-            <Button type="submit">Entrar</Button>
+
+            <Button type="submit" className="w-full my-8">
+              Entrar
+            </Button>
           </form>
         </Form>
       </CardContent>

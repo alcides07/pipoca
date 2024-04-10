@@ -97,9 +97,9 @@ function FormRegister({ onSuccess }: FormRegisterProps) {
           Realize cadastro para ter acesso ao sistema Pipoca!
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-2">
+      <CardContent>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-2">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
               name="username"
@@ -152,7 +152,9 @@ function FormRegister({ onSuccess }: FormRegisterProps) {
                 </FormItem>
               )}
             />
-            <Button type="submit">Cadastrar</Button>
+            <Button type="submit" className="w-full">
+              Cadastrar
+            </Button>
           </form>
         </Form>
       </CardContent>
