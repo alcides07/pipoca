@@ -103,7 +103,7 @@ async def read_problema_id_testes(
     )
 
 
-@router.get("/{id}/testesExemplos/execucao/",
+@router.get("/{id}/testesExemplosExecutados/",
             response_model=ResponseListSchema[ProblemaTesteExecutado],
             summary="Lista testes de exemplo de um problema após execução",
             responses={
