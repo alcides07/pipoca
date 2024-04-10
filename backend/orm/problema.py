@@ -1,5 +1,12 @@
+import tarfile
+import io
+import os
+import docker
 from typing import Optional
+from docker.errors import DockerException
+from compilers import commands
 from sqlalchemy import Column
+from constants import FILENAME_RUN, INPUT_TEST_FILENAME
 from dependencies.authenticated_user import get_authenticated_user
 from dependencies.authorization_user import is_admin, is_user
 from fastapi import HTTPException, status
@@ -15,6 +22,7 @@ from models.validadorTeste import ValidadorTeste
 from models.verificador import Verificador
 from models.verificadorTeste import VerificadorTeste
 from orm.common.index import filter_collection
+from orm.problemaResposta import execute_teste_gerado, get_arquivo_gerador, get_arquivo_solucao
 from schemas.common.direction_order_by import DirectionOrderByEnum
 from schemas.common.pagination import PaginationSchema
 from sqlalchemy.orm import Session
@@ -24,6 +32,7 @@ from models.declaracao import Declaracao
 from models.problema import Problema
 from schemas.problema import ProblemaCreate, ProblemaCreateUpload, ProblemaIntegridade, ProblemaUpdatePartial, ProblemaUpdateTotal
 from models.relationships.problema_tag import problema_tag_relationship
+from schemas.problemaTeste import ProblemaTesteExecutado, TipoTesteProblemaEnum
 
 
 def get_unique_nome_problema(
@@ -622,3 +631,161 @@ async def get_integridade_problema(
     )
 
     return data
+
+
+async def execute_arquivo_solucao_com_testes_exemplo(
+    arquivo_solucao: Arquivo,
+    teste: str
+):
+    codigo_solucao = str(arquivo_solucao.corpo)
+    linguagem = str(arquivo_solucao.linguagem)
+    extension = commands[linguagem]["extension"]
+
+    client = docker.from_env()
+    image = commands[linguagem]["image"]
+    command = commands[linguagem]["run_test"]
+    WORKING_DIR = "/arquivo/testes/"
+    TEMP_SOLUCAO = "/tmp/solucao"
+    TEMP_TESTE_SOLUCAO = "/tmp/teste-solucao"
+
+    client.images.pull(image)
+    volume = client.volumes.create()
+
+    volumes = {
+        volume.name: {  # type: ignore
+            'bind': WORKING_DIR,
+            'mode': 'rw'
+        }
+    }
+
+    with open(TEMP_SOLUCAO, 'w') as file:
+        file.write(codigo_solucao)
+
+    try:
+        container = client.containers.create(
+            image=image,
+            command=command,
+            detach=True,
+            volumes=volumes,
+            working_dir=WORKING_DIR
+        )
+
+        with open(TEMP_TESTE_SOLUCAO, 'w') as file:
+            file.write(teste)
+
+        tarstream = io.BytesIO()
+        tar = tarfile.TarFile(fileobj=tarstream, mode='w')
+
+        tar.add(
+            name=TEMP_SOLUCAO,
+            arcname=f'{WORKING_DIR}/{FILENAME_RUN}{extension}'
+        )
+        tar.add(
+            name=TEMP_TESTE_SOLUCAO,
+            arcname=f'{WORKING_DIR}/{INPUT_TEST_FILENAME}'
+        )
+
+        tar.close()
+
+        container.put_archive(  # type: ignore
+            '/',
+            tarstream.getvalue()
+        )
+
+        container.start()  # type: ignore
+        container.wait()  # type: ignore
+
+        stdout_logs = container.logs(  # type: ignore
+            stdout=True, stderr=False)
+        stderr_logs = container.logs(  # type: ignore
+            stdout=False, stderr=True)
+
+        stdout_logs_decode = stdout_logs.decode()
+        stderr_logs_decode = stderr_logs.decode()
+
+        if (stderr_logs_decode != ""):
+            raise HTTPException(
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+                "O arquivo de solução oficial do problema possui alguma falha!"
+            )
+
+    except DockerException:
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            "Ocorreu um erro no processamento do arquivo de solução oficial do problema!"
+        )
+
+    finally:
+        container.stop()  # type: ignore
+        container.remove()  # type: ignore
+        os.remove(TEMP_SOLUCAO)
+        os.remove(TEMP_TESTE_SOLUCAO)
+        volume.remove()  # type: ignore
+
+    return stdout_logs_decode
+
+
+async def get_testes_exemplo_de_problema_executados(
+    db: Session,
+    id: int,
+    token: str
+):
+    db_problema = db.query(Problema).filter(Problema.id == id).first()
+
+    if (not db_problema):
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND,
+            "O problema não foi encontrado!"
+        )
+
+    user = await get_authenticated_user(token, db)
+
+    if (
+        is_user(user)
+        and
+        bool(db_problema.usuario_id != user.id and bool(db_problema.privado))
+    ):
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED)
+
+    try:
+        arquivo_solucao = get_arquivo_solucao(db_problema)
+
+        testes_exemplo = db.query(ProblemaTeste).filter(
+            ProblemaTeste.problema_id == id).filter(ProblemaTeste.exemplo == True).all()
+
+        arquivo_gerador: Arquivo | None = get_arquivo_gerador(db_problema)
+        testes_executados: list[ProblemaTesteExecutado] = []
+
+        for teste in testes_exemplo:
+            teste_entrada = str(teste.entrada)
+
+            if (bool(teste.tipo == TipoTesteProblemaEnum.GERADO.value)):
+                if (arquivo_gerador is None):
+                    raise HTTPException(
+                        status.HTTP_500_INTERNAL_SERVER_ERROR,
+                        "O arquivo gerador de testes não foi encontrado!"
+                    )
+
+                teste_entrada = await execute_teste_gerado(
+                    teste, arquivo_gerador
+                )
+
+            teste_saida = await execute_arquivo_solucao_com_testes_exemplo(
+                teste=teste_entrada,
+                arquivo_solucao=arquivo_solucao
+            )
+
+            teste_executado = ProblemaTesteExecutado(
+                entrada=teste_entrada,
+                saida=teste_saida
+            )
+
+            testes_executados.append(teste_executado)
+
+        return testes_executados
+
+    except SQLAlchemyError:
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            "Ocorreu um erro na busca pelos testes de exemplo do problema!"
+        )
