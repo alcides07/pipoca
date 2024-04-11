@@ -1,14 +1,13 @@
+import { iRespondeProblema } from "@/interfaces/services/iRespondeProblema";
 import axiosInstance from "../axiosInstance";
 
 class ProblemaService {
 	async getProblemas() {
 		const response = await axiosInstance.get("/problemas/");
-		console.log(response.data);
 		return response.data;
 	}
 	async createProblema(data: any) {
 		const response = await axiosInstance.post(`/problemas/`, data);
-		console.log(response);
 		return response;
 	}
 	async getProblemaById(id: number) {
@@ -18,6 +17,11 @@ class ProblemaService {
 
 	async updateProblema(id: number, data: any) {
 		const response = await axiosInstance.put(`/problemas/${id}`, data);
+		return response.data;
+	}
+
+	async respondeProblema(data: iRespondeProblema) {
+		const response = await axiosInstance.post(`/problemasRespostas/`, data);
 		return response.data;
 	}
 

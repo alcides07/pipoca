@@ -9,6 +9,7 @@ from filters.problemaTeste import ProblemaTesteFilter
 from models.problemaResposta import ProblemaResposta
 from models.problemaTeste import ProblemaTeste
 from models.tag import Tag
+from models.user import User
 from models.validador import Validador
 from models.validadorTeste import ValidadorTeste
 from models.verificador import Verificador
@@ -21,7 +22,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from models.arquivo import Arquivo
 from models.declaracao import Declaracao
 from models.problema import Problema
-from schemas.problema import ProblemaCreate, ProblemaCreateUpload, ProblemaUpdatePartial, ProblemaUpdateTotal
+from schemas.problema import ProblemaCreate, ProblemaCreateUpload, ProblemaIntegridade, ProblemaUpdatePartial, ProblemaUpdateTotal
 from models.relationships.problema_tag import problema_tag_relationship
 
 
@@ -557,3 +558,67 @@ async def get_problema_by_id(
     db_problema.testes = testes_exemplo
 
     return db_problema
+
+
+async def get_meus_problemas(
+        db: Session,
+        pagination: PaginationSchema,
+        token: str,
+        field_order_by: OrderByFieldsProblemaEnum,
+        direction: DirectionOrderByEnum,
+        filters: ProblemaFilter,
+        id: int
+):
+    db_user = db.query(User).filter(User.id == id).first()
+
+    if (not db_user):
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND,
+            "O usuário não foi encontrado!"
+        )
+
+    user = await get_authenticated_user(token, db)
+    if (is_user(user) and bool(user.id != db_user.id)):
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED)
+
+    query = db.query(Problema)
+
+    db_problemas, metadata = filter_collection(
+        model=Problema,
+        pagination=pagination,
+        filters=filters,
+        query=query,
+        direction=direction,
+        field_order_by=field_order_by,
+        search_fields=search_fields_problema
+    )
+
+    return db_problemas.all(), metadata
+
+
+async def get_integridade_problema(
+    db: Session,
+    id: int,
+    token: str
+):
+    db_problema = db.query(Problema).filter(Problema.id == id).first()
+
+    if (not db_problema):
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND,
+            "O problema não foi encontrado!"
+        )
+
+    user = await get_authenticated_user(token, db)
+    if (is_user(user) and bool(db_problema.usuario_id != user.id)):
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED)
+
+    data = ProblemaIntegridade(
+        declaracoes=len(db_problema.declaracoes) > 0,
+        arquivos=len(db_problema.arquivos) > 0,
+        testes=len(db_problema.testes) > 0,
+        verificador=db_problema.verificador is not None,
+        validador=db_problema.validador is not None
+    )
+
+    return data
