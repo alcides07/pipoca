@@ -2,6 +2,13 @@ from enum import Enum
 
 
 class IdiomaEnum(Enum):
+    EN = "Inglês"
+    PT = "Português"
+    ES = "Espanhol"
+    OT = "Outro"
+
+
+class IdiomaFullEnum(Enum):
     AF = "Africâner"
     AR = "Árabe"
     HY = "Armênio"
