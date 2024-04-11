@@ -4,12 +4,10 @@ import axiosInstance from "../axiosInstance";
 class ProblemaService {
 	async getProblemas() {
 		const response = await axiosInstance.get("/problemas/");
-		console.log(response.data);
 		return response.data;
 	}
 	async createProblema(data: any) {
 		const response = await axiosInstance.post(`/problemas/`, data);
-		console.log(response);
 		return response;
 	}
 	async getProblemaById(id: number) {
