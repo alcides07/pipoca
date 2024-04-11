@@ -470,7 +470,7 @@ def test_delete_declaracao_com_admin():
 
 JSON_DECLARACAO = {
     "titulo": "string",
-    "idioma": "Africâner",
+    "idioma": "Português",
     "contextualizacao": "string",
     "formatacao_entrada": "string",
     "formatacao_saida": "string",
