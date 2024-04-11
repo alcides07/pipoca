@@ -8,9 +8,10 @@ from fastapi import APIRouter, Body, Depends, Path, Response, status
 from models.problema import Problema
 from orm.common.index import delete_object, get_all
 from schemas.common.pagination import PaginationSchema
-from schemas.common.response import ResponsePaginationSchema, ResponseUnitSchema
+from schemas.common.response import ResponseListSchema, ResponsePaginationSchema, ResponseUnitSchema
 from schemas.declaracao import DeclaracaoCreateSingle, DeclaracaoReadFull, DeclaracaoReadSimple, DeclaracaoUpdatePartial, DeclaracaoUpdateTotal
 from sqlalchemy.orm import Session
+from schemas.idioma import IdiomaEnum
 from utils.errors import errors
 
 DECLARACAO_ID_DESCRIPTION = "Identificador da declaração de um problema"
@@ -40,6 +41,16 @@ async def read(
     return ResponsePaginationSchema(
         data=declaracoes,
         metadata=metadata
+    )
+
+
+@router.get("/idiomas/",
+            response_model=ResponseListSchema[IdiomaEnum],
+            summary="Lista idiomas em que as declarações podem ser escritas"
+            )
+async def read_idiomas():
+    return ResponseListSchema(
+        data=[idioma for idioma in IdiomaEnum]
     )
 
 
