@@ -8,10 +8,15 @@ from constants import FILENAME_RUN, INPUT_TEST_FILENAME, OUTPUT_JUDGE_FILENAME, 
 from dependencies.authenticated_user import get_authenticated_user
 from dependencies.authorization_user import is_admin, is_user
 from fastapi import HTTPException, status
+from filters.problemaResposta import OrderByFieldsProblemaRespostaEnum, search_fields_problema_resposta
 from models.arquivo import Arquivo
 from models.problemaResposta import ProblemaResposta
 from models.problemaTeste import ProblemaTeste
+from models.user import User
+from orm.common.index import filter_collection
 from schemas.arquivo import SecaoEnum
+from schemas.common.direction_order_by import DirectionOrderByEnum
+from schemas.common.pagination import PaginationSchema
 from schemas.problemaResposta import ProblemaRespostaCreate
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
@@ -54,7 +59,7 @@ async def execute_teste_gerado(
 
     teste_entrada = " ".join(teste.entrada.split()[1:])
     client.images.pull(image)
-    volume = client.volumes.create("runners-gerador")
+    volume = client.volumes.create()
     command = commands[linguagem_gerador]["run_gerador"]
 
     TEMP_TESTLIB = "/tmp/testlib"
@@ -166,7 +171,7 @@ async def execute_checker(
     TEMP_SAIDA_USUARIO = "/tmp/saida-usuario"
 
     client.images.pull(image)
-    volume = client.volumes.create("runners-verificador")
+    volume = client.volumes.create()
     command = commands[linguagem_verificador]["run_checker"]
 
     volumes = {
@@ -275,7 +280,7 @@ async def execute_checker(
 async def execute_codigo_user(
     db_problema: Problema,
     problema_resposta: ProblemaRespostaCreate,
-    output_testes_gerados: List[str]
+    arquivo_gerador: Arquivo | None
 ):
     codigo_user = problema_resposta.resposta
     linguagem = problema_resposta.linguagem
@@ -288,7 +293,7 @@ async def execute_codigo_user(
     TEMP_TESTE_USUARIO = "/tmp/teste-usuario"
 
     client.images.pull(image)
-    volume = client.volumes.create("runners-codigo-user")
+    volume = client.volumes.create()
     command = commands[linguagem]["run_test"]
 
     volumes = {
@@ -302,13 +307,24 @@ async def execute_codigo_user(
         file.write(codigo_user)
 
     output_codigo_user: List[str] = []
+    output_testes_gerados: List[str] = []
 
     try:
         for i, teste in enumerate(db_problema.testes):
             teste_entrada = teste.entrada
 
             if (teste.tipo == TipoTesteProblemaEnum.GERADO.value):
-                teste_entrada = output_testes_gerados[i]
+                if (arquivo_gerador is None):
+                    raise HTTPException(
+                        status.HTTP_500_INTERNAL_SERVER_ERROR,
+                        "O arquivo gerador de testes não foi encontrado!"
+                    )
+
+                teste_entrada = await execute_teste_gerado(
+                    teste, arquivo_gerador
+                )
+
+            output_testes_gerados.append(teste_entrada)
 
             try:
                 container = client.containers.create(
@@ -355,7 +371,7 @@ async def execute_codigo_user(
                 output_codigo_user.append(stdout_logs_decode)
 
                 if (stderr_logs_decode != ""):
-                    return f"Erro em tempo de execução no teste {i+1}"
+                    return f"Erro em tempo de execução no teste {i+1}", []
 
             except DockerException:
                 raise HTTPException(
@@ -372,13 +388,13 @@ async def execute_codigo_user(
         os.remove(TEMP_TESTE_USUARIO)
         volume.remove()  # type: ignore
 
-    return output_codigo_user
+    return output_codigo_user, output_testes_gerados
 
 
 async def execute_arquivo_solucao(
     db_problema: Problema,
     arquivo_solucao: Arquivo,
-    arquivo_gerador: Arquivo | None
+    output_testes_gerados: List[str]
 ):
     codigo_solucao = str(arquivo_solucao.corpo)
     linguagem = str(arquivo_solucao.linguagem)
@@ -392,7 +408,7 @@ async def execute_arquivo_solucao(
     TEMP_TESTE_SOLUCAO = "/tmp/teste-solucao"
 
     client.images.pull(image)
-    volume = client.volumes.create("runners-solucao")
+    volume = client.volumes.create()
 
     volumes = {
         volume.name: {  # type: ignore
@@ -405,23 +421,13 @@ async def execute_arquivo_solucao(
         file.write(codigo_solucao)
 
     output_codigo_solucao: List[str] = []
-    output_testes_gerados: List[str] = []
 
     try:
-        for teste in db_problema.testes:
+        for i, teste in enumerate(db_problema.testes):
             teste_entrada = teste.entrada
 
             if (teste.tipo == TipoTesteProblemaEnum.GERADO.value):
-                if (arquivo_gerador is None):
-                    raise HTTPException(
-                        status.HTTP_500_INTERNAL_SERVER_ERROR,
-                        "O arquivo gerador de testes não foi encontrado!"
-                    )
-
-                teste_entrada = await execute_teste_gerado(
-                    teste, arquivo_gerador)
-
-            output_testes_gerados.append(teste_entrada)
+                teste_entrada = output_testes_gerados[i]
 
             try:
                 container = client.containers.create(
@@ -487,7 +493,7 @@ async def execute_arquivo_solucao(
         os.remove(TEMP_TESTE_SOLUCAO)
         volume.remove()  # type: ignore
 
-    return output_codigo_solucao, output_testes_gerados
+    return output_codigo_solucao
 
 
 async def execute_processo_resolucao(
@@ -497,20 +503,20 @@ async def execute_processo_resolucao(
     arquivo_solucao = get_arquivo_solucao(db_problema)
     arquivo_gerador = get_arquivo_gerador(db_problema)
 
-    output_codigo_solucao, output_testes_gerados = await execute_arquivo_solucao(
-        db_problema,
-        arquivo_solucao,
-        arquivo_gerador
-    )
-
-    output_codigo_user = await execute_codigo_user(
+    output_codigo_user, output_testes_gerados = await execute_codigo_user(
         db_problema,
         problema_resposta,
-        output_testes_gerados
+        arquivo_gerador
     )
 
     if (isinstance(output_codigo_user, str)):
         return [], [], [], output_codigo_user
+
+    output_codigo_solucao = await execute_arquivo_solucao(
+        db_problema,
+        arquivo_solucao,
+        output_testes_gerados
+    )
 
     veredito = await execute_checker(
         db_problema,
@@ -617,3 +623,81 @@ async def get_problema_resposta_by_id(
             status.HTTP_500_INTERNAL_SERVER_ERROR,
             "Ocorreu um erro na busca pela resposta!"
         )
+
+
+async def get_problemas_respostas_by_user(
+        db: Session,
+        pagination: PaginationSchema,
+        token: str,
+        field_order_by: OrderByFieldsProblemaRespostaEnum,
+        direction: DirectionOrderByEnum,
+        id: int
+):
+    db_user = db.query(User).filter(User.id == id).first()
+
+    if (not db_user):
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND,
+            "O usuário não foi encontrado!"
+        )
+
+    user = await get_authenticated_user(token, db)
+    if (is_user(user) and bool(user.id != db_user.id)):
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED)
+
+    query = db.query(ProblemaResposta)
+
+    db_problemas_respostas, metadata = filter_collection(
+        model=ProblemaResposta,
+        pagination=pagination,
+        query=query,
+        direction=direction,
+        field_order_by=field_order_by,
+        search_fields=search_fields_problema_resposta
+    )
+
+    return db_problemas_respostas.all(), metadata
+
+
+async def get_problema_id_respostas_by_user(
+        db: Session,
+        pagination: PaginationSchema,
+        token: str,
+        field_order_by: OrderByFieldsProblemaRespostaEnum,
+        direction: DirectionOrderByEnum,
+        id_problema: int,
+        id_usuario: int
+):
+    db_user = db.query(User).filter(User.id == id_usuario).first()
+    db_problema = db.query(Problema).filter(Problema.id == id_problema).first()
+
+    if (not db_user):
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND,
+            "O usuário não foi encontrado!"
+        )
+
+    if (not db_problema):
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND,
+            "O problema não foi encontrado!"
+        )
+
+    user = await get_authenticated_user(token, db)
+    if (is_user(user) and bool(user.id != db_user.id)):
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED)
+
+    query = db.query(ProblemaResposta).filter(
+        ProblemaResposta.problema_id == id_problema
+    )
+
+    db_problemas_respostas, metadata = filter_collection(
+        model=ProblemaResposta,
+        pagination=pagination,
+        query=query,
+        direction=direction,
+        field_order_by=field_order_by,
+        search_fields=search_fields_problema_resposta
+    )
+
+    return db_problemas_respostas.all(), metadata
