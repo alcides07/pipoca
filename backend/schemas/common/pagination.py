@@ -33,7 +33,7 @@ class MetadataSchema(BaseModel):
 
     search_fields: Optional[list[str]] = Field(
         default=None,
-        description="Lista de campos nos quais a busca pode ser realizada"
+        description="Lista de campos nos quais a busca é realizada"
     )
 
 

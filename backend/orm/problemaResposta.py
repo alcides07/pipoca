@@ -59,7 +59,7 @@ async def execute_teste_gerado(
 
     teste_entrada = " ".join(teste.entrada.split()[1:])
     client.images.pull(image)
-    volume = client.volumes.create("runners-gerador")
+    volume = client.volumes.create()
     command = commands[linguagem_gerador]["run_gerador"]
 
     TEMP_TESTLIB = "/tmp/testlib"
@@ -171,7 +171,7 @@ async def execute_checker(
     TEMP_SAIDA_USUARIO = "/tmp/saida-usuario"
 
     client.images.pull(image)
-    volume = client.volumes.create("runners-verificador")
+    volume = client.volumes.create()
     command = commands[linguagem_verificador]["run_checker"]
 
     volumes = {
@@ -293,7 +293,7 @@ async def execute_codigo_user(
     TEMP_TESTE_USUARIO = "/tmp/teste-usuario"
 
     client.images.pull(image)
-    volume = client.volumes.create("runners-codigo-user")
+    volume = client.volumes.create()
     command = commands[linguagem]["run_test"]
 
     volumes = {
@@ -408,7 +408,7 @@ async def execute_arquivo_solucao(
     TEMP_TESTE_SOLUCAO = "/tmp/teste-solucao"
 
     client.images.pull(image)
-    volume = client.volumes.create("runners-solucao")
+    volume = client.volumes.create()
 
     volumes = {
         volume.name: {  # type: ignore

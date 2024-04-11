@@ -89,7 +89,7 @@ async def read_problemas_respostas_by_user(
     )
 
 
-@router.get("/problemas/{id_problema}/usuarios/{id_usuario}/",
+@router.get("/problemas/{idProblema}/usuarios/{idUsuario}/",
             response_model=ResponsePaginationSchema[ProblemaRespostaReadFull],
             summary="Lista respostas fornecidas por um usuário a um problema específico",
             )
@@ -105,8 +105,8 @@ async def read_problema_id_respostas_by_user(
         default=None,
         description=DIRECTION_ORDER_BY_DESCRIPTION
     ),
-    id_problema: int = Path(description="Identificador do problema"),
-    id_usuario: int = Path(description="Identificador do usuário")
+    idProblema: int = Path(description="Identificador do problema"),
+    idUsuario: int = Path(description="Identificador do usuário")
 ):
     problemas_respostas, metadata = await get_problema_id_respostas_by_user(
         db=db,
@@ -114,8 +114,8 @@ async def read_problema_id_respostas_by_user(
         token=token,
         field_order_by=sort,
         direction=direction,
-        id_problema=id_problema,
-        id_usuario=id_usuario
+        id_problema=idProblema,
+        id_usuario=idUsuario
     )
 
     return ResponsePaginationSchema(
