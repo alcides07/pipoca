@@ -36,6 +36,7 @@ import { iRespondeProblema } from "@/interfaces/services/iRespondeProblema";
 import { Toaster } from "@/components/ui/toaster";
 import { iDataProblema } from "@/interfaces/models/iProblema";
 import { Badge } from "@/components/ui/badge";
+import Loading from "@/components/loading";
 
 const FormSchema = z.object({
   linguagem: z.string().nonempty("Selecione uma linguagem de programação!"),
@@ -56,6 +57,7 @@ function RespondeProblema({ children }: RespondeProblemaProps) {
   const { id } = useParams();
   const [problema, setProblema] = useState<iDataProblema>();
   const [rows, setRows] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -66,6 +68,7 @@ function RespondeProblema({ children }: RespondeProblemaProps) {
   });
 
   async function onSubmit(values: z.infer<typeof FormSchema>) {
+    setIsLoading(true);
     const data: iRespondeProblema = {
       resposta: values.resposta,
       linguagem: values.linguagem,
@@ -97,10 +100,13 @@ function RespondeProblema({ children }: RespondeProblemaProps) {
       .catch((error) => {
         toast({
           title: "Erro.",
-          description: error,
+          description: error.message,
           variant: "destructive",
           duration: 5000,
         });
+      })
+      .finally(() => {
+        setIsLoading(false);
       });
   }
 
@@ -122,7 +128,7 @@ function RespondeProblema({ children }: RespondeProblemaProps) {
           <ResizablePanelGroup direction="horizontal">
             <ResizablePanel
               defaultSize={30}
-              className=" flex justify-evenly items-center  bg-gray-200"
+              className="m-1 flex justify-evenly items-center  bg-gray-200"
             >
               <span className="text-xs font-bold flex justify-center">
                 Memória Limite
@@ -133,7 +139,7 @@ function RespondeProblema({ children }: RespondeProblemaProps) {
             <ResizableHandle disabled className="bg-white" />
             <ResizablePanel
               defaultSize={30}
-              className=" flex justify-evenly items-center  bg-gray-200"
+              className="m-1 flex justify-evenly items-center  bg-gray-200"
             >
               <span className="text-xs font-bold flex justify-center">
                 Tempo Limite
@@ -144,7 +150,7 @@ function RespondeProblema({ children }: RespondeProblemaProps) {
             <ResizableHandle disabled className="bg-white" />
             <ResizablePanel
               defaultSize={40}
-              className="px-0 flex justify-evenly items-center  bg-gray-200"
+              className="m-1 px-0 flex justify-evenly items-center  bg-gray-200"
             >
               <span className="text-xs font-bold flex justify-center">
                 Tags
@@ -152,7 +158,9 @@ function RespondeProblema({ children }: RespondeProblemaProps) {
               <span>|</span>
               <span>
                 {problema?.tags?.map((tag) => (
-                  <Badge className="py-0 m-1">{tag?.nome} </Badge>
+                  <Badge key={tag.id} className="py-0 m-1">
+                    {tag?.nome}{" "}
+                  </Badge>
                 ))}
               </span>
             </ResizablePanel>
@@ -232,7 +240,7 @@ function RespondeProblema({ children }: RespondeProblemaProps) {
                           <FormItem>
                             <FormControl>
                               <Textarea
-                                placeholder="Tell us a little bit about yourself"
+                                placeholder="Informe seu código!"
                                 className="min-h-[17rem] text-ms"
                                 rows={rows}
                                 onInput={(e: any) => {
@@ -245,8 +253,16 @@ function RespondeProblema({ children }: RespondeProblemaProps) {
                           </FormItem>
                         )}
                       />
-                      <Button type="submit" className="w-full">
-                        Enviar
+                      <Button
+                        type="submit"
+                        className="w-full"
+                        disabled={isLoading}
+                      >
+                        {isLoading ? (
+                          <Loading isLoading={isLoading} />
+                        ) : (
+                          "Enviar"
+                        )}
                       </Button>
                     </form>
                   </Form>
