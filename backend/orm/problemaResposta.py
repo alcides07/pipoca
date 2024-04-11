@@ -120,14 +120,11 @@ async def execute_teste_gerado(
         container.wait()  # type: ignore
 
         stdout_logs = container.logs(  # type: ignore
-            stdout=True, stderr=False)
+            stdout=True, stderr=False).decode()
         stderr_logs = container.logs(  # type: ignore
-            stdout=False, stderr=True)
+            stdout=False, stderr=True).decode()
 
-        stdout_logs_decode = stdout_logs.decode()
-        stderr_logs_decode = stderr_logs.decode()
-
-        if (stderr_logs_decode != ""):
+        if (stderr_logs != ""):
             raise HTTPException(
                 status.HTTP_500_INTERNAL_SERVER_ERROR,
                 "O arquivo gerador de testes do problema possui alguma falha!"
@@ -147,7 +144,7 @@ async def execute_teste_gerado(
         os.remove(TEMP_TESTE_PROBLEMA)
         volume.remove()  # type: ignore
 
-    return stdout_logs_decode
+    return stdout_logs
 
 
 async def execute_checker(
@@ -248,12 +245,10 @@ async def execute_checker(
                 container.wait()  # type: ignore
 
                 stderr_logs = container.logs(  # type: ignore
-                    stdout=False, stderr=True)
+                    stdout=False, stderr=True).decode()
 
-                stderr_logs_decode = stderr_logs.decode()
-
-                if (stderr_logs_decode != ""):
-                    veredito_mensagem = stderr_logs_decode.split()
+                if (stderr_logs != ""):
+                    veredito_mensagem = stderr_logs.split()
                     veredito.append(veredito_mensagem[0].lower())
 
             except DockerException:
@@ -362,16 +357,13 @@ async def execute_codigo_user(
                 container.wait()  # type: ignore
 
                 stdout_logs = container.logs(  # type: ignore
-                    stdout=True, stderr=False)
+                    stdout=True, stderr=False).decode()
                 stderr_logs = container.logs(  # type: ignore
-                    stdout=False, stderr=True)
+                    stdout=False, stderr=True).decode()
 
-                stdout_logs_decode = stdout_logs.decode()
-                stderr_logs_decode = stderr_logs.decode()
+                output_codigo_user.append(stdout_logs)
 
-                output_codigo_user.append(stdout_logs_decode)
-
-                if (stderr_logs_decode != ""):
+                if (stderr_logs != ""):
                     return f"Erro em tempo de execução no teste {i+1}", []
 
             except DockerException:
@@ -465,15 +457,13 @@ async def execute_arquivo_solucao(
                 container.wait()  # type: ignore
 
                 stdout_logs = container.logs(  # type: ignore
-                    stdout=True, stderr=False)
+                    stdout=True, stderr=False).decode()
                 stderr_logs = container.logs(  # type: ignore
-                    stdout=False, stderr=True)
+                    stdout=False, stderr=True).decode()
 
-                stdout_logs_decode = stdout_logs.decode()
-                stderr_logs_decode = stderr_logs.decode()
-                output_codigo_solucao.append(stdout_logs_decode)
+                output_codigo_solucao.append(stdout_logs)
 
-                if (stderr_logs_decode != ""):
+                if (stderr_logs != ""):
                     raise HTTPException(
                         status.HTTP_500_INTERNAL_SERVER_ERROR,
                         "O arquivo de solução oficial do problema possui alguma falha!"
