@@ -7,6 +7,7 @@ import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { iIntegridade } from "@/interfaces/models/iProblema";
 import problemaService from "@/services/models/problemaService";
+import EditaDeclaracao from "./EditaProblema/componentes/editaDeclaracao";
 
 function TabsProblema() {
 	const { id } = useParams();
@@ -19,9 +20,8 @@ function TabsProblema() {
 	}, [id]);
 
 	async function integridadeProblem() {
-		await problemaService.getProblemas().then((response) => {
+		await problemaService.integridadeProblema(id).then((response) => {
 			console.log("response.data", response.data);
-
 			setIntegridade(response.data);
 			console.log(response);
 		});
@@ -42,7 +42,12 @@ function TabsProblema() {
 					<EditaProblema />
 				</TabsContent>
 				<TabsContent value="declaracao">
-					<FormDeclaracao problemaId={parseInt(id)} />
+					{integridade?.declaracoes ? (
+						<EditaDeclaracao problemaId={parseInt(id)} />
+					) : (
+						<FormDeclaracao problemaId={parseInt(id)} />
+					)}
+					{/* <FormDeclaracao problemaId={parseInt(id)} /> */}
 				</TabsContent>
 				<TabsContent value="arquivos">
 					<FormLogin />

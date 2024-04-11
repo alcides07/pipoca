@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
 
 import {
@@ -33,8 +33,9 @@ import {
 } from "@/components/ui/select";
 import { idiomas } from "@/utils/idiomas";
 import { Textarea } from "@/components/ui/textarea";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { iDeclaracao } from "@/interfaces/models/iDeclaracao";
+import problemaService from "@/services/models/problemaService";
 
 const FormSchema = z.object({
 	titulo: z.string().nonempty("O título é obrigatório.").max(64, {
@@ -67,13 +68,19 @@ const FormSchema = z.object({
 
 type ProfileFormValues = z.infer<typeof FormSchema>;
 
-interface FormDeclaracaoProps {
+interface EditaDeclaracaoProps {
 	problemaId: number;
 }
 
-function FormDeclaracao({ problemaId }: FormDeclaracaoProps) {
+function EditaDeclaracao({ problemaId }: EditaDeclaracaoProps) {
 	const [rows, setRows] = useState(1);
-	console.log("problemaId", problemaId);
+
+	useEffect(() => {
+		window.scrollTo(0, 0);
+		if (problemaId) {
+			getDeclaracao(problemaId);
+		}
+	}, []);
 
 	const form = useForm<ProfileFormValues>({
 		resolver: zodResolver(FormSchema),
@@ -89,9 +96,26 @@ function FormDeclaracao({ problemaId }: FormDeclaracaoProps) {
 		},
 		mode: "onChange",
 	});
+	async function getDeclaracao(id: number) {
+		await problemaService.declaracoesProblema(id).then((response) => {
+			if (response.data.length > 0) {
+				const res = response.data[0];
+				form.reset({
+					titulo: res.titulo,
+					idioma: res.idioma,
+					contextualizacao: res.contextualizacao,
+					formatacao_entrada: res.formatacao_entrada,
+					formatacao_saida: res.formatacao_saida,
+					observacao: res.observacao,
+					tutorial: res.tutorial,
+				});
+				form.setValue("idioma", res.idioma);
+			}
+		});
+	}
 
 	async function onSubmit(values: ProfileFormValues) {
-		console.log("problemaId", values);
+		console.log("declaração", values);
 
 		const data: iDeclaracao = {
 			titulo: values.titulo,
@@ -126,10 +150,7 @@ function FormDeclaracao({ problemaId }: FormDeclaracaoProps) {
 		<Card>
 			<CardHeader className="">
 				<CardTitle>Declaração</CardTitle>
-				<CardDescription>
-					Para cadastrar as informações do problema, preencha o
-					formulário baixo.
-				</CardDescription>
+				<CardDescription>Atualize os dados abaixo.</CardDescription>
 			</CardHeader>
 			<CardContent>
 				<Separator className="mb-4" />
@@ -317,4 +338,4 @@ function FormDeclaracao({ problemaId }: FormDeclaracaoProps) {
 		</Card>
 	);
 }
-export default FormDeclaracao;
+export default EditaDeclaracao;
