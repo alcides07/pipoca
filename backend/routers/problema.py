@@ -385,13 +385,20 @@ async def create(
              summary="Cadastra um problema via pacote da plataforma Polygon",
              responses={
                  422: errors[422]
-             }
+             },
+             description='''
+             **A tentativa de submeter mais de uma linguagem de programação através do OPENAPI resultará em um erro de validação.** <br> <br>
+             Isso ocorre devido ao OPENAPI não processar corretamente o envio de um array de opções, ao menos nesse cenário com **multipart/form-data**. <br> <br>
+             O envio correto deve conter uma chave **linguagens** para cada valor desejado. <br> <br>
+            '''
              )
 async def upload(
     pacote: UploadFile = File(
         description="Pacote **.zip** gerado pelo Polygon"),
     privado: bool = Body(
         description="Visibilidade do problema (privado/público)"),
+    linguagens: list[CompilersEnum] = Body(
+        description="Linguagens de programação aceitas na resolução do problema"),
     db: Session = Depends(get_db),
     token: str = Depends(oauth2_scheme)
 ):
@@ -420,7 +427,8 @@ async def upload(
         validador=ValidadorCreate(
             nome="", linguagem=CompilersEnum.PYTHON_3, corpo="", testes=[]),
         privado=privado,
-        testes=[]
+        testes=[],
+        linguagens=linguagens
     )
 
     def process_files_gerador(data: ET.Element, nome_arquivo_gerador: str):
