@@ -139,5 +139,6 @@ JSON_PROBLEMA = {
     "nome_arquivo_entrada": "string",
     "nome_arquivo_saida": "string",
     "tempo_limite": 250,
-    "memoria_limite": 600
+    "memoria_limite": 600,
+    "linguagens": [],
 }
