@@ -30,6 +30,13 @@ class ProblemaService {
     return response.data;
   }
 
+  async testesExemplosProblema(id: number) {
+    const response = await axiosInstance.get(
+      `/problemas/${id}/testesExemplosExecutados/`
+    );
+    return response.data;
+  }
+
   async uploadFile(formData: FormData) {
     const response = await axiosInstance.post(`/problemas/pacotes/`, formData, {
       headers: {
@@ -38,7 +45,6 @@ class ProblemaService {
     });
     return response.data;
   }
-
 }
 
 export default new ProblemaService();
