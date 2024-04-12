@@ -4,12 +4,11 @@ from routers.auth import oauth2_scheme
 from dependencies.authenticated_user import get_authenticated_user
 from dependencies.database import get_db
 from fastapi import APIRouter, Body, Depends, Path, Response, status
-from models.problema import Problema
 from models.verificador import Verificador
 from orm.common.index import delete_object, get_all, get_by_id
 from routers.verificadorTeste import VERIFICADOR_TESTE_ID_DESCRIPTION
 from schemas.common.pagination import PaginationSchema
-from schemas.common.response import ResponsePaginationSchema, ResponseUnitSchema
+from schemas.common.response import ResponsePaginationSchema, ResponseUnitRequiredSchema
 from schemas.verificador import VERIFICADOR_ID_DESCRIPTION, VerificadorCreateSingle, VerificadorReadFull, VerificadorReadSimple, VerificadorUpdatePartial, VerificadorUpdateTotal
 from sqlalchemy.orm import Session
 from schemas.verificadorTeste import VerificadorTesteReadFull
@@ -44,7 +43,7 @@ async def read(
 
 
 @router.get("/{id}/",
-            response_model=ResponseUnitSchema[VerificadorReadFull],
+            response_model=ResponseUnitRequiredSchema[VerificadorReadFull],
             summary="Lista um verificador",
             responses={
                 404: errors[404]
@@ -63,7 +62,7 @@ async def read_id(
         path_has_user_key="problema"
     )
 
-    return ResponseUnitSchema(
+    return ResponseUnitRequiredSchema(
         data=verificador
     )
 
@@ -95,7 +94,7 @@ async def read_verificador_id_testes(
 
 
 @router.post("/",
-             response_model=ResponseUnitSchema[VerificadorReadFull],
+             response_model=ResponseUnitRequiredSchema[VerificadorReadFull],
              status_code=201,
              summary="Cadastra um verificador",
              responses={
@@ -115,11 +114,11 @@ async def create(
         token=token,
     )
 
-    return ResponseUnitSchema(data=verificador)
+    return ResponseUnitRequiredSchema(data=verificador)
 
 
 @router.patch("/{id}/",
-              response_model=ResponseUnitSchema[VerificadorReadFull],
+              response_model=ResponseUnitRequiredSchema[VerificadorReadFull],
               summary="Atualiza um verificador parcialmente",
               responses={
                   404: errors[404]
@@ -138,13 +137,13 @@ async def parcial_update(
         verificador=data,
         token=token
     )
-    return ResponseUnitSchema(
+    return ResponseUnitRequiredSchema(
         data=verificador
     )
 
 
 @router.put("/{id}/",
-            response_model=ResponseUnitSchema[VerificadorReadFull],
+            response_model=ResponseUnitRequiredSchema[VerificadorReadFull],
             summary="Atualiza um verificador por completo",
             responses={
                 404: errors[404]
@@ -163,7 +162,7 @@ async def total_update(
         verificador=data,
         token=token
     )
-    return ResponseUnitSchema(
+    return ResponseUnitRequiredSchema(
         data=verificador
     )
 

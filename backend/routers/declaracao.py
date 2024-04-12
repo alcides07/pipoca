@@ -5,10 +5,9 @@ from routers.auth import oauth2_scheme
 from dependencies.authenticated_user import get_authenticated_user
 from dependencies.database import get_db
 from fastapi import APIRouter, Body, Depends, Path, Response, status
-from models.problema import Problema
 from orm.common.index import delete_object, get_all
 from schemas.common.pagination import PaginationSchema
-from schemas.common.response import ResponseListSchema, ResponsePaginationSchema, ResponseUnitSchema
+from schemas.common.response import ResponseListSchema, ResponsePaginationSchema, ResponseUnitRequiredSchema, ResponseUnitSchema
 from schemas.declaracao import DeclaracaoCreateSingle, DeclaracaoReadFull, DeclaracaoReadSimple, DeclaracaoUpdatePartial, DeclaracaoUpdateTotal
 from sqlalchemy.orm import Session
 from schemas.idioma import IdiomaEnum
@@ -55,7 +54,7 @@ async def read_idiomas():
 
 
 @router.get("/{id}/",
-            response_model=ResponseUnitSchema[DeclaracaoReadFull],
+            response_model=ResponseUnitRequiredSchema[DeclaracaoReadFull],
             summary="Lista uma declaração de um problema",
             responses={
                 404: errors[404]
@@ -72,13 +71,13 @@ async def read_id(
         token=token
     )
 
-    return ResponseUnitSchema(
+    return ResponseUnitRequiredSchema(
         data=declaracao
     )
 
 
 @router.post("/",
-             response_model=ResponseUnitSchema[DeclaracaoReadFull],
+             response_model=ResponseUnitRequiredSchema[DeclaracaoReadFull],
              status_code=201,
              summary="Cadastra uma declaração para um problema",
              responses={
@@ -97,11 +96,11 @@ async def create(
         token=token
     )
 
-    return ResponseUnitSchema(data=declaracao)
+    return ResponseUnitRequiredSchema(data=declaracao)
 
 
 @router.patch("/{id}/",
-              response_model=ResponseUnitSchema[DeclaracaoReadFull],
+              response_model=ResponseUnitRequiredSchema[DeclaracaoReadFull],
               summary="Atualiza uma declaração de um problema parcialmente",
               responses={
                   404: errors[404]
@@ -120,13 +119,13 @@ async def partial_update(
         declaracao=data,
         token=token
     )
-    return ResponseUnitSchema(
+    return ResponseUnitRequiredSchema(
         data=declaracao
     )
 
 
 @router.put("/{id}/",
-            response_model=ResponseUnitSchema[DeclaracaoReadFull],
+            response_model=ResponseUnitRequiredSchema[DeclaracaoReadFull],
             summary="Atualiza uma declaração de um problema por completo",
             responses={
                 404: errors[404]
@@ -145,7 +144,7 @@ async def total_update(
         declaracao=data,
         token=token
     )
-    return ResponseUnitSchema(
+    return ResponseUnitRequiredSchema(
         data=declaracao
     )
 

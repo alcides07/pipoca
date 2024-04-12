@@ -8,7 +8,7 @@ from dependencies.authenticated_user import get_authenticated_user
 from dependencies.database import get_db
 from orm.common.index import delete_object, get_all
 from schemas.common.pagination import PaginationSchema
-from schemas.common.response import ResponsePaginationSchema, ResponseUnitSchema
+from schemas.common.response import ResponsePaginationSchema, ResponseUnitRequiredSchema
 from sqlalchemy.orm import Session
 from utils.errors import errors
 
@@ -43,7 +43,7 @@ async def read(
 
 
 @router.get("/{id}/",
-            response_model=ResponseUnitSchema[ProblemaTesteReadFull],
+            response_model=ResponseUnitRequiredSchema[ProblemaTesteReadFull],
             summary="Lista um teste de um problema",
             responses={
                 404: errors[404]
@@ -59,13 +59,13 @@ async def read_id(
         id=id,
         token=token
     )
-    return ResponseUnitSchema(
+    return ResponseUnitRequiredSchema(
         data=problema_teste
     )
 
 
 @router.post("/",
-             response_model=ResponseUnitSchema[ProblemaTesteReadFull],
+             response_model=ResponseUnitRequiredSchema[ProblemaTesteReadFull],
              status_code=201,
              summary="Cadastra um teste para um problema",
              responses={
@@ -84,11 +84,11 @@ async def create(
         token=token
     )
 
-    return ResponseUnitSchema(data=problema_teste)
+    return ResponseUnitRequiredSchema(data=problema_teste)
 
 
 @router.patch("/{id}/",
-              response_model=ResponseUnitSchema[ProblemaTesteReadFull],
+              response_model=ResponseUnitRequiredSchema[ProblemaTesteReadFull],
               summary="Atualiza um teste de um problema parcialmente",
               responses={
                   400: errors[400],
@@ -108,13 +108,13 @@ async def parcial_update(
         problema_teste=data,
         token=token
     )
-    return ResponseUnitSchema(
+    return ResponseUnitRequiredSchema(
         data=problema_teste
     )
 
 
 @router.put("/{id}/",
-            response_model=ResponseUnitSchema[ProblemaTesteReadFull],
+            response_model=ResponseUnitRequiredSchema[ProblemaTesteReadFull],
             summary="Atualiza um teste de um problema por completo",
             responses={
                 400: errors[400],
@@ -134,7 +134,7 @@ async def total_update(
         problema_teste=data,
         token=token
     )
-    return ResponseUnitSchema(
+    return ResponseUnitRequiredSchema(
         data=problema_teste
     )
 
