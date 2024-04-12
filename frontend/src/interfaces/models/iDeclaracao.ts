@@ -7,5 +7,5 @@ export interface iDeclaracao {
   observacao: string;
   tutorial: string;
   id?: number;
-  problema_id: number;
+  problema_id?: number;
 }
