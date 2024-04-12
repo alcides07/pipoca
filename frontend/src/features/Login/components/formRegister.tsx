@@ -61,114 +61,101 @@ function FormRegister({ onSuccess }: FormRegisterProps) {
 		},
 	});
 
-	function onSubmit(values: z.infer<typeof formSchema>) {
-		const data = {
-			username: values.username,
-			email: values.email,
-			password: values.password,
-			passwordConfirmation: values.passwordConfirmation,
-		};
+  function onSubmit(values: z.infer<typeof formSchema>) {
+    const data = {
+      username: values.username,
+      email: values.email,
+      password: values.password,
+      passwordConfirmation: values.passwordConfirmation,
+    };
 
-		AutenticacaoService.register(data)
-			.then((response) => {
-				toast({
-					title: "Sucesso.",
-					description: "Usuário cadastrado com sucesso!",
-					duration: 2000,
-				});
-				onSuccess();
-			})
-			.catch((error) => {
-				// console.error("Cadastro erro:", error);
-				toast({
-					variant: "destructive",
-					title: "Erro.",
-					description: error.response.data.error,
-					duration: 2000,
-				});
-			});
-	}
-	return (
-		<Card>
-			<CardHeader>
-				<CardTitle>Cadastro</CardTitle>
-				<CardDescription>
-					Realize cadastro para ter acesso ao sistema Pipoca!
-				</CardDescription>
-			</CardHeader>
-			<CardContent>
-				<Form {...form}>
-					<form
-						onSubmit={form.handleSubmit(onSubmit)}
-						className="space-y-4">
-						<FormField
-							control={form.control}
-							name="username"
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel>Nome</FormLabel>
-									<FormControl>
-										<Input
-											type="text"
-											placeholder=""
-											{...field}
-										/>
-									</FormControl>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
-						<FormField
-							control={form.control}
-							name="email"
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel>E-mail</FormLabel>
-									<FormControl>
-										<Input
-											type="email"
-											placeholder=""
-											{...field}
-										/>
-									</FormControl>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
-						<FormField
-							control={form.control}
-							name="password"
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel>Senha</FormLabel>
-									<FormControl>
-										<Input type="password" {...field} />
-									</FormControl>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
-						<FormField
-							control={form.control}
-							name="passwordConfirmation"
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel>Confirme sua senha</FormLabel>
-									<FormControl>
-										<Input type="password" {...field} />
-									</FormControl>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
-						<Button type="submit" className="w-full">
-							Cadastrar
-						</Button>
-					</form>
-				</Form>
-			</CardContent>
-		</Card>
-	);
+    AutenticacaoService.register(data)
+      .then((response) => {
+        toast({
+          title: "Sucesso.",
+          description: "Usuário cadastrado com sucesso!",
+          duration: 2000,
+        });
+        onSuccess();
+      })
+      .catch((error) => {
+        toast({
+          variant: "destructive",
+          title: "Erro.",
+          description: error.response.data.error,
+          duration: 2000,
+        });
+      });
+  }
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Cadastro</CardTitle>
+        <CardDescription>
+          Realize cadastro para ter acesso ao sistema Pipoca!
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-2">
+            <FormField
+              control={form.control}
+              name="username"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nome</FormLabel>
+                  <FormControl>
+                    <Input type="text" placeholder="" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>E-mail</FormLabel>
+                  <FormControl>
+                    <Input type="email" placeholder="" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Senha</FormLabel>
+                  <FormControl>
+                    <Input type="password" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="passwordConfirmation"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Confirme sua senha</FormLabel>
+                  <FormControl>
+                    <Input type="password" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <Button type="submit">Cadastrar</Button>
+          </form>
+        </Form>
+      </CardContent>
+    </Card>
+  );
 }
 
 export default FormRegister;

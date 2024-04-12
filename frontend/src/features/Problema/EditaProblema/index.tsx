@@ -91,12 +91,11 @@ function EditaProblema() {
 	const { toast } = useToast();
 	const [loading, setLoading] = useState(true);
 
-	useEffect(() => {
-		window.scrollTo(0, 0);
-		if (id) {
-			getProblema(id);
-		}
-	}, []);
+  useEffect(() => {
+    if (id) {
+      getProblema(id);
+    }
+  }, []);
 
 	async function getProblema(id: number) {
 		await problemaService.getProblemaById(id).then((response) => {
@@ -128,157 +127,146 @@ function EditaProblema() {
 			memoria_limite: data.memoria_limite,
 		};
 
-		await problemaService
-			.updateProblema(id, p)
-			.then((response: any) => {
-				toast({
-					title: "Sucesso.",
-					description: "Problema atualizado!",
-					duration: 3000,
-				});
-			})
-			.catch(() => {
-				toast({
-					variant: "destructive",
-					title: "Erro.",
-					description:
-						"A atualização do problema falhou. Tente novamente!.",
-					duration: 3000,
-				});
-			});
-	}
 
-	return loading ? (
-		<Progress data-state="loading" className="w-full" />
-	) : (
-		<Card>
-			<CardHeader>
-				<CardTitle>Cadastro de Problema</CardTitle>
-				<CardDescription>
-					Preencha o formulário para cadastrar um problema.
-				</CardDescription>
-			</CardHeader>
-			<CardContent>
-				<Separator className="my-4" />
-				<Form {...form}>
-					<form
-						onSubmit={form.handleSubmit(onSubmit)}
-						className="space-y-12">
-						<FormField
-							control={form.control}
-							name="nome"
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel>Nome</FormLabel>
-									<FormControl>
-										<Input
-											placeholder="Informe o nome do problema"
-											{...field}
-										/>
-									</FormControl>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
-						<FormField
-							control={form.control}
-							name="privado"
-							render={({ field }) => (
-								<FormItem>
-									<FormControl>
-										<div className="flex items-center space-x-2">
-											<Switch
-												// checked={field.value}
-												onCheckedChange={field.onChange}
-											/>
-											<Label htmlFor="airplane-mode">
-												Privado
-											</Label>
-										</div>
-									</FormControl>
-								</FormItem>
-							)}
-						/>
-						<div className="grid grid-cols-2 gap-4">
-							<FormField
-								control={form.control}
-								name="nome_arquivo_entrada"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>
-											Nome do Arquivo de Entrada
-										</FormLabel>
-										<FormControl>
-											<Input
-												placeholder="Informe o nome do arquivo de entrada"
-												{...field}
-											/>
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-							<FormField
-								control={form.control}
-								name="nome_arquivo_saida"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>
-											Nome do Arquivo de Saída
-										</FormLabel>
-										<FormControl>
-											<Input
-												placeholder="Informe o nome do arquivo de saída"
-												{...field}
-											/>
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-						</div>
-						<div className="grid grid-cols-2 gap-4">
-							<FormField
-								control={form.control}
-								name="tempo_limite"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>Tempo Limite</FormLabel>
-										<FormControl>
-											<Input
-												placeholder="Informe o tempo limite"
-												{...field}
-											/>
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-							<FormField
-								control={form.control}
-								name="memoria_limite"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>Memória Limite</FormLabel>
-										<FormControl>
-											<Input
-												placeholder="Informe a memória limite"
-												{...field}
-											/>
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-						</div>
+    await problemaService
+      .updateProblema(id, p)
+      .then(() => {
+        window.scrollTo(0, 0);
 
-						<Button className="w-full" type="submit">
-							Cadastrar
-						</Button>
-					</form>
-				</Form>
-			</CardContent>
-		</Card>
-	);
+        toast({
+          title: "Sucesso.",
+          description: "Problema atualizado!",
+          duration: 3000,
+        });
+      })
+      .catch(() => {
+        toast({
+          variant: "destructive",
+          title: "Erro.",
+          description: "A atualização do problema falhou. Tente novamente!.",
+          duration: 3000,
+        });
+      });
+  }
+
+  return loading ? (
+    <Progress data-state="loading" className="w-full" />
+  ) : (
+    <Card>
+      <CardHeader>
+        <CardTitle>Problema</CardTitle>
+        <CardDescription>Atualize os dados abaixo.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Separator className="mb-4" />
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-12">
+            <FormField
+              control={form.control}
+              name="nome"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nome</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Informe o nome do problema"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="privado"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        // checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                      <Label htmlFor="airplane-mode">Privado</Label>
+                    </div>
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="nome_arquivo_entrada"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nome do Arquivo de Entrada</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Informe o nome do arquivo de entrada"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="nome_arquivo_saida"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nome do Arquivo de Saída</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Informe o nome do arquivo de saída"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="tempo_limite"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tempo Limite</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Informe o tempo limite" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="memoria_limite"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Memória Limite</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Informe a memória limite"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <Button className="w-full" type="submit">
+              Editar
+            </Button>
+          </form>
+        </Form>
+      </CardContent>
+    </Card>
+  );
 }
 export default EditaProblema;

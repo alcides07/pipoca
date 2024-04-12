@@ -41,82 +41,69 @@ function FormLogin({ onLogin }: any) {
 		},
 	});
 
-	function onSubmit(values: z.infer<typeof formSchema>) {
-		const data = {
-			username: values.username,
-			password: values.password,
-		};
-		AutenticacaoService.login(data)
-			.then((response) => {
-				if (response.status === 200) {
-					localStorage.setItem(
-						"access_token",
-						response.data.access_token
-					);
-					navigate("/dashboard");
-					onLogin();
-				}
-			})
-			.catch((error) => {
-				console.error("Login erro:", error);
-			});
-	}
-	return (
-		<Card className="w-full">
-			<CardHeader>
-				<CardTitle>Login</CardTitle>
-				<CardDescription>
-					Realize login para ter acesso ao sistema Pipoca!
-				</CardDescription>
-			</CardHeader>
-			<CardContent>
-				<Form {...form}>
-					<form
-						onSubmit={form.handleSubmit(onSubmit)}
-						className="space-y-4">
-						<FormField
-							control={form.control}
-							name="username"
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel>Nome</FormLabel>
-									<FormControl>
-										<Input
-											placeholder=""
-											{...field}
-											autoComplete="username"
-										/>
-									</FormControl>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
-						<FormField
-							control={form.control}
-							name="password"
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel>Senha</FormLabel>
-									<FormControl>
-										<Input
-											type="password"
-											{...field}
-											autoComplete="current-password"
-										/>
-									</FormControl>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
+  function onSubmit(values: z.infer<typeof formSchema>) {
+    const data = {
+      username: values.username,
+      password: values.password,
+    };
 
-						<Button type="submit" className="w-full my-8">
-							Entrar
-						</Button>
-					</form>
-				</Form>
-			</CardContent>
-		</Card>
-	);
+    AutenticacaoService.login(data)
+      .then((response) => {
+        if (response.status === 200) {
+          localStorage.setItem("access_token", response.data.access_token);
+          navigate("/dashboard");
+          onLogin();
+        }
+      })
+      .catch((error) => {});
+  }
+  return (
+    <Card className="w-full">
+      <CardHeader>
+        <CardTitle>Login</CardTitle>
+        <CardDescription>
+          Realize login para ter acesso ao sistema Pipoca!
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-2">
+            <FormField
+              control={form.control}
+              name="username"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nome</FormLabel>
+                  <FormControl>
+                    <Input placeholder="" {...field} autoComplete="username" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Senha</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="password"
+                      {...field}
+                      autoComplete="current-password"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <Button type="submit">Entrar</Button>
+          </form>
+        </Form>
+      </CardContent>
+    </Card>
+  );
 }
 
 export default FormLogin;

@@ -17,11 +17,11 @@ function ListaProblema() {
 		handleProblem();
 	}, []);
 
-	async function handleProblem() {
-		await problemaService.getProblemas().then((response) => {
-			setProblemas(response.data);
-		});
-	}
+  async function handleProblem() {
+    await problemaService.getProblemas().then((response) => {
+      setProblemas(response.data);
+    });
+  }
 
 	function cadastraProblema(): void {
 		navigate("/problema/cadastro");

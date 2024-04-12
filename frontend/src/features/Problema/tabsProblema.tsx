@@ -2,8 +2,29 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Toaster } from "@/components/ui/toaster";
 import EditaProblema from "./EditaProblema";
 import FormLogin from "../Login/components/formLogin";
+import FormDeclaracao from "./CadastraProblema/components/formDeclaracao";
+import { useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { iIntegridade } from "@/interfaces/models/iProblema";
+import problemaService from "@/services/models/problemaService";
+import EditaDeclaracao from "./EditaProblema/componentes/editaDeclaracao";
 
 function TabsProblema() {
+  const { id } = useParams();
+  const [integridade, setIntegridade] = useState<iIntegridade>();
+
+  console.log("id", id);
+
+  useEffect(() => {
+    integridadeProblem();
+  }, []);
+
+  async function integridadeProblem() {
+    await problemaService.integridadeProblema(id).then((response) => {
+      setIntegridade(response.data);
+    });
+  }
+
   return (
     <div>
       <Tabs defaultValue="problema" className="w-full">
@@ -19,7 +40,12 @@ function TabsProblema() {
           <EditaProblema />
         </TabsContent>
         <TabsContent value="declaracao">
-          <FormLogin />
+          {integridade?.declaracoes ? (
+            <EditaDeclaracao problemaId={parseInt(id)} />
+          ) : (
+            <FormDeclaracao problemaId={parseInt(id)} />
+          )}
+          {/* <FormDeclaracao problemaId={parseInt(id)} /> */}
         </TabsContent>
         <TabsContent value="arquivos">
           <FormLogin />
