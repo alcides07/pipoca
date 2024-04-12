@@ -1,3 +1,4 @@
+import tempfile
 import io
 import tarfile
 import docker
@@ -62,10 +63,6 @@ async def execute_teste_gerado(
     volume = client.volumes.create()
     command = commands[linguagem_gerador]["run_gerador"]
 
-    TEMP_TESTLIB = "/tmp/testlib"
-    TEMP_ARQUIVO_GERADOR = "/tmp/arquivo-gerador"
-    TEMP_TESTE_GERADOR = "/tmp/teste-gerador"
-
     volumes = {
         volume.name: {  # type: ignore
             'bind': WORKING_DIR,
@@ -73,15 +70,18 @@ async def execute_teste_gerado(
         }
     }
 
-    with open(TEMP_TESTLIB, 'w') as file:
+    with tempfile.NamedTemporaryFile(delete=False) as temp_testlib:
         response = get_test_lib()
-        file.write(response)
+        temp_testlib.write(response.encode())
+        TEMP_TESTLIB = temp_testlib.name
 
-    with open(TEMP_ARQUIVO_GERADOR, 'w') as file:
-        file.write(str(arquivo_gerador.corpo))
+    with tempfile.NamedTemporaryFile(delete=False) as temp_codigo_gerador:
+        temp_codigo_gerador.write(arquivo_gerador.corpo.encode())
+        TEMP_CODIGO_GERADOR = temp_codigo_gerador.name
 
-    with open(TEMP_TESTE_GERADOR, 'w') as file:
-        file.write(teste_entrada)
+    with tempfile.NamedTemporaryFile(delete=False) as temp_teste_problema:
+        temp_teste_problema.write(teste_entrada.encode())
+        TEMP_TESTE_PROBLEMA = temp_teste_problema.name
 
     try:
         container = client.containers.create(
@@ -100,11 +100,11 @@ async def execute_teste_gerado(
             arcname=f'{WORKING_DIR}/testlib.h'
         )
         tar.add(
-            name=TEMP_TESTE_GERADOR,
+            name=TEMP_TESTE_PROBLEMA,
             arcname=f'{WORKING_DIR}/{INPUT_TEST_FILENAME}'
         )
         tar.add(
-            name=TEMP_ARQUIVO_GERADOR,
+            name=TEMP_CODIGO_GERADOR,
             arcname=f'{WORKING_DIR}/{FILENAME_RUN}{extensao_gerador}'
         )
 
@@ -120,14 +120,11 @@ async def execute_teste_gerado(
         container.wait()  # type: ignore
 
         stdout_logs = container.logs(  # type: ignore
-            stdout=True, stderr=False)
+            stdout=True, stderr=False).decode()
         stderr_logs = container.logs(  # type: ignore
-            stdout=False, stderr=True)
+            stdout=False, stderr=True).decode()
 
-        stdout_logs_decode = stdout_logs.decode()
-        stderr_logs_decode = stderr_logs.decode()
-
-        if (stderr_logs_decode != ""):
+        if (stderr_logs != ""):
             raise HTTPException(
                 status.HTTP_500_INTERNAL_SERVER_ERROR,
                 "O arquivo gerador de testes do problema possui alguma falha!"
@@ -143,11 +140,11 @@ async def execute_teste_gerado(
         container.stop()  # type: ignore
         container.remove()  # type: ignore
         os.remove(TEMP_TESTLIB)
-        os.remove(TEMP_ARQUIVO_GERADOR)
-        os.remove(TEMP_TESTE_GERADOR)
+        os.remove(TEMP_CODIGO_GERADOR)
+        os.remove(TEMP_TESTE_PROBLEMA)
         volume.remove()  # type: ignore
 
-    return stdout_logs_decode
+    return stdout_logs
 
 
 async def execute_checker(
@@ -164,11 +161,6 @@ async def execute_checker(
     client = docker.from_env()
     image = commands[linguagem_verificador]["image"]
     WORKING_DIR = "/checker/testes/"
-    TEMP_TESTLIB = "/tmp/testlib"
-    TEMP_VERIFICADOR = "/tmp/verificador"
-    TEMP_TESTE_PROBLEMA = "/tmp/teste-problema"
-    TEMP_SAIDA_JUIZ = "/tmp/saida-juiz"
-    TEMP_SAIDA_USUARIO = "/tmp/saida-usuario"
 
     client.images.pull(image)
     volume = client.volumes.create()
@@ -181,12 +173,14 @@ async def execute_checker(
         }
     }
 
-    with open(TEMP_TESTLIB, 'w') as file:
+    with tempfile.NamedTemporaryFile(delete=False) as temp_testlib:
         response = get_test_lib()
-        file.write(response)
+        temp_testlib.write(response.encode())
+        TEMP_TESTLIB = temp_testlib.name
 
-    with open(TEMP_VERIFICADOR, 'w') as file:
-        file.write(codigo_verificador)
+    with tempfile.NamedTemporaryFile(delete=False) as temp_codigo_verificador:
+        temp_codigo_verificador.write(codigo_verificador.encode())
+        TEMP_CODIGO_VERIFICADOR = temp_codigo_verificador.name
 
     try:
         for i, teste in enumerate(db_problema.testes):
@@ -204,14 +198,17 @@ async def execute_checker(
                     working_dir=WORKING_DIR
                 )
 
-                with open(TEMP_TESTE_PROBLEMA, 'w') as file:
-                    file.write(teste_entrada)
+                with tempfile.NamedTemporaryFile(delete=False) as temp_teste_problema:
+                    temp_teste_problema.write(teste_entrada.encode())
+                    TEMP_TESTE_PROBLEMA = temp_teste_problema.name
 
-                with open(TEMP_SAIDA_USUARIO, 'w') as file:
-                    file.write(output_codigo_user[i])
+                with tempfile.NamedTemporaryFile(delete=False) as temp_saida_usuario:
+                    temp_saida_usuario.write(output_codigo_user[i].encode())
+                    TEMP_SAIDA_USUARIO = temp_saida_usuario.name
 
-                with open(TEMP_SAIDA_JUIZ, 'w') as file:
-                    file.write(output_codigo_solucao[i])
+                with tempfile.NamedTemporaryFile(delete=False) as temp_saida_juiz:
+                    temp_saida_juiz.write(output_codigo_solucao[i].encode())
+                    TEMP_SAIDA_JUIZ = temp_saida_juiz.name
 
                 tarstream = io.BytesIO()
                 tar = tarfile.TarFile(fileobj=tarstream, mode='w')
@@ -229,7 +226,7 @@ async def execute_checker(
                     arcname=f'{WORKING_DIR}/{OUTPUT_USER_FILENAME}'
                 )
                 tar.add(
-                    name=TEMP_VERIFICADOR,
+                    name=TEMP_CODIGO_VERIFICADOR,
                     arcname=f'{WORKING_DIR}/{FILENAME_RUN}{extensao_verificador}'
                 )
                 tar.add(
@@ -248,12 +245,10 @@ async def execute_checker(
                 container.wait()  # type: ignore
 
                 stderr_logs = container.logs(  # type: ignore
-                    stdout=False, stderr=True)
+                    stdout=False, stderr=True).decode()
 
-                stderr_logs_decode = stderr_logs.decode()
-
-                if (stderr_logs_decode != ""):
-                    veredito_mensagem = stderr_logs_decode.split()
+                if (stderr_logs != ""):
+                    veredito_mensagem = stderr_logs.split()
                     veredito.append(veredito_mensagem[0].lower())
 
             except DockerException:
@@ -265,15 +260,16 @@ async def execute_checker(
             finally:
                 container.stop()  # type: ignore
                 container.remove()  # type: ignore
+                os.remove(TEMP_TESTE_PROBLEMA)
+                os.remove(TEMP_SAIDA_USUARIO)
+                os.remove(TEMP_SAIDA_JUIZ)
 
     finally:
-        os.remove(TEMP_VERIFICADOR)
-        os.remove(TEMP_TESTE_PROBLEMA)
-        os.remove(TEMP_SAIDA_USUARIO)
-        os.remove(TEMP_SAIDA_JUIZ)
+        os.remove(TEMP_CODIGO_VERIFICADOR)
         os.remove(TEMP_TESTLIB)
         volume.remove()  # type: ignore
 
+    print("veredito: ", veredito)
     return veredito
 
 
@@ -289,8 +285,6 @@ async def execute_codigo_user(
     client = docker.from_env()
     image = commands[linguagem.value]["image"]
     WORKING_DIR = "/user/submission/"
-    TEMP_CODIGO_USER = "/tmp/codigo-user"
-    TEMP_TESTE_USUARIO = "/tmp/teste-usuario"
 
     client.images.pull(image)
     volume = client.volumes.create()
@@ -303,8 +297,9 @@ async def execute_codigo_user(
         }
     }
 
-    with open(TEMP_CODIGO_USER, 'w') as file:
-        file.write(codigo_user)
+    with tempfile.NamedTemporaryFile(delete=False) as temp_codigo_usuario:
+        temp_codigo_usuario.write(codigo_user.encode())
+        TEMP_CODIGO_USUARIO = temp_codigo_usuario.name
 
     output_codigo_user: List[str] = []
     output_testes_gerados: List[str] = []
@@ -335,18 +330,19 @@ async def execute_codigo_user(
                     working_dir=WORKING_DIR
                 )
 
-                with open(TEMP_TESTE_USUARIO, 'w') as file:
-                    file.write(teste_entrada)
+                with tempfile.NamedTemporaryFile(delete=False) as temp_teste_problema:
+                    temp_teste_problema.write(teste_entrada.encode())
+                    TEMP_TESTE_PROBLEMA = temp_teste_problema.name
 
                 tarstream = io.BytesIO()
                 tar = tarfile.TarFile(fileobj=tarstream, mode='w')
 
                 tar.add(
-                    name=TEMP_CODIGO_USER,
+                    name=TEMP_CODIGO_USUARIO,
                     arcname=f'{WORKING_DIR}/{FILENAME_RUN}{extension}'
                 )
                 tar.add(
-                    name=TEMP_TESTE_USUARIO,
+                    name=TEMP_TESTE_PROBLEMA,
                     arcname=f'{WORKING_DIR}/{INPUT_TEST_FILENAME}'
                 )
 
@@ -361,16 +357,13 @@ async def execute_codigo_user(
                 container.wait()  # type: ignore
 
                 stdout_logs = container.logs(  # type: ignore
-                    stdout=True, stderr=False)
+                    stdout=True, stderr=False).decode()
                 stderr_logs = container.logs(  # type: ignore
-                    stdout=False, stderr=True)
+                    stdout=False, stderr=True).decode()
 
-                stdout_logs_decode = stdout_logs.decode()
-                stderr_logs_decode = stderr_logs.decode()
+                output_codigo_user.append(stdout_logs)
 
-                output_codigo_user.append(stdout_logs_decode)
-
-                if (stderr_logs_decode != ""):
+                if (stderr_logs != ""):
                     return f"Erro em tempo de execução no teste {i+1}", []
 
             except DockerException:
@@ -382,10 +375,10 @@ async def execute_codigo_user(
             finally:
                 container.stop()  # type: ignore
                 container.remove()  # type: ignore
+                os.remove(TEMP_TESTE_PROBLEMA)
 
     finally:
-        os.remove(TEMP_CODIGO_USER)
-        os.remove(TEMP_TESTE_USUARIO)
+        os.remove(TEMP_CODIGO_USUARIO)
         volume.remove()  # type: ignore
 
     return output_codigo_user, output_testes_gerados
@@ -404,8 +397,6 @@ async def execute_arquivo_solucao(
     image = commands[linguagem]["image"]
     command = commands[linguagem]["run_test"]
     WORKING_DIR = "/arquivo/testes/"
-    TEMP_SOLUCAO = "/tmp/solucao"
-    TEMP_TESTE_SOLUCAO = "/tmp/teste-solucao"
 
     client.images.pull(image)
     volume = client.volumes.create()
@@ -417,8 +408,9 @@ async def execute_arquivo_solucao(
         }
     }
 
-    with open(TEMP_SOLUCAO, 'w') as file:
-        file.write(codigo_solucao)
+    with tempfile.NamedTemporaryFile(delete=False) as temp_codigo_solucao:
+        temp_codigo_solucao.write(codigo_solucao.encode())
+        TEMP_CODIGO_SOLUCAO = temp_codigo_solucao.name
 
     output_codigo_solucao: List[str] = []
 
@@ -438,18 +430,19 @@ async def execute_arquivo_solucao(
                     working_dir=WORKING_DIR
                 )
 
-                with open(TEMP_TESTE_SOLUCAO, 'w') as file:
-                    file.write(teste_entrada)
+                with tempfile.NamedTemporaryFile(delete=False) as temp_teste_problema:
+                    temp_teste_problema.write(teste_entrada.encode())
+                    TEMP_TESTE_PROBLEMA = temp_teste_problema.name
 
                 tarstream = io.BytesIO()
                 tar = tarfile.TarFile(fileobj=tarstream, mode='w')
 
                 tar.add(
-                    name=TEMP_SOLUCAO,
+                    name=TEMP_CODIGO_SOLUCAO,
                     arcname=f'{WORKING_DIR}/{FILENAME_RUN}{extension}'
                 )
                 tar.add(
-                    name=TEMP_TESTE_SOLUCAO,
+                    name=TEMP_TESTE_PROBLEMA,
                     arcname=f'{WORKING_DIR}/{INPUT_TEST_FILENAME}'
                 )
 
@@ -464,15 +457,13 @@ async def execute_arquivo_solucao(
                 container.wait()  # type: ignore
 
                 stdout_logs = container.logs(  # type: ignore
-                    stdout=True, stderr=False)
+                    stdout=True, stderr=False).decode()
                 stderr_logs = container.logs(  # type: ignore
-                    stdout=False, stderr=True)
+                    stdout=False, stderr=True).decode()
 
-                stdout_logs_decode = stdout_logs.decode()
-                stderr_logs_decode = stderr_logs.decode()
-                output_codigo_solucao.append(stdout_logs_decode)
+                output_codigo_solucao.append(stdout_logs)
 
-                if (stderr_logs_decode != ""):
+                if (stderr_logs != ""):
                     raise HTTPException(
                         status.HTTP_500_INTERNAL_SERVER_ERROR,
                         "O arquivo de solução oficial do problema possui alguma falha!"
@@ -487,10 +478,10 @@ async def execute_arquivo_solucao(
             finally:
                 container.stop()  # type: ignore
                 container.remove()  # type: ignore
+                os.remove(TEMP_TESTE_PROBLEMA)
 
     finally:
-        os.remove(TEMP_SOLUCAO)
-        os.remove(TEMP_TESTE_SOLUCAO)
+        os.remove(TEMP_CODIGO_SOLUCAO)
         volume.remove()  # type: ignore
 
     return output_codigo_solucao
