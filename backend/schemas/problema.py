@@ -1,19 +1,21 @@
 from datetime import datetime
 from typing import Optional
 from pydantic import BaseModel, Field
-from schemas.arquivo import ArquivoCreate, ArquivoReadFull, ArquivoReadSimple
+from schemas.arquivo import ArquivoCreate
+from schemas.common.compilers import CompilersEnum
 from schemas.problemaTeste import ProblemaTesteCreate, ProblemaTesteReadFull, ProblemaTesteReadSimple
 from schemas.tag import TagRead
 from schemas.declaracao import DeclaracaoCreate, DeclaracaoReadFull, DeclaracaoReadSimple
 from schemas.user import UserReadSimple
-from schemas.validador import ValidadorCreate, ValidadorReadFull, ValidadorReadSimple
-from schemas.verificador import VerificadorCreate, VerificadorReadFull, VerificadorReadSimple
+from schemas.validador import ValidadorCreate
+from schemas.verificador import VerificadorCreate
 
 DECLARACAO_DESCRIPTION = "Declarações associadas ao problema"
 VERIFICADOR_DESCRIPTION = "Arquivo verificador do problema"
 VALIDADOR_DESCRIPTION = "Arquivo validador do problema"
 ARQUIVOS_DESCRIPTION = "Arquivos associados ao problema"
 TESTES_DESCRIPTION = "Testes associados ao problema"
+LINGUAGENS_DESCRIPTION = "Linguagens de programação aceitas na resolução do problema"
 
 
 class ProblemaBase(BaseModel):
@@ -46,6 +48,10 @@ class ProblemaBase(BaseModel):
         ge=4,
         le=1024,
         description="Memória limite do problema (em megabytes)"
+    )
+
+    linguagens: list[CompilersEnum] = Field(
+        description=LINGUAGENS_DESCRIPTION
     )
 
 
@@ -171,6 +177,10 @@ class ProblemaUpdatePartial(BaseModel):
         ge=4,
         le=1024,
         description="Memória limite do problema (em megabytes)"
+    )
+
+    linguagens: Optional[list[CompilersEnum]] = Field(
+        description=LINGUAGENS_DESCRIPTION
     )
 
 
