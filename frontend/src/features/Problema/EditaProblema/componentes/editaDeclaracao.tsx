@@ -90,7 +90,6 @@ function EditaDeclaracao({ problemaId }: EditaDeclaracaoProps) {
     await problemaService.declaracoesProblema(id).then((response) => {
       if (response.data.length > 0) {
         const res = response.data[0];
-        console.log("response.data[0]", response.data[0]);
         form.reset({
           titulo: res.titulo,
           idioma: res.idioma,
@@ -101,14 +100,11 @@ function EditaDeclaracao({ problemaId }: EditaDeclaracaoProps) {
           tutorial: res.tutorial,
         });
         setIdDeclaracao(res.id);
-        console.log("res.id", res.id);
       }
     });
   }
 
   async function onSubmit(values: iDeclaracao) {
-    console.log("declaração1", values);
-
     const data: iDeclaracao = {
       titulo: values.titulo,
       idioma: values.idioma,

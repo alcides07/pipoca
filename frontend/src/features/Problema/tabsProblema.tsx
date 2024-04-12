@@ -21,9 +21,7 @@ function TabsProblema() {
 
   async function integridadeProblem() {
     await problemaService.integridadeProblema(id).then((response) => {
-      console.log("response.data", response.data);
       setIntegridade(response.data);
-      console.log(response);
     });
   }
 

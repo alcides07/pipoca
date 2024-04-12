@@ -72,7 +72,6 @@ interface FormDeclaracaoProps {
 
 function FormDeclaracao({ problemaId }: FormDeclaracaoProps) {
   const [rows, setRows] = useState(1);
-  console.log("problemaId", problemaId);
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(FormSchema),
@@ -90,8 +89,6 @@ function FormDeclaracao({ problemaId }: FormDeclaracaoProps) {
   });
 
   async function onSubmit(values: ProfileFormValues) {
-    console.log("oie", values);
-
     const data: iDeclaracao = {
       titulo: values.titulo,
       idioma: values.idioma,

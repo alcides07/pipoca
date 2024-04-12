@@ -59,19 +59,15 @@ function FormRegister({ onSuccess }: FormRegisterProps) {
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log("values", values);
-
     const data = {
       username: values.username,
       email: values.email,
       password: values.password,
       passwordConfirmation: values.passwordConfirmation,
     };
-    console.log("data", data);
 
     AutenticacaoService.register(data)
       .then((response) => {
-        console.log("Cadastro", response);
         toast({
           title: "Sucesso.",
           description: "Usuário cadastrado com sucesso!",
@@ -80,7 +76,6 @@ function FormRegister({ onSuccess }: FormRegisterProps) {
         onSuccess();
       })
       .catch((error) => {
-        // console.error("Cadastro erro:", error);
         toast({
           variant: "destructive",
           title: "Erro.",

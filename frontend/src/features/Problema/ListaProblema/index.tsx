@@ -20,7 +20,6 @@ function ListaProblema() {
   async function handleProblem() {
     await problemaService.getProblemas().then((response) => {
       setProblemas(response.data);
-      console.log(response);
     });
   }
 

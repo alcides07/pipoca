@@ -127,8 +127,7 @@ function EditaProblema() {
 
     await problemaService
       .updateProblema(id, p)
-      .then((response: any) => {
-        console.log("data na atualização", response.data);
+      .then(() => {
         window.scrollTo(0, 0);
 
         toast({
@@ -259,7 +258,7 @@ function EditaProblema() {
             </div>
 
             <Button className="w-full" type="submit">
-              Cadastrar
+              Editar
             </Button>
           </form>
         </Form>

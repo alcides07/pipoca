@@ -42,27 +42,20 @@ function FormLogin({ onLogin }: any) {
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log("values", values);
-
     const data = {
       username: values.username,
       password: values.password,
     };
-    console.log("data", data);
 
     AutenticacaoService.login(data)
       .then((response) => {
-        console.log("response", response);
         if (response.status === 200) {
-          console.log("token", response.data.access_token);
           localStorage.setItem("access_token", response.data.access_token);
           navigate("/dashboard");
           onLogin();
         }
       })
-      .catch((error) => {
-        console.error("Login erro:", error);
-      });
+      .catch((error) => {});
   }
   return (
     <Card className="w-full">

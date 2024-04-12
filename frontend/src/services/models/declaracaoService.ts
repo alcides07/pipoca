@@ -18,7 +18,6 @@ class DeclaracaoService {
   }
   async createDeclaracao(data: iDeclaracao) {
     const response = await axiosInstance.post(`/declaracoes/`, data);
-    console.log(response);
     return response;
   }
 }
