@@ -11,14 +11,15 @@ class AutenticacaoService {
 		return response;
 	}
 
-	async register(data: iRegister) {
-		const response = await axiosInstance.post("/usuarios", data, {
-			headers: {
-				"Content-Type": "application/json",
-			},
-		});
-		return response;
-	}
+
+  async register(data: iRegister) {
+    const response = await axiosInstance.post("/usuarios", data, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    return response;
+  }
 }
 
 export default new AutenticacaoService();

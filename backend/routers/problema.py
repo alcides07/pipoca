@@ -32,6 +32,8 @@ from dependencies.database import get_db
 from sqlalchemy.orm import Session
 from orm.problema import create_problema, create_problema_upload, get_all_problemas, get_arquivos_problema, get_declaracoes_problema, get_meus_problemas, get_problema_by_id, get_respostas_problema, get_integridade_problema, get_tags_problema, get_testes_exemplo_de_problema_executados, get_testes_problema, get_validador_problema, get_verificador_problema, update_problema
 from schemas.common.response import ResponseListSchema, ResponsePaginationSchema, ResponseUnitSchema
+from orm.problema import create_problema, create_problema_upload, get_all_problemas, get_arquivos_problema, get_declaracoes_problema, get_meus_problemas, get_problema_by_id, get_respostas_problema, get_integridade_problema, get_tags_problema, get_testes_problema, get_validador_problema, get_verificador_problema, update_problema
+from schemas.common.response import ResponsePaginationSchema, ResponseUnitSchema
 
 PROBLEMA_ID_DESCRIPTION = "Identificador do problema"
 

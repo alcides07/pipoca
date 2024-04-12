@@ -1,9 +1,9 @@
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
+	Card,
+	CardContent,
+	CardDescription,
+	CardHeader,
+	CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,52 +11,55 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
+	Form,
+	FormControl,
+	FormField,
+	FormItem,
+	FormLabel,
+	FormMessage,
 } from "@/components/ui/form";
 import AutenticacaoService from "@/services/models/autenticacaoService";
 import { useToast } from "@/components/ui/use-toast";
 import { Toaster } from "@/components/ui/toaster";
 
 const formSchema = z.object({
-  username: z.string().nonempty({ message: "O nome é obrigatório." }).min(3, {
-    message: "O nome de usuário deve ter pelo menos 3 caracteres.",
-  }),
-  email: z.string().nonempty({ message: "O e-mail é obrigatório." }).email({
-    message: "O email deve ser um email válido.",
-  }),
-  password: z.string().nonempty({ message: "A senha é obrigatória." }).min(3, {
-    message: "A senha deve ter pelo menos 3 caracteres.",
-  }),
+	username: z.string().nonempty({ message: "O nome é obrigatório." }).min(3, {
+		message: "O nome de usuário deve ter pelo menos 3 caracteres.",
+	}),
+	email: z.string().nonempty({ message: "O e-mail é obrigatório." }).email({
+		message: "O email deve ser um email válido.",
+	}),
+	password: z
+		.string()
+		.nonempty({ message: "A senha é obrigatória." })
+		.min(3, {
+			message: "A senha deve ter pelo menos 3 caracteres.",
+		}),
 
-  passwordConfirmation: z
-    .string()
-    .nonempty({ message: "A confirmação da senha é obrigatória." })
-    .min(3, {
-      message: "A senha deve ter pelo menos 3 caracteres.",
-    }),
+	passwordConfirmation: z
+		.string()
+		.nonempty({ message: "A confirmação da senha é obrigatória." })
+		.min(3, {
+			message: "A senha deve ter pelo menos 3 caracteres.",
+		}),
 });
 
 interface FormRegisterProps {
-  onSuccess?: () => void;
+	onSuccess?: () => void;
 }
 
 function FormRegister({ onSuccess }: FormRegisterProps) {
-  const { toast } = useToast();
+	const { toast } = useToast();
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      username: "",
-      email: "",
-      password: "",
-      passwordConfirmation: "",
-    },
-  });
+	const form = useForm<z.infer<typeof formSchema>>({
+		resolver: zodResolver(formSchema),
+		defaultValues: {
+			username: "",
+			email: "",
+			password: "",
+			passwordConfirmation: "",
+		},
+	});
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     const data = {
