@@ -540,7 +540,7 @@ def test_read_linguagens_de_problema_com_dono():
     response_json = response.json().get("data")
 
     assert response.status_code == 200
-    assert response_json is not []
+    assert response_json != []
 
     resume_dependencies()
 
