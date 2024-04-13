@@ -1,5 +1,4 @@
 from fastapi.responses import FileResponse
-from dependencies.authorization_user import is_admin
 from dependencies.is_admin import is_admin_dependencies
 from routers.auth import oauth2_scheme
 from fastapi import APIRouter, Body, Depends, HTTPException, Path, Response, UploadFile, status, File
@@ -46,38 +45,6 @@ async def read(
     return ResponsePaginationSchema(
         data=users,
         metadata=metadata
-    )
-
-
-@router.get("/eu/",
-            response_model=ResponseUnitRequiredSchema[UserReadFull],
-            summary="Lista dados do usuário autenticado",
-            dependencies=[Depends(get_authenticated_user)],
-            responses={
-                501: {"501": 501}
-            })
-async def read_me(
-        db: Session = Depends(get_db),
-        token: str = Depends(oauth2_scheme)
-):
-    user_db = await get_authenticated_user(token, db)
-
-    if (is_admin(user_db)):
-        raise HTTPException(
-            status.HTTP_501_NOT_IMPLEMENTED,
-            "Funcionalidade não disponível para administradores!"
-        )
-
-    user = await get_by_id(
-        id=user_db.id,
-        path_has_user_key="user",
-        db=db,
-        model=User,
-        token=token
-    )
-
-    return ResponseUnitRequiredSchema(
-        data=user
     )
 
 
