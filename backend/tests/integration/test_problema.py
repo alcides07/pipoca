@@ -534,7 +534,10 @@ def test_read_testes_exemplo_executados():
         response_problema = client.post(
             f"{URL_PROBLEMA}/pacotes/",
             files={"pacote": file},
-            data={"privado": "true"},
+            data={
+                "privado": "true",
+                "linguagens": ["python.3", "cpp.g++17"]
+            },
             headers={
                 "Authorization": f"Bearer {token}",
             },
@@ -542,7 +545,6 @@ def test_read_testes_exemplo_executados():
 
     assert response_problema.status_code == 201
     id_problema = response_problema.json().get("data").get("id")
-    print("id : ", id_problema)
 
     response = client.get(
         f"{URL_PROBLEMA}/{id_problema}/testesExemplosExecutados/",
@@ -708,7 +710,10 @@ def test_upload_problema_user():
         response = client.post(
             f"{URL_PROBLEMA}/pacotes/",
             files={"pacote": file},
-            data={"privado": "true"},
+            data={
+                "privado": "true",
+                "linguagens": ["python.3", "cpp.g++17"]
+            },
             headers={
                 "Authorization": f"Bearer {token}",
             },
@@ -729,7 +734,10 @@ def test_upload_problema_admin():
         response = client.post(
             f"{URL_PROBLEMA}/pacotes/",
             files={"pacote": file},
-            data={"privado": "true"},
+            data={
+                "privado": "true",
+                "linguagens": ["python.3", "cpp.g++17"]
+            },
             headers={
                 "Authorization": f"Bearer {token}",
             },
