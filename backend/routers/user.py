@@ -1,16 +1,8 @@
 from fastapi.responses import FileResponse
-from constants import DIRECTION_ORDER_BY_DESCRIPTION, FIELDS_ORDER_BY_DESCRIPTION
 from dependencies.authorization_user import is_admin
 from dependencies.is_admin import is_admin_dependencies
-from filters.problema import OrderByFieldsProblemaEnum, ProblemaFilter, search_fields_problema
-from filters.problemaResposta import OrderByFieldsProblemaRespostaEnum, search_fields_problema_resposta
-from models.problema import Problema
-from models.problemaResposta import ProblemaResposta
 from routers.auth import oauth2_scheme
-from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query, Response, UploadFile, status, File
-from schemas.common.direction_order_by import DirectionOrderByEnum
-from schemas.problema import ProblemaReadSimple
-from schemas.problemaResposta import ProblemaRespostaReadFull
+from fastapi import APIRouter, Body, Depends, HTTPException, Path, Response, UploadFile, status, File
 from utils.errors import errors
 from models.user import User
 from orm.common.index import delete_object, get_by_id, get_all
@@ -20,7 +12,7 @@ from schemas.common.pagination import PaginationSchema
 from dependencies.database import get_db
 from sqlalchemy.orm import Session
 from orm.user import create_imagem_user, create_user, delete_imagem_user, get_imagem_user, update_user
-from schemas.common.response import ResponsePaginationSchema, ResponseUnitSchema
+from schemas.common.response import ResponsePaginationSchema, ResponseUnitRequiredSchema
 from passlib.context import CryptContext
 
 
@@ -58,7 +50,7 @@ async def read(
 
 
 @router.get("/eu/",
-            response_model=ResponseUnitSchema[UserReadFull],
+            response_model=ResponseUnitRequiredSchema[UserReadFull],
             summary="Lista dados do usuário autenticado",
             dependencies=[Depends(get_authenticated_user)],
             responses={
@@ -84,7 +76,7 @@ async def read_me(
         token=token
     )
 
-    return ResponseUnitSchema(
+    return ResponseUnitRequiredSchema(
         data=user
     )
 
@@ -109,7 +101,7 @@ async def get_imagem(
 
 
 @router.get("/{id}/",
-            response_model=ResponseUnitSchema[UserReadFull],
+            response_model=ResponseUnitRequiredSchema[UserReadFull],
             summary="Lista um usuário",
             dependencies=[Depends(get_authenticated_user)],
             responses={
@@ -129,13 +121,13 @@ async def read_id(
         path_has_user_key="user"
     )
 
-    return ResponseUnitSchema(
+    return ResponseUnitRequiredSchema(
         data=users
     )
 
 
 @router.post("/",
-             response_model=ResponseUnitSchema[UserReadFull],
+             response_model=ResponseUnitRequiredSchema[UserReadFull],
              status_code=201,
              summary="Cadastra um usuário",
              responses={
@@ -150,7 +142,7 @@ def create(
 ):
     data = create_user(db=db, user=user)
 
-    return ResponseUnitSchema(data=data)
+    return ResponseUnitRequiredSchema(data=data)
 
 
 @router.post("/{id}/imagem/",
@@ -210,7 +202,7 @@ async def delete_image(
 
 
 @router.put("/{id}/",
-            response_model=ResponseUnitSchema[UserReadFull],
+            response_model=ResponseUnitRequiredSchema[UserReadFull],
             summary="Atualiza um usuário por completo",
             responses={
                 404: errors[404]
@@ -231,13 +223,13 @@ async def total_update(
         token=token
     )
 
-    return ResponseUnitSchema(
+    return ResponseUnitRequiredSchema(
         data=response
     )
 
 
 @router.patch("/{id}/",
-              response_model=ResponseUnitSchema[UserReadFull],
+              response_model=ResponseUnitRequiredSchema[UserReadFull],
               summary="Atualiza um usuário parcialmente",
               responses={
                   400: errors[400],
@@ -259,7 +251,7 @@ async def partial_update(
         token=token
     )
 
-    return ResponseUnitSchema(
+    return ResponseUnitRequiredSchema(
         data=response
     )
 

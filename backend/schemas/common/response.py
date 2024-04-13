@@ -18,6 +18,10 @@ class ResponseUnitSchema(BaseModel, Generic[T]):
     data: T | None = None
 
 
+class ResponseUnitRequiredSchema(BaseModel, Generic[T]):
+    data: T
+
+
 class ResponseMessageSchema(BaseModel, Generic[T]):
     data: T | List[T] | None = None
     message: str | None = None

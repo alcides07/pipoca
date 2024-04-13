@@ -9,7 +9,7 @@ from fastapi import APIRouter, Body, Depends, Path, Query, Response, status
 from orm.common.index import delete_object_simple, get_all, get_by_id_simple, update_object_simple
 from schemas.common.direction_order_by import DirectionOrderByEnum
 from schemas.common.pagination import PaginationSchema
-from schemas.common.response import ResponsePaginationSchema, ResponseUnitSchema
+from schemas.common.response import ResponsePaginationSchema, ResponseUnitRequiredSchema
 from sqlalchemy.orm import Session
 from schemas.tag import TagBase, TagCreate, TagRead
 from utils.errors import errors
@@ -57,7 +57,7 @@ async def read(
 
 
 @router.get("/{id}/",
-            response_model=ResponseUnitSchema[TagRead],
+            response_model=ResponseUnitRequiredSchema[TagRead],
             summary="Lista uma tag",
             responses={
                 404: errors[404]
@@ -72,13 +72,13 @@ async def read_id(
         id=id,
         model=Tag
     )
-    return ResponseUnitSchema(
+    return ResponseUnitRequiredSchema(
         data=tag
     )
 
 
 @router.post("/",
-             response_model=ResponseUnitSchema[TagRead],
+             response_model=ResponseUnitRequiredSchema[TagRead],
              status_code=201,
              summary="Cadastra uma tag",
              responses={
@@ -95,11 +95,11 @@ async def create(
         tag=tag,
         token=token
     )
-    return ResponseUnitSchema(data=data)
+    return ResponseUnitRequiredSchema(data=data)
 
 
 @router.patch("/{id}/",
-              response_model=ResponseUnitSchema[TagRead],
+              response_model=ResponseUnitRequiredSchema[TagRead],
               summary="Atualiza uma tag parcialmente",
               responses={
                   404: errors[404]
@@ -118,13 +118,13 @@ async def partial_update(
         model=Tag,
         data=data
     )
-    return ResponseUnitSchema(
+    return ResponseUnitRequiredSchema(
         data=tag
     )
 
 
 @router.put("/{id}/",
-            response_model=ResponseUnitSchema[TagRead],
+            response_model=ResponseUnitRequiredSchema[TagRead],
             summary="Atualiza uma tag por completo",
             responses={
                 404: errors[404]
@@ -143,7 +143,7 @@ async def total_update(
         model=Tag,
         data=data
     )
-    return ResponseUnitSchema(
+    return ResponseUnitRequiredSchema(
         data=tag
     )
 

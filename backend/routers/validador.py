@@ -4,11 +4,10 @@ from routers.auth import oauth2_scheme
 from dependencies.authenticated_user import get_authenticated_user
 from dependencies.database import get_db
 from fastapi import APIRouter, Body, Depends, Path, Response, status
-from models.problema import Problema
 from models.validador import Validador
 from orm.common.index import delete_object, get_all, get_by_id
 from schemas.common.pagination import PaginationSchema
-from schemas.common.response import ResponsePaginationSchema, ResponseUnitSchema
+from schemas.common.response import ResponsePaginationSchema, ResponseUnitRequiredSchema
 from schemas.validador import VALIDADOR_ID_DESCRIPTION, ValidadorCreateSingle, ValidadorReadFull, ValidadorReadSimple, ValidadorUpdatePartial, ValidadorUpdateTotal
 from sqlalchemy.orm import Session
 from schemas.validadorTeste import ValidadorTesteReadFull
@@ -43,7 +42,7 @@ async def read(
 
 
 @router.get("/{id}/",
-            response_model=ResponseUnitSchema[ValidadorReadFull],
+            response_model=ResponseUnitRequiredSchema[ValidadorReadFull],
             summary="Lista um validador",
             responses={
                 404: errors[404]
@@ -62,7 +61,7 @@ async def read_id(
         path_has_user_key="problema"
     )
 
-    return ResponseUnitSchema(
+    return ResponseUnitRequiredSchema(
         data=validador
     )
 
@@ -94,7 +93,7 @@ async def read_validador_id_testes(
 
 
 @router.post("/",
-             response_model=ResponseUnitSchema[ValidadorReadFull],
+             response_model=ResponseUnitRequiredSchema[ValidadorReadFull],
              status_code=201,
              summary="Cadastra um validador",
              responses={
@@ -114,11 +113,11 @@ async def create(
         token=token
     )
 
-    return ResponseUnitSchema(data=validador)
+    return ResponseUnitRequiredSchema(data=validador)
 
 
 @router.patch("/{id}/",
-              response_model=ResponseUnitSchema[ValidadorReadFull],
+              response_model=ResponseUnitRequiredSchema[ValidadorReadFull],
               summary="Atualiza um validador parcialmente",
               responses={
                   404: errors[404]
@@ -137,13 +136,13 @@ async def parcial_update(
         validador=data,
         token=token
     )
-    return ResponseUnitSchema(
+    return ResponseUnitRequiredSchema(
         data=validador
     )
 
 
 @router.put("/{id}/",
-            response_model=ResponseUnitSchema[ValidadorReadFull],
+            response_model=ResponseUnitRequiredSchema[ValidadorReadFull],
             summary="Atualiza um validador por completo",
             responses={
                 404: errors[404]
@@ -162,7 +161,7 @@ async def total_update(
         validador=data,
         token=token
     )
-    return ResponseUnitSchema(
+    return ResponseUnitRequiredSchema(
         data=validador
     )
 

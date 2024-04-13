@@ -143,6 +143,24 @@ def test_read_declaracao_by_id_com_admin():
     resume_dependencies()
 
 
+def test_read_idiomas_declaracao():
+    remove_dependencies()
+
+    _, token, _ = create_user_helper()
+
+    response = client.get(
+        f"{URL_DECLARACAO}/idiomas/",
+        headers={
+            "Authorization": f"Bearer {token}",
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json().get("data") != []
+
+    resume_dependencies()
+
+
 # -------------------------------
 # Testes de escrita (POST)
 # -------------------------------
@@ -452,7 +470,7 @@ def test_delete_declaracao_com_admin():
 
 JSON_DECLARACAO = {
     "titulo": "string",
-    "idioma": "Africâner",
+    "idioma": "Português",
     "contextualizacao": "string",
     "formatacao_entrada": "string",
     "formatacao_saida": "string",

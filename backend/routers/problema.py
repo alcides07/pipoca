@@ -31,7 +31,7 @@ from schemas.common.pagination import PaginationSchema
 from dependencies.database import get_db
 from sqlalchemy.orm import Session
 from orm.problema import create_problema, create_problema_upload, get_all_problemas, get_arquivos_problema, get_declaracoes_problema, get_linguagens_problema, get_meus_problemas, get_problema_by_id, get_respostas_problema, get_integridade_problema, get_tags_problema, get_testes_exemplo_de_problema_executados, get_testes_problema, get_validador_problema, get_verificador_problema, update_problema
-from schemas.common.response import ResponseListSchema, ResponsePaginationSchema, ResponseUnitSchema
+from schemas.common.response import ResponseListSchema, ResponsePaginationSchema, ResponseUnitRequiredSchema, ResponseUnitSchema
 
 PROBLEMA_ID_DESCRIPTION = "Identificador do problema"
 
@@ -237,7 +237,7 @@ async def read_problema_id_validador(
 
 
 @router.get("/{id}/integridade/",
-            response_model=ResponseUnitSchema[ProblemaIntegridade],
+            response_model=ResponseUnitRequiredSchema[ProblemaIntegridade],
             summary="Lista o status do preenchimento ou ausência das partes que compõem um problema",
             responses={
                 404: errors[404]
@@ -254,7 +254,7 @@ async def read_problema_status(
         token=token
     )
 
-    return ResponseUnitSchema(
+    return ResponseUnitRequiredSchema(
         data=status
     )
 
@@ -360,7 +360,7 @@ async def read_problema_id_arquivos(
 
 
 @router.get("/{id}/",
-            response_model=ResponseUnitSchema[ProblemaReadFull],
+            response_model=ResponseUnitRequiredSchema[ProblemaReadFull],
             summary="Lista um problema",
             responses={
                 404: errors[404]
@@ -376,13 +376,13 @@ async def read_id(
         id=id,
         token=token
     )
-    return ResponseUnitSchema(
+    return ResponseUnitRequiredSchema(
         data=problema
     )
 
 
 @router.post("/",
-             response_model=ResponseUnitSchema[ProblemaReadFull],
+             response_model=ResponseUnitRequiredSchema[ProblemaReadFull],
              status_code=201,
              summary="Cadastra um problema",
              responses={
@@ -399,11 +399,11 @@ async def create(
         problema=problema,
         token=token
     )
-    return ResponseUnitSchema(data=data)
+    return ResponseUnitRequiredSchema(data=data)
 
 
 @router.post("/pacotes/",
-             response_model=ResponseUnitSchema[ProblemaReadFull],
+             response_model=ResponseUnitRequiredSchema[ProblemaReadFull],
              status_code=201,
              summary="Cadastra um problema via pacote da plataforma Polygon",
              responses={
@@ -746,7 +746,7 @@ async def upload(
             problema=problema,
             token=token
         )
-        return ResponseUnitSchema(data=data)
+        return ResponseUnitRequiredSchema(data=data)
 
     except HTTPException:
         raise HTTPException(
@@ -756,7 +756,7 @@ async def upload(
 
 
 @router.put("/{id}/",
-            response_model=ResponseUnitSchema[ProblemaReadFull],
+            response_model=ResponseUnitRequiredSchema[ProblemaReadFull],
             summary="Atualiza um problema por completo",
             responses={
                 404: errors[404]
@@ -775,13 +775,13 @@ async def total_update(
         problema=data,
         token=token
     )
-    return ResponseUnitSchema(
+    return ResponseUnitRequiredSchema(
         data=response
     )
 
 
 @router.patch("/{id}/",
-              response_model=ResponseUnitSchema[ProblemaReadFull],
+              response_model=ResponseUnitRequiredSchema[ProblemaReadFull],
               summary="Atualiza um problema parcialmente",
               responses={
                   404: errors[404]
@@ -800,6 +800,6 @@ async def parcial_update(
         problema=data,
         token=token
     )
-    return ResponseUnitSchema(
+    return ResponseUnitRequiredSchema(
         data=response
     )
