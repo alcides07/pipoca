@@ -793,3 +793,31 @@ async def get_testes_exemplo_de_problema_executados(
             status.HTTP_500_INTERNAL_SERVER_ERROR,
             "Ocorreu um erro na busca pelos testes de exemplo do problema!"
         )
+
+
+async def get_linguagens_problema(
+    db: Session,
+    id: int,
+    token: str
+):
+    db_problema = db.query(Problema).filter(Problema.id == id).first()
+
+    if (not db_problema):
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND,
+            "O problema não foi encontrado!"
+        )
+
+    user = await get_authenticated_user(token, db)
+
+    if (
+        is_user(user)
+        and
+        bool(db_problema.usuario_id != user.id)
+        and
+        bool(db_problema.privado) == True
+    ):
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED)
+
+    linguagens: list[str] = db_problema.linguagens
+    return linguagens
