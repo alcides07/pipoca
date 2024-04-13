@@ -51,7 +51,6 @@ class ProblemaBase(BaseModel):
     )
 
     linguagens: list[CompilersEnum] = Field(
-        ...,
         description=LINGUAGENS_DESCRIPTION,
         min_length=1
     )
@@ -182,6 +181,7 @@ class ProblemaUpdatePartial(BaseModel):
     )
 
     linguagens: Optional[list[CompilersEnum]] = Field(
+        default=None,
         description=LINGUAGENS_DESCRIPTION
     )
 
