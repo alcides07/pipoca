@@ -68,8 +68,6 @@ A documentação completa do projeto está disponível no diretório [doc](./doc
         <a href="https://github.com/IsraelKleber"><b>Israel Kleber</b></a><br> (front-end)
     </td>
   </tr>
-  <tr>
-  </tr>
 </table>
 
 <hr>
