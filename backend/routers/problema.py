@@ -718,30 +718,33 @@ async def upload(
             # Atribui os testes do validador
             process_validador_teste(data)
 
-    def process_declaracoes(zip, filename):
+    def process_declaracoes(data):
         try:
-            with zip.open(filename) as statement:
-                content = statement.read().decode()
-                data = json.loads(content)
+            declaracao = DeclaracaoCreate(
+                titulo=data["name"],
+                contextualizacao=data["legend"],
+                formatacao_entrada=data["input"],
+                formatacao_saida=data["output"],
+                tutorial=data["tutorial"],
+                observacao=data["notes"],
+                idioma=IdiomaEnum[languages_parser.get(
+                    data["language"].capitalize(), "OT")]
+            )
 
-                declaracao = DeclaracaoCreate(
-                    titulo=data["name"],
-                    contextualizacao=data["legend"],
-                    formatacao_entrada=data["input"],
-                    formatacao_saida=data["output"],
-                    tutorial=data["tutorial"],
-                    observacao=data["notes"],
-                    idioma=IdiomaEnum[languages_parser.get(
-                        data["language"].capitalize(), "OT")]
-                )
-
-                problema.declaracoes.append(declaracao)
+            problema.declaracoes.append(declaracao)
 
         except Exception:
             raise HTTPException(
                 status.HTTP_500_INTERNAL_SERVER_ERROR,
                 "Ocorreu um erro ao processar as declarações do problema!"
             )
+
+    def process_properties_json(zip, filename):
+        with zip.open(filename) as statement:
+            content = statement.read().decode()
+            data = json.loads(content)
+
+            process_declaracoes(data)
 
     def process_entrada_verificador_teste(zip: zipfile.ZipFile, directory: str):
         try:
@@ -821,7 +824,7 @@ async def upload(
 
             # Processa o statement de cada idioma
             if filename.startswith("statements/") and filename.endswith("problem-properties.json"):
-                process_declaracoes(zip, filename)
+                process_properties_json(zip, filename)
 
     data = await create_problema_upload(
         db=db,
