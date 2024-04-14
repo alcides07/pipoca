@@ -5,7 +5,7 @@
       <a href="#funcionalidades">Funcionalidades</a> •
       <a href="#estrutura-do-projeto">Estrutura do Projeto</a>  •     
       <a href="#contribuicao">Contribuição</a> •
-      <a href="#membros">Membros</a> 
+      <a href="#autores">Autores</a> 
     </div>
   </section>
 
@@ -19,7 +19,7 @@ Somos uma plataforma web dedicada a competições de programação e resolução
 
 #### ✅ Criação de problemas
 
-> _Desenvolva seus próprios desafios de programação de forma detalhada. Defina as regras, crie os testes e veja como a comunidade se sai na resolução._
+> _Desenvolva seus próprios desafios de programação de forma detalhada. Defina as regras e veja como a comunidade se sai na resolução._
 
 #### ✅ Resolução de problemas
 
@@ -27,7 +27,7 @@ Somos uma plataforma web dedicada a competições de programação e resolução
 
 #### ⏳ Turmas
 
-> _Organize seus alunos em turmas, atribua problemas e acompanhe o progresso de cada um._
+> _Organize seus alunos em turmas, atribua problemas e listas de exercícios e acompanhe o progresso de cada um._
 
 #### ⏳ Listas de exercícios
 
@@ -41,11 +41,11 @@ Este repositório está estruturado de forma a separar o lado do servidor (_back
 
 #### 🖥️ Back-End
 
-O código-fonte do _back-end_ e da _API_ da PIPOCA pode ser encontrado no diretório [backend](./backend/). Este diretório contém todos os arquivos e códigos necessários para o funcionamento do servidor, incluindo a lógica de negócios, a manipulação de dados e a comunicação com o banco de dados.
+O código-fonte e todas as instruções acerca do _back-end_ e da _API_ da PIPOCA podem ser encontrados no diretório [backend](./backend/). Este diretório contém todos os arquivos e códigos necessários para o funcionamento do servidor, incluindo a lógica de negócios, a manipulação de dados e a comunicação com o banco de dados.
 
 #### 🖼️ Front-End
 
-O código-fonte do _front-end_ da PIPOCA pode ser encontrado no diretório [frontend](./frontend/). Este diretório contém todos os arquivos e códigos relacionados à interface do usuário, incluindo HTML, CSS, JavaScript e quaisquer frameworks ou bibliotecas utilizadas para aprimorar a experiência do usuário.
+O código-fonte e todas as instruções acerca do _front-end_ da PIPOCA podem ser encontrados no diretório [frontend](./frontend/). Este diretório contém todos os arquivos e códigos relacionados à interface do usuário, incluindo HTML, CSS, JavaScript e quaisquer frameworks ou bibliotecas utilizadas para aprimorar a experiência do usuário.
 
 #### 📜 Documentação
 
@@ -53,12 +53,27 @@ A documentação completa do projeto está disponível no diretório [doc](./doc
 
 <hr>
 
-## <div id="contribuicao">🤝 Contribuição</div>
+## <div id="autores">👥 Autores</div>
 
-Em breve...
+<table style>
+  <tr>
+    <td align="center"><a href="https://github.com/alcides07">
+        <img style="border-radius: 50%;" src="https://avatars.githubusercontent.com/u/84922660?v=4" width="100px;" alt=""/>
+        <br />
+        <a href="https://github.com/alcides07"><b>Alcides Dantas </b></a><br> (back-end)
+    </td>
+    <td align="center"><a href="https://github.com/IsraelKleber">
+        <img style="border-radius: 50%;" src="https://avatars.githubusercontent.com/u/94148869?v=4" width="100px;" alt=""/>
+        <br />
+        <a href="https://github.com/IsraelKleber"><b>Israel Kleber</b></a><br> (front-end)
+    </td>
+  </tr>
+  <tr>
+  </tr>
+</table>
 
 <hr>
 
-## <div id="membros">👥 Membros</div>
+## <div id="contribuicao">🤝 Contribuição</div>
 
 Em breve...
