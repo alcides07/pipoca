@@ -257,3 +257,23 @@ def test_create_problema_resposta_de_problema_privado_com_user_qualquer():
     assert response.status_code == 401
 
     resume_dependencies()
+
+
+def test_create_problema_resposta_com_linguagem_nao_permitida():
+    remove_dependencies()
+
+    _, token_user_criador_problema, _ = create_user_helper()
+    _, token_user_resposta, _ = create_user_helper()
+
+    response = create_problema_resposta_helper(
+        token_user_criador_problema=token_user_criador_problema,
+        token_user_resposta=token_user_resposta,
+        problema_privado=True,
+        path_problema="./tests/integration/example_problem.zip",
+        resposta=JSON_PROBLEMA_RESPOSTA["resposta"],
+        linguagem=CompilersEnum("ruby.3")
+    )
+
+    assert response.status_code == 400
+
+    resume_dependencies()
