@@ -4,10 +4,12 @@
   <div>
     <a href="#principais-funcionalidades">Funcionalidades</a> •
     <a href="#estrutura-do-projeto">Estrutura do Projeto</a>  •
-    <a href="#contribuicao">Contribuição</a> •
-    <a href="#membros">Membros</a> 
+    <a href="#contribuição-">Contribuição</a> •
+    <a href="#membros-">Membros</a> 
   </div>
 </section>
+
+<hr>
 
 Olá, seja bem vindo ao repositório da **PIPOCA**! 🍿
 
