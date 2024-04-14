@@ -268,7 +268,7 @@ def test_create_problema_resposta_com_linguagem_nao_permitida():
     response = create_problema_resposta_helper(
         token_user_criador_problema=token_user_criador_problema,
         token_user_resposta=token_user_resposta,
-        problema_privado=True,
+        problema_privado=False,
         path_problema="./tests/integration/example_problem.zip",
         resposta=JSON_PROBLEMA_RESPOSTA["resposta"],
         linguagem=CompilersEnum("ruby.3")
