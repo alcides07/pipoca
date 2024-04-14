@@ -1,5 +1,6 @@
 import os
 import json
+import re
 import zipfile
 import tempfile
 import xml.etree.ElementTree as ET
@@ -685,66 +686,57 @@ async def upload(
             content = xml.read().decode()
             data = ET.fromstring(content)
 
-            # Atribui o tempo limite
             process_tempo_limite(data)
 
-            # Atribui a memória limite
             process_memoria_limite(data)
 
-            # Atribui o nome do problema
             process_name(data)
 
-            # Atribui todos os testes do problema
             process_tests(data)
 
-            # Atribui todas as tags
             process_tags(data)
 
-            # Atribui todos os arquivos de recursos
             process_files_recursos(data)
 
-            # Atribui todos os arquivos de solução
             process_files_solucao(data)
 
-            # Atribui o verificador
             process_verificador(data)
 
-            # Atribui os testes do verificador
             process_verificador_teste(data)
 
-            # Atribui o validador
             process_validador(data)
 
-            # Atribui os testes do validador
             process_validador_teste(data)
 
-    def process_declaracoes(data):
+    def process_declaracoes(zip, filename):
         try:
-            declaracao = DeclaracaoCreate(
-                titulo=data["name"],
-                contextualizacao=data["legend"],
-                formatacao_entrada=data["input"],
-                formatacao_saida=data["output"],
-                tutorial=data["tutorial"],
-                observacao=data["notes"],
-                idioma=IdiomaEnum[languages_parser.get(
-                    data["language"].capitalize(), "OT")]
-            )
+            with zip.open(filename) as statement:
+                content = statement.read().decode()
+                data = json.loads(content)
 
-            problema.declaracoes.append(declaracao)
+                declaracao = DeclaracaoCreate(
+                    titulo=data["name"],
+                    contextualizacao=data["legend"],
+                    formatacao_entrada=data["input"],
+                    formatacao_saida=data["output"],
+                    tutorial=data["tutorial"],
+                    observacao=data["notes"],
+                    idioma=IdiomaEnum[languages_parser.get(
+                        data["language"].capitalize(), "OT")]
+                )
+
+                imagens = re.findall(
+                    r'\\includegraphics\[.*\]\{(.*?)\}', data["legend"])
+
+                problema.declaracoes.append(declaracao)
+
+                return imagens
 
         except Exception:
             raise HTTPException(
                 status.HTTP_500_INTERNAL_SERVER_ERROR,
                 "Ocorreu um erro ao processar as declarações do problema!"
             )
-
-    def process_properties_json(zip, filename):
-        with zip.open(filename) as statement:
-            content = statement.read().decode()
-            data = json.loads(content)
-
-            process_declaracoes(data)
 
     def process_entrada_verificador_teste(zip: zipfile.ZipFile, directory: str):
         try:
@@ -809,7 +801,6 @@ async def upload(
     with zipfile.ZipFile(temp_file, 'r') as zip:
         for filename in zip.namelist():
 
-            # Processa o xml global do problema
             if filename.lower() == "problem.xml":
                 await process_xml(zip, filename)
 
@@ -821,11 +812,8 @@ async def upload(
                 process_entrada_teste_manual(
                     zip, "tests/"
                 )
-
-            # Processa o statement de cada idioma
             if filename.startswith("statements/") and filename.endswith("problem-properties.json"):
-                process_properties_json(zip, filename)
-
+                process_declaracoes(zip, filename)
     data = await create_problema_upload(
         db=db,
         problema=problema,
