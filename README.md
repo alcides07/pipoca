@@ -27,7 +27,7 @@ Somos uma plataforma web dedicada a competições de programação e resolução
 
 #### ⏳ Turmas
 
-> _Organize seus alunos em turmas, atribua problemas e listas de exercícios e acompanhe o progresso de cada um._
+> _Organize seus alunos em turmas, atribua listas de exercícios e acompanhe o progresso de cada um._
 
 #### ⏳ Listas de exercícios
 
