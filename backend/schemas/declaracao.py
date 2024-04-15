@@ -74,12 +74,12 @@ class DeclaracaoReadSimple(DeclaracaoBase):
 class DeclaracaoCreate(DeclaracaoBaseFull):
     imagens: Optional[list[str]] = Field(
         default=None,
-        description="Caminhos de imagens exibidas na declaração de um problema"
+        description="Nomes de imagens exibidas na declaração de um problema"
     )
 
-    imagens_arquivos: Optional[list[bytes]] = Field(
+    imagens_arquivos: Optional[list[str]] = Field(
         default=None,
-        description="Conteúdo de imagens exibidas da declaração de um problema"
+        description="Caminhos de imagens exibidas da declaração de um problema"
     )
 
 
