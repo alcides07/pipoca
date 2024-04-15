@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import problemaService from "@/services/models/problemaService";
-import { iDataProblema } from "@/interfaces/iProblemas";
 import { DataTable } from "@/components/table";
 import { problemaColumns } from "@/components/table/columns/problemaColumns";
 import { Button } from "@/components/ui/button";
@@ -8,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Toaster } from "@/components/ui/toaster";
 import { useNavigate } from "react-router-dom";
 import ImportaProblema from "../CadastraProblema/components/importaProblema";
+import { iDataProblema } from "@/interfaces/models/iProblema";
 
 function ListaProblema() {
 	const [problemas, setProblemas] = useState<iDataProblema[]>([]);
@@ -17,11 +17,11 @@ function ListaProblema() {
 		handleProblem();
 	}, []);
 
-  async function handleProblem() {
-    await problemaService.getProblemas().then((response) => {
-      setProblemas(response.data);
-    });
-  }
+	async function handleProblem() {
+		await problemaService.getProblemas().then((response) => {
+			setProblemas(response.data);
+		});
+	}
 
 	function cadastraProblema(): void {
 		navigate("/problema/cadastro");
