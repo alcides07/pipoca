@@ -236,7 +236,7 @@ function RespondeProblema({ children }: RespondeProblemaProps) {
                         <Separator className="my-4" />
                         {testesExemplos != undefined ? (
                           <Table className="border rounded mb-8">
-                            <TableHeader>
+                            <TableHeader className="bg-slate-100">
                               <TableRow className="divide-y divide-slate-200">
                                 <TableHead className="text-center">
                                   Exemplos de Entrada
