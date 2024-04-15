@@ -714,8 +714,9 @@ async def upload(
                 content = statement.read().decode()
                 data = json.loads(content)
 
-                imagens = re.findall(
-                    r'\\includegraphics\[.*\]\{(.*?)\}', data["legend"])
+                nomes_imagens = re.findall(
+                    r'\\includegraphics\[.*\]\{(.*?)\}', data["legend"]
+                )
 
                 declaracao = DeclaracaoCreate(
                     titulo=data["name"],
@@ -723,11 +724,20 @@ async def upload(
                     formatacao_entrada=data["input"],
                     formatacao_saida=data["output"],
                     tutorial=data["tutorial"],
-                    imagens=imagens,
+                    imagens=nomes_imagens,
+                    imagens_arquivos=[],
                     observacao=data["notes"],
                     idioma=IdiomaEnum[languages_parser.get(
                         data["language"].capitalize(), "OT")]
                 )
+
+                for imagem in nomes_imagens:
+                    partes_filename = filename.split('/')
+                    endereco_statement = '/'.join(partes_filename[:-1])
+                    caminho_imagem = os.path.join(endereco_statement, imagem)
+
+                    if (declaracao.imagens_arquivos):
+                        declaracao.imagens_arquivos.append(caminho_imagem)
 
                 problema.declaracoes.append(declaracao)
 
