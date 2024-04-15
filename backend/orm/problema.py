@@ -112,7 +112,7 @@ def create_declaracoes(db, declaracao, db_problema):
     declaracao.idioma = str(declaracao.idioma.value)
 
     db_declaracao = Declaracao(
-        **declaracao.model_dump())
+        **declaracao.model_dump(exclude=set(["imagens_arquivos"])))
     db.add(db_declaracao)
     db_problema.declaracoes.append(db_declaracao)
 
@@ -131,6 +131,21 @@ def create_testes(db, teste, db_problema):
     db_teste = ProblemaTeste(**teste.model_dump())
     db.add(db_teste)
     db_problema.testes.append(db_teste)
+
+
+def process_imagens_declaracoes(declaracoes: Declaracao):
+    for declaracao in declaracoes:
+        caminho_diretorio = f"static/problema/{declaracao.problema_id}/declaracao/{declaracao.id}"
+        if not os.path.exists(caminho_diretorio):
+            os.makedirs(caminho_diretorio)
+
+            for imagem in declaracao.imagens:
+                caminho_imagem = os.path.join(
+                    caminho_diretorio, imagem)
+                print(f"Imagem {imagem} da declaração {declaracao.id}")
+
+                with open(caminho_imagem, "wb") as buffer:
+                    buffer.write(imagem.file.read())
 
 
 async def create_problema_upload(
@@ -175,6 +190,8 @@ async def create_problema_upload(
 
         db.commit()
         db.refresh(db_problema)
+
+        process_imagens_declaracoes(db_problema.declaracoes)
 
         return db_problema
 
