@@ -714,23 +714,22 @@ async def upload(
                 content = statement.read().decode()
                 data = json.loads(content)
 
+                imagens = re.findall(
+                    r'\\includegraphics\[.*\]\{(.*?)\}', data["legend"])
+
                 declaracao = DeclaracaoCreate(
                     titulo=data["name"],
                     contextualizacao=data["legend"],
                     formatacao_entrada=data["input"],
                     formatacao_saida=data["output"],
                     tutorial=data["tutorial"],
+                    imagens=imagens,
                     observacao=data["notes"],
                     idioma=IdiomaEnum[languages_parser.get(
                         data["language"].capitalize(), "OT")]
                 )
 
-                imagens = re.findall(
-                    r'\\includegraphics\[.*\]\{(.*?)\}', data["legend"])
-
                 problema.declaracoes.append(declaracao)
-
-                return imagens
 
         except Exception:
             raise HTTPException(
@@ -805,15 +804,20 @@ async def upload(
                 await process_xml(zip, filename)
 
                 process_entrada_verificador_teste(
-                    zip, "files/tests/checker-tests/")
+                    zip, "files/tests/checker-tests/"
+                )
+
                 process_entrada_validador_teste(
-                    zip, "files/tests/validator-tests/")
+                    zip, "files/tests/validator-tests/"
+                )
 
                 process_entrada_teste_manual(
                     zip, "tests/"
                 )
+
             if filename.startswith("statements/") and filename.endswith("problem-properties.json"):
                 process_declaracoes(zip, filename)
+
     data = await create_problema_upload(
         db=db,
         problema=problema,
