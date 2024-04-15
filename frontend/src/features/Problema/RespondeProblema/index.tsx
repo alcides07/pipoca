@@ -37,6 +37,17 @@ import { Toaster } from "@/components/ui/toaster";
 import { iDataProblema } from "@/interfaces/models/iProblema";
 import { Badge } from "@/components/ui/badge";
 import Loading from "@/components/loading";
+import { iTestesExemplos } from "@/interfaces/models/iTeste";
+
+import {
+	Table,
+	TableBody,
+	TableCaption,
+	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow,
+} from "@/components/ui/table";
 
 const FormSchema = z.object({
 	linguagem: z.string().nonempty("Selecione uma linguagem de programação!"),
@@ -58,6 +69,10 @@ function RespondeProblema({ children }: RespondeProblemaProps) {
 	const [problema, setProblema] = useState<iDataProblema>();
 	const [rows, setRows] = useState(1);
 	const [isLoading, setIsLoading] = useState(false);
+	const [testesExemplos, setTestesExemplos] = useState<iTestesExemplos[]>();
+	const [loadingProblema, setLoadingProblema] = useState(true);
+	const [loadingProblemaExemplos, setLoadingProblemaExemplos] =
+		useState(true);
 
 	const form = useForm<z.infer<typeof FormSchema>>({
 		resolver: zodResolver(FormSchema),
@@ -108,13 +123,29 @@ function RespondeProblema({ children }: RespondeProblemaProps) {
 	}
 
 	useEffect(() => {
-		getProblem();
+		obtemProblema();
 	}, []);
 
-	async function getProblem() {
+	useEffect(() => {
+		if (problema != undefined) obtemTestesExemplos();
+	}, [problema]);
+
+	async function obtemProblema() {
+		setLoadingProblema(true);
+
 		await problemaService.getProblemaById(id).then((response) => {
 			setProblema(response.data);
 		});
+		setLoadingProblema(false);
+	}
+
+	async function obtemTestesExemplos() {
+		setLoadingProblemaExemplos(true);
+		await problemaService.testesExemplosProblema(id).then((response) => {
+			console.log("testes:", response.data);
+			setTestesExemplos(response.data);
+		});
+		setLoadingProblemaExemplos(false);
 	}
 
 	return (
@@ -148,7 +179,7 @@ function RespondeProblema({ children }: RespondeProblemaProps) {
 						<ResizableHandle disabled className="bg-white" />
 						<ResizablePanel
 							defaultSize={40}
-							className="m-1 px-0 flex justify-center items-center">
+							className="m-1 px-0 h-full flex justify-center items-center">
 							<span className="text-xs font-bold flex justify-center">
 								Tags
 							</span>
@@ -172,48 +203,113 @@ function RespondeProblema({ children }: RespondeProblemaProps) {
 						direction="horizontal"
 						className="min-h-[200px]">
 						<ResizablePanel defaultSize={60}>
-							<ScrollArea className="h-full w-full">
-								<div className="flex h-full justify-center overflow-y-auto px-10">
-									{problema && problema.declaracoes[0] && (
-										<div>
-											<h2 className="text-3xl font-bold my-5">
-												{problema.declaracoes[0].titulo}
-											</h2>
-											<Separator className="my-4" />
+							{problema != undefined && problema != null ? (
+								<ScrollArea className="h-full w-full">
+									<div className="flex h-full w-full px-10">
+										{problema &&
+											problema.declaracoes[0] && (
+												<div className="w-full">
+													<h2 className="text-3xl font-bold my-5">
+														{
+															problema
+																.declaracoes[0]
+																.titulo
+														}
+													</h2>
+													<Separator className="my-4" />
 
-											<p className="pb-5 text-justify">
-												{
-													problema.declaracoes[0]
-														.contextualizacao
-												}
-											</p>
-											<div className="pb-5">
-												<span className="text-ms font-bold">
-													Entrada
-												</span>
-												<p>
-													{
-														problema.declaracoes[0]
-															.formatacao_entrada
-													}
-												</p>
-											</div>
-											<div>
-												<span className="text-ms font-bold">
-													Saída
-												</span>
-												<p>
-													{
-														problema.declaracoes[0]
-															.formatacao_saida
-													}
-												</p>
-											</div>
-											<Separator className="my-4" />
-										</div>
-									)}
-								</div>
-							</ScrollArea>
+													<p className="pb-5 text-justify">
+														{
+															problema
+																.declaracoes[0]
+																.contextualizacao
+														}
+													</p>
+													<div className="pb-5">
+														<span className="text-ms font-bold">
+															Entrada
+														</span>
+														<p>
+															{
+																problema
+																	.declaracoes[0]
+																	.formatacao_entrada
+															}
+														</p>
+													</div>
+													<div>
+														<span className="text-ms font-bold">
+															Saída
+														</span>
+														<p>
+															{
+																problema
+																	.declaracoes[0]
+																	.formatacao_saida
+															}
+														</p>
+													</div>
+													<Separator className="my-4" />
+													{testesExemplos !=
+													undefined ? (
+														<Table className="border rounded mb-8">
+															<TableHeader>
+																<TableRow className="divide-y divide-slate-200">
+																	<TableHead className="text-center">
+																		Exemplos
+																		de
+																		Entrada
+																	</TableHead>
+																	<TableHead className="text-center">
+																		Exemplos
+																		de Saída
+																	</TableHead>
+																</TableRow>
+															</TableHeader>
+															<TableBody>
+																{testesExemplos.map(
+																	(
+																		teste,
+																		index
+																	) => (
+																		<TableRow
+																			key={
+																				index
+																			}>
+																			<TableCell className="border rounded">
+																				{
+																					teste.entrada
+																				}
+																			</TableCell>
+																			<TableCell className="">
+																				{
+																					teste.saida
+																				}
+																			</TableCell>
+																		</TableRow>
+																	)
+																)}
+															</TableBody>
+														</Table>
+													) : (
+														<Loading
+															isLoading={
+																loadingProblemaExemplos
+															}
+															className="text-gray-300 w-[3rem] h-[3rem] flex justify-center items-center"
+														/>
+													)}
+												</div>
+											)}
+									</div>
+								</ScrollArea>
+							) : (
+								<Loading
+									className="text-gray-300 w-[3rem] h-[3rem] flex justify-center items-center"
+									isLoading={loadingProblema}
+									divHeight="h-full"
+								/>
+							)}
 						</ResizablePanel>
 						<ResizableHandle withHandle />
 						<ResizablePanel defaultSize={40}>
@@ -293,7 +389,7 @@ function RespondeProblema({ children }: RespondeProblemaProps) {
 											/>
 											<Button
 												type="submit"
-												className="w-full"
+												className="w-full text-white"
 												disabled={isLoading}>
 												{isLoading ? (
 													<Loading

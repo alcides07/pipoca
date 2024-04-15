@@ -7,3 +7,8 @@ export interface iTestes {
   problema_id: number;
   id: number;
 }
+
+export interface iTestesExemplos {
+  entrada: string;
+  saida: string;
+}
