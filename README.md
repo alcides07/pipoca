@@ -4,8 +4,8 @@
     <div>
       <a href="#funcionalidades">Funcionalidades</a> •
       <a href="#estrutura-do-projeto">Estrutura do Projeto</a>  •     
-      <a href="#contribuicao">Contribuição</a> •
-      <a href="#autores">Autores</a> 
+      <a href="#autores">Autores</a> •
+      <a href="#contribuicao">Contribuição</a> 
     </div>
   </section>
 
