@@ -659,33 +659,34 @@ async def execute_arquivo_solucao_com_testes_exemplo(
 
     testes_executados: list[ProblemaTesteExecutado] = []
 
-    with tempfile.NamedTemporaryFile() as temp_solucao, tempfile.NamedTemporaryFile() as temp_teste_solucao:
+    try:
+        for teste in testes:
+            try:
+                container = client.containers.create(
+                    image=image,
+                    command=command,
+                    detach=True,
+                    volumes=volumes,
+                    working_dir=WORKING_DIR
+                )
 
-        try:
-            container = client.containers.create(
-                image=image,
-                command=command,
-                detach=True,
-                volumes=volumes,
-                working_dir=WORKING_DIR
-            )
+                with tempfile.NamedTemporaryFile(delete=False) as temp_codigo_solucao:
+                    temp_codigo_solucao.write(codigo_solucao.encode())
+                    TEMP_CODIGO_SOLUCAO = temp_codigo_solucao.name
 
-            for teste in testes:
-                temp_solucao.write(codigo_solucao.encode())
-                temp_teste_solucao.write(teste.encode())
-
-                temp_solucao.seek(0)
-                temp_teste_solucao.seek(0)
+                with tempfile.NamedTemporaryFile(delete=False) as temp_teste_problema:
+                    temp_teste_problema.write(teste.encode())
+                    TEMP_TESTE_PROBLEMA = temp_teste_problema.name
 
                 tarstream = io.BytesIO()
                 tar = tarfile.TarFile(fileobj=tarstream, mode='w')
 
                 tar.add(
-                    name=temp_solucao.name,
+                    name=TEMP_CODIGO_SOLUCAO,
                     arcname=f'{WORKING_DIR}/{FILENAME_RUN}{extension}'
                 )
                 tar.add(
-                    name=temp_teste_solucao.name,
+                    name=TEMP_TESTE_PROBLEMA,
                     arcname=f'{WORKING_DIR}/{INPUT_TEST_FILENAME}'
                 )
 
@@ -700,14 +701,14 @@ async def execute_arquivo_solucao_com_testes_exemplo(
                 container.wait()  # type: ignore
 
                 stdout_logs = container.logs(  # type: ignore
-                    stdout=True, stderr=False)
+                    stdout=True, stderr=False
+                ).decode()
+
                 stderr_logs = container.logs(  # type: ignore
-                    stdout=False, stderr=True)
+                    stdout=False, stderr=True
+                ).decode()
 
-                stdout_logs_decode = stdout_logs.decode()
-                stderr_logs_decode = stderr_logs.decode()
-
-                if (stderr_logs_decode != ""):
+                if (stderr_logs != ""):
                     raise HTTPException(
                         status.HTTP_500_INTERNAL_SERVER_ERROR,
                         "O arquivo de solução oficial do problema possui alguma falha!"
@@ -715,21 +716,25 @@ async def execute_arquivo_solucao_com_testes_exemplo(
 
                 teste_executado = ProblemaTesteExecutado(
                     entrada=teste,
-                    saida=stdout_logs_decode
+                    saida=stdout_logs
                 )
 
                 testes_executados.append(teste_executado)
 
-        except DockerException:
-            raise HTTPException(
-                status.HTTP_500_INTERNAL_SERVER_ERROR,
-                "Ocorreu um erro no processamento do arquivo de solução oficial do problema!"
-            )
+            finally:
+                container.stop()  # type: ignore
+                container.remove()  # type: ignore
+                os.remove(TEMP_CODIGO_SOLUCAO)
+                os.remove(TEMP_TESTE_PROBLEMA)
 
-        finally:
-            container.stop()  # type: ignore
-            container.remove()  # type: ignore
-            volume.remove()  # type: ignore
+    except DockerException:
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            "Ocorreu um erro no processamento do arquivo de solução oficial do problema!"
+        )
+
+    finally:
+        volume.remove()  # type: ignore
 
     return testes_executados
 
