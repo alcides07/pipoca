@@ -45,7 +45,7 @@ O código-fonte e todas as instruções acerca do _back-end_ e da _API_ da PIPOC
 
 #### 🖼️ Front-End
 
-O código-fonte e todas as instruções acerca do _front-end_ da PIPOCA podem ser encontrados no diretório [frontend](./frontend/). Este diretório contém todos os arquivos e códigos relacionados à interface do usuário, incluindo HTML, CSS, JavaScript e quaisquer frameworks ou bibliotecas utilizadas para aprimorar a experiência do usuário.
+O código-fonte e todas as instruções acerca do _front-end_ da PIPOCA podem ser encontrados no diretório [frontend](./frontend/). Este diretório contém todos os arquivos e códigos relacionados à interface do usuário, incluindo HTML, CSS, JavaScript, frameworks e bibliotecas utilizadas para aprimorar a experiência do usuário.
 
 #### 📜 Documentação
 
