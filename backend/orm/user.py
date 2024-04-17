@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from models.user import User
 from schemas.user import UserCreate, UserUpdatePartial, UserUpdateTotal
 from passlib.context import CryptContext
+from decouple import config
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -121,7 +122,11 @@ async def create_imagem_user(
     if (is_user(user) and db_user.id != user.id):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED)
 
-    caminho_diretorio = f"static/users/profile/{user.id}"
+    static_files_path = str(config("STATIC_FILES_PATH"))
+    caminho_diretorio = os.path.join(
+        static_files_path,
+        f"users-profile-{user.id}"
+    )
 
     if not os.path.exists(caminho_diretorio):
         os.makedirs(caminho_diretorio)
