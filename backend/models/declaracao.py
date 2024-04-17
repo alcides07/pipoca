@@ -60,5 +60,6 @@ class Declaracao(Base):
     )
 
     imagens = Column(
-        ARRAY(String())
+        ARRAY(String()),
+        default=[]
     )
