@@ -144,28 +144,29 @@ def process_imagens_declaracoes(
     try:
         static_files_path = str(config("STATIC_FILES_PATH"))
         for i, db_declaracao in enumerate(declaracoes):
-            caminho_diretorio = os.path.join(
-                static_files_path,
-                f"problema-{db_declaracao.problema_id}/declaracao-{db_declaracao.id}"
-            )
-
-            if not os.path.exists(caminho_diretorio):
-                os.makedirs(caminho_diretorio)
-
-            for j, _ in enumerate(declaracoes_create[i].imagens):
-                caminho_imagem = os.path.join(
-                    caminho_diretorio,
-                    declaracoes_create[i].imagens[j].nome
+            if (bool(db_declaracao.imagens)):
+                caminho_diretorio = os.path.join(
+                    static_files_path,
+                    f"problema-{db_declaracao.problema_id}/declaracao-{db_declaracao.id}"
                 )
 
-                with open(caminho_imagem, "wb") as buffer:
-                    buffer.write(declaracoes_create[i].imagens[j].conteudo)
+                if not os.path.exists(caminho_diretorio):
+                    os.makedirs(caminho_diretorio)
 
-                db_declaracao.imagens = db_declaracao.imagens + \
-                    [caminho_imagem]  # type: ignore
+                for j, _ in enumerate(declaracoes_create[i].imagens):
+                    caminho_imagem = os.path.join(
+                        caminho_diretorio,
+                        declaracoes_create[i].imagens[j].nome
+                    )
 
-                db.commit()
-                db.refresh(db_declaracao)
+                    with open(caminho_imagem, "wb") as buffer:
+                        buffer.write(declaracoes_create[i].imagens[j].conteudo)
+
+                    db_declaracao.imagens = db_declaracao.imagens + \
+                        [caminho_imagem]  # type: ignore
+
+                    db.commit()
+                    db.refresh(db_declaracao)
 
     except SQLAlchemyError:
         db.rollback()
