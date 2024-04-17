@@ -9,7 +9,7 @@ services:
       dockerfile: ./Dockerfile
     command: bash -c "alembic upgrade head && uvicorn main:app --host 0.0.0.0 --reload"
     volumes:
-      - static-volume:/API/backend/static/
+      - static-volume:/API/static/
       - /var/run/docker.sock:/var/run/docker.sock
     ports:
       - "8000:8000"
