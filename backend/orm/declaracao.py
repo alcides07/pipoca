@@ -1,3 +1,5 @@
+import base64
+import os
 from dependencies.authenticated_user import get_authenticated_user
 from dependencies.authorization_user import is_user
 from fastapi import HTTPException, status
@@ -122,3 +124,43 @@ async def update_declaracao(
             status.HTTP_500_INTERNAL_SERVER_ERROR,
             "Ocorreu um erro na atualização da declaração!"
         )
+
+
+async def get_imagens_imagens(
+        db: Session,
+        id: int,
+        token: str
+):
+    db_declaracao = db.query(Declaracao).filter(Declaracao.id == id).first()
+
+    if (not db_declaracao):
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND,
+            "A declaração não foi encontrada!"
+        )
+
+    user = await get_authenticated_user(token, db)
+
+    if (
+        is_user(user)
+        and
+        db_declaracao.problema.privado == True
+        and
+        db_declaracao.problema.usuario_id != user.id
+    ):
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED)
+
+    caminho_diretorio = f"static/problema/{db_declaracao.problema_id}/declaracao/{db_declaracao.id}"
+    lista_imagens: list[str] = []
+
+    if (os.path.exists(caminho_diretorio)):
+        for nome_arquivo in os.listdir(caminho_diretorio):
+            caminho_imagem = os.path.join(caminho_diretorio, nome_arquivo)
+
+            with open(caminho_imagem, "rb") as imagem_file:
+                imagem_base64 = base64.b64encode(
+                    imagem_file.read()).decode()
+
+                lista_imagens.append(imagem_base64)
+
+    return lista_imagens
