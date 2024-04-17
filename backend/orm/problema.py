@@ -36,6 +36,7 @@ from schemas.declaracao import DeclaracaoCreate
 from schemas.problema import ProblemaCreate, ProblemaCreateUpload, ProblemaIntegridade, ProblemaUpdatePartial, ProblemaUpdateTotal
 from models.relationships.problema_tag import problema_tag_relationship
 from schemas.problemaTeste import ProblemaTesteExecutado, TipoTesteProblemaEnum
+from decouple import config
 
 
 def get_unique_nome_problema(
@@ -141,8 +142,13 @@ def process_imagens_declaracoes(
     db: Session
 ):
     try:
+        static_files_path = str(config("STATIC_FILES_PATH"))
         for i, db_declaracao in enumerate(declaracoes):
-            caminho_diretorio = f"static/problema/{db_declaracao.problema_id}/declaracao/{db_declaracao.id}"
+            caminho_diretorio = os.path.join(
+                static_files_path,
+                f"problema-{db_declaracao.problema_id}/declaracao-{db_declaracao.id}"
+            )
+
             if not os.path.exists(caminho_diretorio):
                 os.makedirs(caminho_diretorio)
 
