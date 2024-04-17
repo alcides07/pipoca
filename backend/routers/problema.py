@@ -14,7 +14,7 @@ from routers.user import USER_ID_DESCRIPTION
 from schemas.arquivo import ArquivoCreate, ArquivoReadFull, SecaoEnum
 from schemas.common.compilers import CompilersEnum
 from schemas.common.direction_order_by import DirectionOrderByEnum
-from schemas.declaracao import DeclaracaoCreate, DeclaracaoReadFull
+from schemas.declaracao import DeclaracaoCreate, DeclaracaoImagem, DeclaracaoReadFull
 from schemas.idioma import IdiomaEnum
 from schemas.problemaResposta import ProblemaRespostaReadSimple
 from schemas.problemaTeste import ProblemaTesteCreate, ProblemaTesteExecutado, ProblemaTesteReadFull, TipoTesteProblemaEnum
@@ -724,20 +724,28 @@ async def upload(
                     formatacao_entrada=data["input"],
                     formatacao_saida=data["output"],
                     tutorial=data["tutorial"],
-                    imagens=nomes_imagens,
-                    imagens_arquivos=[],
                     observacao=data["notes"],
+                    imagens=[],
                     idioma=IdiomaEnum[languages_parser.get(
                         data["language"].capitalize(), "OT")]
                 )
 
-                for imagem in nomes_imagens:
+                for nome_imagem in nomes_imagens:
                     partes_filename = filename.split('/')
                     endereco_statement = '/'.join(partes_filename[:-1])
-                    caminho_imagem = os.path.join(endereco_statement, imagem)
+                    caminho_imagem = os.path.join(
+                        endereco_statement, nome_imagem
+                    )
 
-                    if (declaracao.imagens_arquivos):
-                        declaracao.imagens_arquivos.append(caminho_imagem)
+                    with zip.open(caminho_imagem) as file_imagem:
+                        data = file_imagem.read()
+
+                        declaracao_imagem = DeclaracaoImagem(
+                            nome=nome_imagem,
+                            conteudo=data
+                        )
+
+                        declaracao.imagens.append(declaracao_imagem)
 
                 problema.declaracoes.append(declaracao)
 
