@@ -71,15 +71,19 @@ class DeclaracaoReadSimple(DeclaracaoBase):
     )
 
 
-class DeclaracaoCreate(DeclaracaoBaseFull):
-    imagens: Optional[list[str]] = Field(
-        default=None,
-        description="Nomes de imagens exibidas na declaração de um problema"
+class DeclaracaoImagem(BaseModel):
+    nome: str = Field(
+        description="Nome da imagem da declaração"
     )
 
-    imagens_arquivos: Optional[list[str]] = Field(
-        default=None,
-        description="Caminhos de imagens exibidas da declaração de um problema"
+    conteudo: bytes = Field(
+        description="Conteúdo da imagem da declaração"
+    )
+
+
+class DeclaracaoCreate(DeclaracaoBaseFull):
+    imagens: list[DeclaracaoImagem] = Field(
+        description="Imagens da declaração de um problema"
     )
 
 
