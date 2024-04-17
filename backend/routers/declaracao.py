@@ -1,6 +1,6 @@
 from dependencies.is_admin import is_admin_dependencies
 from models.declaracao import Declaracao
-from orm.declaracao import create_declaracao, get_declaracao_by_id, update_declaracao
+from orm.declaracao import create_declaracao, get_declaracao_by_id, get_imagens_imagens, update_declaracao
 from routers.auth import oauth2_scheme
 from dependencies.authenticated_user import get_authenticated_user
 from dependencies.database import get_db
@@ -73,6 +73,29 @@ async def read_id(
 
     return ResponseUnitRequiredSchema(
         data=declaracao
+    )
+
+
+@router.get("/{id}/imagens/",
+            response_model=ResponseListSchema[str],
+            summary="Lista as imagens de uma declaração em base64",
+            responses={
+                404: errors[404]
+            }
+            )
+async def read_imagens_declaracao(
+        id: int = Path(description=DECLARACAO_ID_DESCRIPTION),
+        db: Session = Depends(get_db),
+        token: str = Depends(oauth2_scheme)
+):
+    imagens = await get_imagens_imagens(
+        db=db,
+        id=id,
+        token=token
+    )
+
+    return ResponseListSchema(
+        data=imagens
     )
 
 
