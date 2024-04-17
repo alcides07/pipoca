@@ -150,17 +150,13 @@ async def get_imagens_imagens(
     ):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED)
 
-    caminho_diretorio = f"static/problema/{db_declaracao.problema_id}/declaracao/{db_declaracao.id}"
     lista_imagens: list[str] = []
 
-    if (os.path.exists(caminho_diretorio)):
-        for nome_arquivo in os.listdir(caminho_diretorio):
-            caminho_imagem = os.path.join(caminho_diretorio, nome_arquivo)
+    for caminho_imagem in db_declaracao.imagens:
+        with open(str(caminho_imagem), "rb") as imagem_file:
+            imagem_base64 = base64.b64encode(
+                imagem_file.read()).decode()
 
-            with open(caminho_imagem, "rb") as imagem_file:
-                imagem_base64 = base64.b64encode(
-                    imagem_file.read()).decode()
-
-                lista_imagens.append(imagem_base64)
+            lista_imagens.append(imagem_base64)
 
     return lista_imagens
