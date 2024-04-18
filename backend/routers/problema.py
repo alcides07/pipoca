@@ -23,6 +23,7 @@ from schemas.validadorTeste import ValidadorTesteCreate, VereditoValidadorTesteE
 from schemas.verificador import VerificadorCreate, VerificadorReadFull
 from schemas.verificadorTeste import VereditoVerificadorTesteEnum, VerificadorTesteCreate
 from utils.bytes_to_megabytes import bytes_to_megabytes
+from utils.get_values_from_enum import get_values_from_enum
 from utils.language_parser import languages_parser
 from utils.errors import errors
 from dependencies.authenticated_user import get_authenticated_user
@@ -445,6 +446,14 @@ async def upload(
             with zip.open(path_file) as file:
                 corpo = file.read().decode()
 
+                if (linguagem not in CompilersEnum.__members__):
+                    linguagens_suportadas = get_values_from_enum(CompilersEnum)
+
+                    raise HTTPException(
+                        status.HTTP_400_BAD_REQUEST,
+                        f"A linguagem de um dos arquivos geradores de testes é {linguagem}, que não é suportada no momento. As linguagens atualmente suportadas são: {linguagens_suportadas}"
+                    )
+
                 arquivo = ArquivoCreate(
                     nome=fullname, corpo=corpo, secao=SecaoEnum.GERADOR, linguagem=CompilersEnum(linguagem))
 
@@ -466,7 +475,7 @@ async def upload(
 
     def process_files_solucao(data: ET.Element):
         for solution in data.findall('.//solutions/solution'):
-            status = str(solution.get("tag"))
+            status_solucao = str(solution.get("tag"))
             source = solution.find('source')
 
             if source != None:
@@ -477,8 +486,18 @@ async def upload(
                 with zip.open(path) as file:
                     nome = file.name.split("/")[-1]
                     corpo = file.read().decode()
+
+                    if (linguagem not in CompilersEnum.__members__):
+                        linguagens_suportadas = get_values_from_enum(
+                            CompilersEnum)
+
+                        raise HTTPException(
+                            status.HTTP_400_BAD_REQUEST,
+                            f"A linguagem de um dos arquivos de solução é {linguagem}, que não é suportada no momento. As linguagens atualmente suportadas são: {linguagens_suportadas}"
+                        )
+
                     arquivo = ArquivoCreate(
-                        nome=nome, corpo=corpo, linguagem=CompilersEnum(linguagem), secao=SecaoEnum.SOLUCAO, status=status)
+                        nome=nome, corpo=corpo, linguagem=CompilersEnum(linguagem), secao=SecaoEnum.SOLUCAO, status=status_solucao)
 
                     problema.arquivos.append(arquivo)
 
@@ -506,6 +525,15 @@ async def upload(
                     nome = os.path.basename(file.name)
                     corpo = file.read().decode()
 
+                    if (linguagem not in CompilersEnum.__members__):
+                        linguagens_suportadas = get_values_from_enum(
+                            CompilersEnum)
+
+                        raise HTTPException(
+                            status.HTTP_400_BAD_REQUEST,
+                            f"A linguagem do verificador é {linguagem}, que não é suportada no momento. As linguagens atualmente suportadas são: {linguagens_suportadas}"
+                        )
+
                     verificador = VerificadorCreate(
                         nome=nome, corpo=corpo, linguagem=CompilersEnum(linguagem), testes=[])
 
@@ -521,6 +549,14 @@ async def upload(
             with zip.open(path) as file:
                 nome = os.path.basename(file.name)
                 corpo = file.read().decode()
+
+                if (linguagem not in CompilersEnum.__members__):
+                    linguagens_suportadas = get_values_from_enum(CompilersEnum)
+
+                    raise HTTPException(
+                        status.HTTP_400_BAD_REQUEST,
+                        f"A linguagem do validador é {linguagem}, que não é suportada no momento. As linguagens atualmente suportadas são: {linguagens_suportadas}"
+                    )
 
                 validador = ValidadorCreate(
                     nome=nome, corpo=corpo, linguagem=CompilersEnum(linguagem), testes=[])
