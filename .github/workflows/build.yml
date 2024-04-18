@@ -47,6 +47,8 @@ jobs:
           python-version: 3.10.12
       - name: Install dependencies
         run: pip install -r requirements.txt
+      - name: Create static directory
+        run: mkdir -p static
       - name: Run tox
         run: tox -e py
       - name: Upload coverage to artifacts
