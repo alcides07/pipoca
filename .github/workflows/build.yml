@@ -23,7 +23,6 @@ jobs:
       SECRET_KEY: ${{ secrets.SECRET_KEY }}
       TOKEN_EXPIRE_MINUTES: ${{ secrets.TOKEN_EXPIRE_MINUTES }}
       TEST_ENV: ${{ secrets.TEST_ENV }}
-      STATIC_FILES_PATH: ${{ secrets.STATIC_FILES_PATH }}
       API_BASE_URL: ${{ secrets.API_BASE_URL }}
     services:
       postgres:
