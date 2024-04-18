@@ -1,5 +1,3 @@
-import base64
-import os
 from dependencies.authenticated_user import get_authenticated_user
 from dependencies.authorization_user import is_user
 from fastapi import HTTPException, status
@@ -9,6 +7,7 @@ from models.declaracao import Declaracao
 from models.problema import Problema
 from schemas.declaracao import DeclaracaoCreateSingle, DeclaracaoUpdatePartial, DeclaracaoUpdateTotal
 from schemas.idioma import IdiomaEnum
+from decouple import config
 
 
 async def get_declaracao_by_id(
@@ -151,12 +150,17 @@ async def get_imagens_imagens(
         raise HTTPException(status.HTTP_401_UNAUTHORIZED)
 
     lista_imagens: list[str] = []
+    API_BASE_URL = str(config("API_BASE_URL"))
 
     for caminho_imagem in db_declaracao.imagens:
-        with open(str(caminho_imagem), "rb") as imagem_file:
-            imagem_base64 = base64.b64encode(
-                imagem_file.read()).decode()
+        try:
+            with open(str(caminho_imagem), "rb"):
+                lista_imagens.append(API_BASE_URL + "/" + str(caminho_imagem))
 
-            lista_imagens.append(imagem_base64)
+        except IOError:
+            raise HTTPException(
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+                f"Ocorreu um erro ao tentar localizar a imagem: {caminho_imagem}"
+            )
 
     return lista_imagens
