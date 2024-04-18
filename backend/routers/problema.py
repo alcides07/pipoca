@@ -385,7 +385,8 @@ async def create(
              status_code=201,
              summary="Cadastra um problema via pacote da plataforma Polygon",
              responses={
-                 422: errors[422]
+                 422: errors[422],
+                 400: errors[400]
              }
              )
 async def upload(
