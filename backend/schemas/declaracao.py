@@ -55,6 +55,11 @@ class DeclaracaoReadFull(DeclaracaoBaseFull):
         description=PROBLEMA_ID_DESCRIPTION
     )
 
+    imagens: Optional[list[str]] = Field(
+        default=None,
+        description="Imagens exibidas na declaração do problema"
+    )
+
 
 class DeclaracaoReadSimple(DeclaracaoBase):
     id: int = Field(
