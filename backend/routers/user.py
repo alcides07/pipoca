@@ -82,8 +82,8 @@ async def read_me(
 
 
 @router.get("/{id}/imagem/",
-            response_class=FileResponse,
-            summary="Retorna a imagem de perfil de um usuário",
+            response_model=ResponseUnitRequiredSchema[str],
+            summary="Retorna o endereço para a imagem de perfil de um usuário",
             dependencies=[Depends(get_authenticated_user)],
             responses={
                 404: {"404": 404}
@@ -92,12 +92,14 @@ async def get_imagem(
     id: int = Path(description=USER_ID_DESCRIPTION),
     db: Session = Depends(get_db)
 ):
-    data = await get_imagem_user(
+    imagem = await get_imagem_user(
         id=id,
         db=db
     )
 
-    return FileResponse(data)
+    return ResponseUnitRequiredSchema(
+        data=imagem
+    )
 
 
 @router.get("/{id}/",
@@ -146,7 +148,7 @@ def create(
 
 
 @router.post("/{id}/imagem/",
-             response_class=FileResponse,
+             response_model=ResponseUnitRequiredSchema[str],
              status_code=200,
              summary="Cadastra uma imagem de perfil para um usuário",
              dependencies=[Depends(get_authenticated_user)],
@@ -176,7 +178,9 @@ async def upload_imagem(
         id=id
     )
 
-    return FileResponse(path=data)
+    return ResponseUnitRequiredSchema(
+        data=data
+    )
 
 
 @router.delete("/{id}/imagem/",

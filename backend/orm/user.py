@@ -140,11 +140,14 @@ async def create_imagem_user(
     with open(caminho_imagem, "wb") as buffer:
         buffer.write(imagem.file.read())
 
+    API_BASE_URL = str(config("API_BASE_URL"))
+    endereco_imagem = API_BASE_URL + "/" + caminho_imagem
+
     db_user.caminho_imagem = caminho_imagem  # type: ignore
     db.commit()
     db.refresh(db_user)
 
-    return caminho_imagem
+    return endereco_imagem
 
 
 async def delete_imagem_user(
@@ -199,12 +202,18 @@ async def get_imagem_user(
             "O usuário não foi encontrado!"
         )
 
+    API_BASE_URL = str(config("API_BASE_URL"))
     caminho_imagem = str(db_user.caminho_imagem)
 
-    if (caminho_imagem is None or not os.path.exists(caminho_imagem)):
+    try:
+        with open(caminho_imagem, "rb") as imagem_file:
+            imagem_file.read()
+            endereco_imagem = API_BASE_URL + "/" + caminho_imagem
+
+    except IOError:
         raise HTTPException(
             status.HTTP_404_NOT_FOUND,
             "A imagem de perfil do usuário não foi encontrada!"
         )
 
-    return caminho_imagem
+    return endereco_imagem
