@@ -125,7 +125,7 @@ async def update_declaracao(
         )
 
 
-async def get_imagens_imagens(
+async def get_imagens_declaracao(
         db: Session,
         id: int,
         token: str
