@@ -190,6 +190,27 @@ function EditaDeclaracao({ problemaId }: EditaDeclaracaoProps) {
             </div>
             <FormField
               control={form.control}
+              name="contextualizacao"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Contextualização</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Informe o contexto do problema"
+                      className="min-h-[15rem] text-ms"
+                      rows={rows}
+                      onInput={(e: any) => {
+                        setRows(e.target.scrollHeight / 20);
+                      }}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
               name="formatacao_entrada"
               render={({ field }) => (
                 <FormItem>
