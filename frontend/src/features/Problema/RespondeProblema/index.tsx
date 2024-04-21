@@ -32,14 +32,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import linguagens from "../../../utils/linguagem";
-import { iRespondeProblema } from "@/interfaces/services/iRespondeProblema";
 import { Toaster } from "@/components/ui/toaster";
 import { iDataProblema } from "@/interfaces/models/iProblema";
 import { Badge } from "@/components/ui/badge";
 import Loading from "@/components/loading";
 import { iTestesExemplos } from "@/interfaces/models/iTeste";
 import Latex from "react-latex";
-
 import {
   Table,
   TableBody,
@@ -49,6 +47,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import type { iProblemaResposta } from "@/interfaces/services/iProblemaResposta";
+import ProblemaRespostaService from "@/services/models/problemaRespostaService";
 
 const FormSchema = z.object({
   linguagem: z.string().nonempty("Selecione uma linguagem de programação!"),
@@ -61,11 +61,7 @@ const FormSchema = z.object({
     ),
 });
 
-interface RespondeProblemaProps {
-  children?: React.ReactNode;
-}
-
-function RespondeProblema({ children }: RespondeProblemaProps) {
+function RespondeProblema() {
   const { id } = useParams();
   const [problema, setProblema] = useState<iDataProblema>();
   const [rows, setRows] = useState(1);
@@ -84,16 +80,17 @@ function RespondeProblema({ children }: RespondeProblemaProps) {
 
   async function onSubmit(values: z.infer<typeof FormSchema>) {
     setIsLoading(true);
-    const data: iRespondeProblema = {
+    const data: iProblemaResposta = {
       resposta: values.resposta,
       linguagem: values.linguagem,
-      problema_id: id,
+      problema_id: parseInt(id),
     };
 
-    await problemaService
-      .respondeProblema(data)
-      .then((response) => {
-        if (response.data.erro) {
+    console.log("Resposta", data);
+
+    await ProblemaRespostaService.respondeProblema(data)
+      .then((response: any) => {
+        if (response.erro) {
           toast({
             title: "Erro.",
             description: response.data.erro,
