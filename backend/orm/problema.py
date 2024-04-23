@@ -1,3 +1,4 @@
+import shutil
 import tarfile
 import io
 import os
@@ -31,9 +32,11 @@ from sqlalchemy.exc import SQLAlchemyError
 from models.arquivo import Arquivo
 from models.declaracao import Declaracao
 from models.problema import Problema
+from schemas.declaracao import DeclaracaoCreate
 from schemas.problema import ProblemaCreate, ProblemaCreateUpload, ProblemaIntegridade, ProblemaUpdatePartial, ProblemaUpdateTotal
 from models.relationships.problema_tag import problema_tag_relationship
 from schemas.problemaTeste import ProblemaTesteExecutado, TipoTesteProblemaEnum
+from decouple import config
 
 
 def get_unique_nome_problema(
@@ -112,7 +115,7 @@ def create_declaracoes(db, declaracao, db_problema):
     declaracao.idioma = str(declaracao.idioma.value)
 
     db_declaracao = Declaracao(
-        **declaracao.model_dump())
+        **declaracao.model_dump(exclude=set(["imagens"])))
     db.add(db_declaracao)
     db_problema.declaracoes.append(db_declaracao)
 
@@ -131,6 +134,45 @@ def create_testes(db, teste, db_problema):
     db_teste = ProblemaTeste(**teste.model_dump())
     db.add(db_teste)
     db_problema.testes.append(db_teste)
+
+
+def process_imagens_declaracoes(
+    declaracoes: list[Declaracao],
+    declaracoes_create: list[DeclaracaoCreate],
+    db: Session
+):
+    try:
+        for i, db_declaracao in enumerate(declaracoes):
+            caminho_diretorio = f"static/problema-{db_declaracao.problema_id}/declaracao-{db_declaracao.id}"
+
+            if not os.path.exists(caminho_diretorio):
+                os.makedirs(caminho_diretorio)
+
+            for j, _ in enumerate(declaracoes_create[i].imagens):
+                caminho_imagem = os.path.join(
+                    caminho_diretorio,
+                    declaracoes_create[i].imagens[j].nome
+                )
+
+                with open(caminho_imagem, "wb") as buffer:
+                    buffer.write(declaracoes_create[i].imagens[j].conteudo)
+
+                db_declaracao.imagens = db_declaracao.imagens + \
+                    [caminho_imagem]  # type: ignore
+
+                db.commit()
+                db.refresh(db_declaracao)
+
+    except SQLAlchemyError:
+        db.rollback()
+
+        if os.path.exists(caminho_diretorio):
+            shutil.rmtree(caminho_diretorio)
+
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            "Ocorreu um erro no armazenamento das imagens da declaração!"
+        )
 
 
 async def create_problema_upload(
@@ -175,6 +217,12 @@ async def create_problema_upload(
 
         db.commit()
         db.refresh(db_problema)
+
+        process_imagens_declaracoes(
+            declaracoes=db_problema.declaracoes,
+            declaracoes_create=problema.declaracoes,
+            db=db
+        )
 
         return db_problema
 
