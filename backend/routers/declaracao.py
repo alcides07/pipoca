@@ -78,7 +78,7 @@ async def read_id(
 
 @router.get("/{id}/imagens/",
             response_model=ResponseListSchema[str],
-            summary="Lista as imagens de uma declaração em base64",
+            summary="Lista as imagens de uma declaração",
             responses={
                 404: errors[404]
             }
