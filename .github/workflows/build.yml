@@ -23,6 +23,7 @@ jobs:
       SECRET_KEY: ${{ secrets.SECRET_KEY }}
       TOKEN_EXPIRE_MINUTES: ${{ secrets.TOKEN_EXPIRE_MINUTES }}
       TEST_ENV: ${{ secrets.TEST_ENV }}
+      API_BASE_URL: ${{ secrets.API_BASE_URL }}
     services:
       postgres:
         image: postgres:16
@@ -47,6 +48,8 @@ jobs:
           python-version: 3.10.12
       - name: Install dependencies
         run: pip install -r requirements.txt
+      - name: Create static directory
+        run: mkdir -p static
       - name: Run tox
         run: tox -e py
       - name: Upload coverage to artifacts
