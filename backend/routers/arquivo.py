@@ -11,7 +11,7 @@ from dependencies.authenticated_user import get_authenticated_user
 from schemas.common.pagination import PaginationSchema
 from dependencies.database import get_db
 from sqlalchemy.orm import Session
-from schemas.common.response import ResponsePaginationSchema, ResponseUnitSchema
+from schemas.common.response import ResponsePaginationSchema, ResponseUnitRequiredSchema
 
 
 router = APIRouter(
@@ -45,7 +45,7 @@ async def read(
 
 
 @router.get("/{id}/",
-            response_model=ResponseUnitSchema[ArquivoReadFull],
+            response_model=ResponseUnitRequiredSchema[ArquivoReadFull],
             summary="Lista um arquivo",
             responses={
                 404: errors[404]
@@ -64,13 +64,13 @@ async def read_id(
         path_has_user_key="problema"
     )
 
-    return ResponseUnitSchema(
+    return ResponseUnitRequiredSchema(
         data=arquivo
     )
 
 
 @router.post("/",
-             response_model=ResponseUnitSchema[ArquivoReadFull],
+             response_model=ResponseUnitRequiredSchema[ArquivoReadFull],
              status_code=201,
              summary="Cadastra um arquivo",
              responses={
@@ -89,11 +89,11 @@ async def create(
         arquivo=arquivo,
     )
 
-    return ResponseUnitSchema(data=arquivo)
+    return ResponseUnitRequiredSchema(data=arquivo)
 
 
 @router.put("/{id}/",
-            response_model=ResponseUnitSchema[ArquivoReadFull],
+            response_model=ResponseUnitRequiredSchema[ArquivoReadFull],
             summary="Atualiza um arquivo por completo",
             responses={
                 404: errors[404]
@@ -112,13 +112,13 @@ async def total_update(
         arquivo=arquivo,
         token=token
     )
-    return ResponseUnitSchema(
+    return ResponseUnitRequiredSchema(
         data=response
     )
 
 
 @router.patch("/{id}/",
-              response_model=ResponseUnitSchema[ArquivoReadFull],
+              response_model=ResponseUnitRequiredSchema[ArquivoReadFull],
               summary="Atualiza um arquivo parcialmente",
               responses={
                   404: errors[404]
@@ -137,7 +137,7 @@ async def parcial_update(
         arquivo=data,
         token=token
     )
-    return ResponseUnitSchema(
+    return ResponseUnitRequiredSchema(
         data=response
     )
 
