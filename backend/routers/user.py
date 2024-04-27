@@ -1,16 +1,7 @@
 from fastapi.responses import FileResponse
-from constants import DIRECTION_ORDER_BY_DESCRIPTION, FIELDS_ORDER_BY_DESCRIPTION
-from dependencies.authorization_user import is_admin
 from dependencies.is_admin import is_admin_dependencies
-from filters.problema import OrderByFieldsProblemaEnum, ProblemaFilter, search_fields_problema
-from filters.problemaResposta import OrderByFieldsProblemaRespostaEnum, search_fields_problema_resposta
-from models.problema import Problema
-from models.problemaResposta import ProblemaResposta
 from routers.auth import oauth2_scheme
-from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query, Response, UploadFile, status, File
-from schemas.common.direction_order_by import DirectionOrderByEnum
-from schemas.problema import ProblemaReadSimple
-from schemas.problemaResposta import ProblemaRespostaReadFull
+from fastapi import APIRouter, Body, Depends, HTTPException, Path, Response, UploadFile, status, File
 from utils.errors import errors
 from models.user import User
 from orm.common.index import delete_object, get_by_id, get_all
@@ -20,7 +11,7 @@ from schemas.common.pagination import PaginationSchema
 from dependencies.database import get_db
 from sqlalchemy.orm import Session
 from orm.user import create_imagem_user, create_user, delete_imagem_user, get_imagem_user, update_user
-from schemas.common.response import ResponsePaginationSchema, ResponseUnitSchema
+from schemas.common.response import ResponsePaginationSchema, ResponseUnitRequiredSchema
 from passlib.context import CryptContext
 
 
@@ -57,41 +48,9 @@ async def read(
     )
 
 
-@router.get("/eu/",
-            response_model=ResponseUnitSchema[UserReadFull],
-            summary="Lista dados do usuário autenticado",
-            dependencies=[Depends(get_authenticated_user)],
-            responses={
-                501: {"501": 501}
-            })
-async def read_me(
-        db: Session = Depends(get_db),
-        token: str = Depends(oauth2_scheme)
-):
-    user_db = await get_authenticated_user(token, db)
-
-    if (is_admin(user_db)):
-        raise HTTPException(
-            status.HTTP_501_NOT_IMPLEMENTED,
-            "Funcionalidade não disponível para administradores!"
-        )
-
-    user = await get_by_id(
-        id=user_db.id,
-        path_has_user_key="user",
-        db=db,
-        model=User,
-        token=token
-    )
-
-    return ResponseUnitSchema(
-        data=user
-    )
-
-
 @router.get("/{id}/imagem/",
-            response_class=FileResponse,
-            summary="Retorna a imagem de perfil de um usuário",
+            response_model=ResponseUnitRequiredSchema[str],
+            summary="Retorna o endereço para a imagem de perfil de um usuário",
             dependencies=[Depends(get_authenticated_user)],
             responses={
                 404: {"404": 404}
@@ -100,16 +59,18 @@ async def get_imagem(
     id: int = Path(description=USER_ID_DESCRIPTION),
     db: Session = Depends(get_db)
 ):
-    data = await get_imagem_user(
+    imagem = await get_imagem_user(
         id=id,
         db=db
     )
 
-    return FileResponse(data)
+    return ResponseUnitRequiredSchema(
+        data=imagem
+    )
 
 
 @router.get("/{id}/",
-            response_model=ResponseUnitSchema[UserReadFull],
+            response_model=ResponseUnitRequiredSchema[UserReadFull],
             summary="Lista um usuário",
             dependencies=[Depends(get_authenticated_user)],
             responses={
@@ -129,13 +90,13 @@ async def read_id(
         path_has_user_key="user"
     )
 
-    return ResponseUnitSchema(
+    return ResponseUnitRequiredSchema(
         data=users
     )
 
 
 @router.post("/",
-             response_model=ResponseUnitSchema[UserReadFull],
+             response_model=ResponseUnitRequiredSchema[UserReadFull],
              status_code=201,
              summary="Cadastra um usuário",
              responses={
@@ -150,11 +111,11 @@ def create(
 ):
     data = create_user(db=db, user=user)
 
-    return ResponseUnitSchema(data=data)
+    return ResponseUnitRequiredSchema(data=data)
 
 
 @router.post("/{id}/imagem/",
-             response_class=FileResponse,
+             response_model=ResponseUnitRequiredSchema[str],
              status_code=200,
              summary="Cadastra uma imagem de perfil para um usuário",
              dependencies=[Depends(get_authenticated_user)],
@@ -184,7 +145,9 @@ async def upload_imagem(
         id=id
     )
 
-    return FileResponse(path=data)
+    return ResponseUnitRequiredSchema(
+        data=data
+    )
 
 
 @router.delete("/{id}/imagem/",
@@ -210,7 +173,7 @@ async def delete_image(
 
 
 @router.put("/{id}/",
-            response_model=ResponseUnitSchema[UserReadFull],
+            response_model=ResponseUnitRequiredSchema[UserReadFull],
             summary="Atualiza um usuário por completo",
             responses={
                 404: errors[404]
@@ -231,13 +194,13 @@ async def total_update(
         token=token
     )
 
-    return ResponseUnitSchema(
+    return ResponseUnitRequiredSchema(
         data=response
     )
 
 
 @router.patch("/{id}/",
-              response_model=ResponseUnitSchema[UserReadFull],
+              response_model=ResponseUnitRequiredSchema[UserReadFull],
               summary="Atualiza um usuário parcialmente",
               responses={
                   400: errors[400],
@@ -259,7 +222,7 @@ async def partial_update(
         token=token
     )
 
-    return ResponseUnitSchema(
+    return ResponseUnitRequiredSchema(
         data=response
     )
 

@@ -10,7 +10,7 @@ from dependencies.database import get_db
 from orm.common.index import get_all
 from schemas.common.direction_order_by import DirectionOrderByEnum
 from schemas.common.pagination import PaginationSchema
-from schemas.common.response import ResponsePaginationSchema, ResponseUnitSchema
+from schemas.common.response import ResponsePaginationSchema, ResponseUnitRequiredSchema
 from schemas.problemaResposta import ProblemaRespostaCreate, ProblemaRespostaReadFull, ProblemaRespostaReadSimple
 from sqlalchemy.orm import Session
 from utils.errors import errors
@@ -125,7 +125,7 @@ async def read_problema_id_respostas_by_user(
 
 
 @router.get("/{id}/",
-            response_model=ResponseUnitSchema[ProblemaRespostaReadFull],
+            response_model=ResponseUnitRequiredSchema[ProblemaRespostaReadFull],
             summary="Lista uma resposta específica fornecida para um problema",
             responses={
                 404: errors[404]
@@ -141,13 +141,13 @@ async def read_id(
         id=id,
         token=token,
     )
-    return ResponseUnitSchema(
+    return ResponseUnitRequiredSchema(
         data=problema_resposta
     )
 
 
 @router.post("/",
-             response_model=ResponseUnitSchema[ProblemaRespostaReadSimple],
+             response_model=ResponseUnitRequiredSchema[ProblemaRespostaReadSimple],
              status_code=201,
              summary="Cadastra uma resposta para um problema",
              responses={
@@ -166,4 +166,4 @@ async def create(
         token=token
     )
 
-    return ResponseUnitSchema(data=problema_resposta)
+    return ResponseUnitRequiredSchema(data=problema_resposta)
