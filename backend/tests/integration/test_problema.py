@@ -557,7 +557,6 @@ def test_read_testes_exemplo_executados():
 
     resume_dependencies()
 
-
 def test_create_problema_user():
     remove_dependencies()
 
