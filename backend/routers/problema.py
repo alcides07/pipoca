@@ -451,7 +451,7 @@ async def upload(
                 with zip.open(path_file) as file:
                     corpo = file.read().decode()
 
-                if (linguagem not in CompilersEnum.__members__):
+                if (linguagem not in CompilersEnum.__members__.values()):
                     linguagens_suportadas = get_values_from_enum(CompilersEnum)
 
                     raise HTTPException(
@@ -459,10 +459,10 @@ async def upload(
                         f"A linguagem de um dos arquivos geradores de testes é {linguagem}, que não é suportada no momento. As linguagens atualmente suportadas são: {linguagens_suportadas}"
                     )
 
-                    arquivo = ArquivoCreate(
-                        nome=fullname, corpo=corpo, secao=SecaoEnum.GERADOR, linguagem=CompilersEnum(linguagem))
+                arquivo = ArquivoCreate(
+                    nome=fullname, corpo=corpo, secao=SecaoEnum.GERADOR, linguagem=CompilersEnum(linguagem))
 
-                    problema.arquivos.append(arquivo)
+                problema.arquivos.append(arquivo)
 
         except Exception:
             raise HTTPException(
@@ -506,7 +506,7 @@ async def upload(
                         nome = file.name.split("/")[-1]
                         corpo = file.read().decode()
 
-                    if (linguagem not in CompilersEnum.__members__):
+                    if (linguagem not in CompilersEnum.__members__.values()):
                         linguagens_suportadas = get_values_from_enum(
                             CompilersEnum)
 
@@ -565,7 +565,7 @@ async def upload(
                         nome = os.path.basename(file.name)
                         corpo = file.read().decode()
 
-                        if (linguagem not in CompilersEnum.__members__):
+                        if (linguagem not in CompilersEnum.__members__.values()):
                             linguagens_suportadas = get_values_from_enum(
                                 CompilersEnum)
 
@@ -597,7 +597,7 @@ async def upload(
                     nome = os.path.basename(file.name)
                     corpo = file.read().decode()
 
-                    if (linguagem not in CompilersEnum.__members__):
+                    if (linguagem not in CompilersEnum.__members__.values()):
                         linguagens_suportadas = get_values_from_enum(
                             CompilersEnum)
 
