@@ -37,9 +37,7 @@ app = FastAPI(docs_url=None,
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:5173",
-        "https://pipoca-development.up.railway.app",
-        "https://pipoca-80wl.onrender.com"
+        "http://localhost:5173"
     ],
     allow_credentials=True,
     allow_methods=["*"],
