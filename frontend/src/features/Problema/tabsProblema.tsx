@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { iIntegridade } from "@/interfaces/models/iProblema";
 import problemaService from "@/services/models/problemaService";
 import EditaDeclaracao from "./EditaProblema/componentes/editaDeclaracao";
+import VerificadorProblema from "../Problema/CadastraProblema/components/verificadorProblema";
 
 function TabsProblema() {
   const { id } = useParams();
@@ -54,7 +55,7 @@ function TabsProblema() {
           <FormLogin />
         </TabsContent>
         <TabsContent value="verificador">
-          <FormLogin />
+          <VerificadorProblema />
         </TabsContent>
         <TabsContent value="testes">
           <FormLogin />
