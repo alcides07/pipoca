@@ -136,7 +136,7 @@ function EditaDeclaracao({ problemaId }: EditaDeclaracaoProps) {
   return (
     <Card>
       <CardHeader className="">
-        <CardTitle>Declaração</CardTitle>
+        <CardTitle className="text-3xl">Declaração</CardTitle>
         <CardDescription>Atualize os dados abaixo.</CardDescription>
       </CardHeader>
       <CardContent>
