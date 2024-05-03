@@ -38,8 +38,10 @@ import Loading from "@/components/loading";
 import { iTestesExemplos } from "@/interfaces/models/iTeste";
 import type { iProblemaResposta } from "@/interfaces/services/iProblemaResposta";
 import ProblemaRespostaService from "@/services/models/problemaRespostaService";
+import verificadorService from "@/services/models/verificadorService";
 import { DataTable } from "@/components/table";
-import { problemaColumns } from "@/components/table/columns/problemaColumns";
+import { verificadorProblemaColumns } from "@/components/table/columns/verificadorProblemaColumns";
+import { iTesteVerificador } from "@/interfaces/models/iTesteVerificador";
 
 const FormSchema = z.object({
   linguagem: z.string().nonempty("Selecione uma linguagem de programação!"),
@@ -57,7 +59,7 @@ function VerificadorProblema() {
   const [problema, setProblema] = useState<iDataProblema>();
   const [rows, setRows] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
-  const [testesExemplos, setTestesExemplos] = useState<iTestesExemplos[]>();
+  const [TesteVerificador, setTesteVerificador] = useState<any[]>();
   const [loadingProblema, setLoadingProblema] = useState(true);
   const [loadingProblemaExemplos, setLoadingProblemaExemplos] = useState(true);
   const [problemas, setProblemas] = useState<iDataProblema[]>([]);
@@ -90,17 +92,29 @@ function VerificadorProblema() {
 
   useEffect(() => {
     obtemProblema();
-    handleProblem();
   }, []);
-  async function handleProblem() {
-    await problemaService.getProblemas().then((response) => {
-      setProblemas(response.data);
-    });
-  }
 
   useEffect(() => {
-    if (problema != undefined) obtemTestesExemplos();
+    if (problema) {
+      async function fetchVerificador() {
+        await consultaVerificador(problema.id);
+      }
+      fetchVerificador();
+    }
   }, [problema]);
+
+  // if (problema) {
+  //   useEffect(() => {
+  //     consultaVerificador(problema.id);
+  //   }, [problema.id]);
+  // }
+
+  async function consultaVerificador(id: number) {
+    await verificadorService.consultaTesteVerificador(id).then((response) => {
+      console.log("Verificar", response.data);
+      setTesteVerificador(response.data);
+    });
+  }
 
   async function obtemProblema() {
     setLoadingProblema(true);
@@ -112,15 +126,6 @@ function VerificadorProblema() {
     setLoadingProblema(false);
   }
 
-  async function obtemTestesExemplos() {
-    setLoadingProblemaExemplos(true);
-    await problemaService.testesExemplosProblema(id).then((response) => {
-      console.log("testes:", response.data);
-      setTestesExemplos(response.data);
-    });
-    setLoadingProblemaExemplos(false);
-  }
-
   return (
     <div className="overflow-hidden rounded-[0.5rem] border bg-background shadow-md md:shadow-xl">
       <ResizablePanelGroup direction="horizontal" className="min-h-[300px]">
@@ -130,7 +135,11 @@ function VerificadorProblema() {
               Testes do Verificador
             </p>
             <Separator className="my-4" />
-            <DataTable columns={problemaColumns} data={problemas} busca>
+            <DataTable
+              columns={verificadorProblemaColumns}
+              data={problemas}
+              busca
+            >
               <Button variant="outline">Adicionar testes</Button>
               <Button variant="outline">Executar testes</Button>
             </DataTable>
