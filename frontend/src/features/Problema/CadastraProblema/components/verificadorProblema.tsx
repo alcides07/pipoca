@@ -35,7 +35,6 @@ import linguagens from "@/utils/linguagem";
 import { Toaster } from "@/components/ui/toaster";
 import { iDataProblema } from "@/interfaces/models/iProblema";
 import Loading from "@/components/loading";
-import { iTestesExemplos } from "@/interfaces/models/iTeste";
 import type { iProblemaResposta } from "@/interfaces/services/iProblemaResposta";
 import ProblemaRespostaService from "@/services/models/problemaRespostaService";
 import verificadorService from "@/services/models/verificadorService";
@@ -59,10 +58,11 @@ function VerificadorProblema() {
   const [problema, setProblema] = useState<iDataProblema>();
   const [rows, setRows] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
-  const [TesteVerificador, setTesteVerificador] = useState<any[]>();
+  const [verificador, setVerificador] = useState(null);
   const [loadingProblema, setLoadingProblema] = useState(true);
   const [loadingProblemaExemplos, setLoadingProblemaExemplos] = useState(true);
   const [problemas, setProblemas] = useState<iDataProblema[]>([]);
+  const [testes, setTestes] = useState([]);
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -110,10 +110,17 @@ function VerificadorProblema() {
   // }
 
   async function consultaVerificador(id: number) {
-    await verificadorService.consultaTesteVerificador(id).then((response) => {
+    setIsLoading(true);
+    await problemaService.verificadorProblema(id).then((response) => {
       console.log("Verificar", response.data);
-      setTesteVerificador(response.data);
+      setVerificador(response.data);
+      if (response.data && response.data.testes) {
+        setTestes(response.data.testes);
+      } else {
+        setTestes(null);
+      }
     });
+    setIsLoading(false);
   }
 
   async function obtemProblema() {
@@ -126,6 +133,10 @@ function VerificadorProblema() {
     setLoadingProblema(false);
   }
 
+  useEffect(() => {
+    console.log("verificador 2", verificador);
+  }, [verificador]);
+
   return (
     <div className="overflow-hidden rounded-[0.5rem] border bg-background shadow-md md:shadow-xl">
       <ResizablePanelGroup direction="horizontal" className="min-h-[300px]">
@@ -135,14 +146,25 @@ function VerificadorProblema() {
               Testes do Verificador
             </p>
             <Separator className="my-4" />
-            <DataTable
-              columns={verificadorProblemaColumns}
-              data={problemas}
-              busca
-            >
-              <Button variant="outline">Adicionar testes</Button>
-              <Button variant="outline">Executar testes</Button>
-            </DataTable>
+            {isLoading ? (
+              <Loading isLoading={isLoading} />
+            ) : verificador ? (
+              <DataTable
+                columns={verificadorProblemaColumns}
+                data={problema}
+                busca
+              >
+                <Button variant="outline">Adicionar testes</Button>
+                <Button variant="outline">Executar testes</Button>
+              </DataTable>
+            ) : (
+              <div className="flex flex-col justify-center items-center text-center min-h-[50vh]">
+                <p>Não há verificador cadastrados.</p>
+                <h1 className="font-bold">
+                  Por favor, cadastre um verificador e adicione seus testes!
+                </h1>
+              </div>
+            )}
           </div>
         </ResizablePanel>
         <ResizableHandle withHandle />

@@ -30,6 +30,11 @@ class ProblemaService {
     return response.data;
   }
 
+  async verificadorProblema(id: number) {
+    const response = await axiosInstance.get(`/problemas/${id}/verificadores/`);
+    return response.data;
+  }
+
   async testesExemplosProblema(id: number) {
     const response = await axiosInstance.get(
       `/problemas/${id}/testesExemplosExecutados/`

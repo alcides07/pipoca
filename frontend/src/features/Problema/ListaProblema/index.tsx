@@ -37,7 +37,12 @@ function ListaProblema() {
 
       {problemas && problemas.length > 0 ? (
         <div className="mt-4">
-          <DataTable columns={problemaColumns} data={problemas} busca>
+          <DataTable
+            columns={problemaColumns}
+            data={problemas}
+            busca
+            filtro="nome"
+          >
             <Button onClick={cadastraProblema}>Cadastrar</Button>
             <ImportaProblema handleProblem={handleProblem} />
           </DataTable>

@@ -22,7 +22,7 @@ export const verificadorProblemaColumns: ColumnDef<iTesteVerificador>[] = [
     cell: ({ row }) => {
       const problema = row.original;
       return (
-        <div className="px-5 w-5 flex flex-row gap-3">
+        <div className="px-5 flex flex-row justify-end gap-3">
           <Link to={`/problema/${problema.id}/responde/`}>
             <Button variant="outline" title="Responder">
               <ClipboardPenLine />

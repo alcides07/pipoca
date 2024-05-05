@@ -21,15 +21,15 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+// import {
+//   DropdownMenu,
+//   DropdownMenuCheckboxItem,
+//   DropdownMenuContent,
+//   DropdownMenuTrigger,
+// } from "@/components/ui/dropdown-menu";
 
 import { useState } from "react";
-import { Button } from "../ui/button";
+// import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import "./styles.css";
 
@@ -38,6 +38,7 @@ interface DataTableProps<TData, TValue> {
   data: TData[];
   children: React.ReactNode;
   busca: boolean;
+  filtro?: string;
 }
 
 export function DataTable<TData, TValue>({
@@ -45,6 +46,7 @@ export function DataTable<TData, TValue>({
   data,
   children,
   busca,
+  filtro,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -76,10 +78,10 @@ export function DataTable<TData, TValue>({
             <Input
               placeholder="Filter nome..."
               value={
-                (table.getColumn("nome")?.getFilterValue() as string) ?? ""
+                (table.getColumn(`${filtro}`)?.getFilterValue() as string) ?? ""
               }
               onChange={(event) =>
-                table.getColumn("nome")?.setFilterValue(event.target.value)
+                table.getColumn(`${filtro}`)?.setFilterValue(event.target.value)
               }
               // className="max-w-sm"
             />
@@ -123,7 +125,7 @@ export function DataTable<TData, TValue>({
       {/* </div> */}
       <div className="rounded-md border no-hover my-4">
         <Table>
-          <TableHeader>
+          <TableHeader className="">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
