@@ -18,7 +18,7 @@ COPY compilers.py .
 COPY constants.py .
 COPY main.py .
 COPY alembic.ini .
-COPY koyeb-entrypoint.sh .
+COPY koyeb-entrypoint.sh /koyeb-entrypoint.sh
 COPY docker-compose.koyeb.yml .
 
 ENTRYPOINT ["/koyeb-entrypoint.sh"]
