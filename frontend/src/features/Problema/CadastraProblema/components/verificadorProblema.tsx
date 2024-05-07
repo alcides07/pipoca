@@ -22,7 +22,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
-import { toast } from "@/components/ui/use-toast";
 import {
   Select,
   SelectContent,
@@ -33,14 +32,11 @@ import {
 } from "@/components/ui/select";
 import linguagens from "@/utils/linguagem";
 import { Toaster } from "@/components/ui/toaster";
-import { iDataProblema } from "@/interfaces/models/iProblema";
 import Loading from "@/components/loading";
 import type { iProblemaResposta } from "@/interfaces/services/iProblemaResposta";
 import ProblemaRespostaService from "@/services/models/problemaRespostaService";
-import verificadorService from "@/services/models/verificadorService";
 import { DataTable } from "@/components/table";
 import { verificadorProblemaColumns } from "@/components/table/columns/verificadorProblemaColumns";
-import { iTesteVerificador } from "@/interfaces/models/iTesteVerificador";
 
 const FormSchema = z.object({
   linguagem: z.string().nonempty("Selecione uma linguagem de programação!"),
@@ -55,13 +51,10 @@ const FormSchema = z.object({
 
 function VerificadorProblema() {
   const { id } = useParams();
-  const [problema, setProblema] = useState<iDataProblema>();
   const [rows, setRows] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [verificador, setVerificador] = useState(null);
-  const [loadingProblema, setLoadingProblema] = useState(true);
-  const [loadingProblemaExemplos, setLoadingProblemaExemplos] = useState(true);
-  const [problemas, setProblemas] = useState<iDataProblema[]>([]);
+  const [loadingTesteVerificador, setLoadingTesteVerificador] = useState(true);
   const [testes, setTestes] = useState([]);
 
   const form = useForm<z.infer<typeof FormSchema>>({
@@ -91,26 +84,12 @@ function VerificadorProblema() {
   }
 
   useEffect(() => {
-    obtemProblema();
+    consultaVerificador(id);
   }, []);
 
-  useEffect(() => {
-    if (problema) {
-      async function fetchVerificador() {
-        await consultaVerificador(problema.id);
-      }
-      fetchVerificador();
-    }
-  }, [problema]);
-
-  // if (problema) {
-  //   useEffect(() => {
-  //     consultaVerificador(problema.id);
-  //   }, [problema.id]);
-  // }
-
   async function consultaVerificador(id: number) {
-    setIsLoading(true);
+    console.log("Entrei aqui!");
+    setLoadingTesteVerificador(true);
     await problemaService.verificadorProblema(id).then((response) => {
       console.log("Verificar", response.data);
       setVerificador(response.data);
@@ -120,22 +99,8 @@ function VerificadorProblema() {
         setTestes(null);
       }
     });
-    setIsLoading(false);
+    setLoadingTesteVerificador(false);
   }
-
-  async function obtemProblema() {
-    setLoadingProblema(true);
-
-    await problemaService.getProblemaById(id).then((response) => {
-      console.log("response.data", response.data);
-      setProblema(response.data);
-    });
-    setLoadingProblema(false);
-  }
-
-  useEffect(() => {
-    console.log("verificador 2", verificador);
-  }, [verificador]);
 
   return (
     <div className="overflow-hidden rounded-[0.5rem] border bg-background shadow-md md:shadow-xl">
@@ -146,12 +111,15 @@ function VerificadorProblema() {
               Testes do Verificador
             </p>
             <Separator className="my-4" />
-            {isLoading ? (
-              <Loading isLoading={isLoading} />
-            ) : verificador ? (
+            {loadingTesteVerificador ? (
+              <Loading
+                isLoading={loadingTesteVerificador}
+                className="text-gray-300 w-[3rem] h-[3rem] flex justify-center items-center"
+              />
+            ) : testes != null ? (
               <DataTable
                 columns={verificadorProblemaColumns}
-                data={problema}
+                data={testes}
                 busca
               >
                 <Button variant="outline">Adicionar testes</Button>

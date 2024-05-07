@@ -15,7 +15,7 @@ export const verificadorProblemaColumns: ColumnDef<iTesteVerificador>[] = [
   },
   {
     accessorKey: "veredito",
-    header: "Status",
+    header: "Veredito",
   },
   {
     id: "actions",
