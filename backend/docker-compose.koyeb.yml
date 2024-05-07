@@ -6,8 +6,8 @@ services:
       - .env
     build:
       context: ./
-      dockerfile: ./Dockerfile
-    command: bash -c "alembic upgrade head && uvicorn main:app --host 0.0.0.0 --reload"
+      dockerfile: ./Dockerfile.koyeb
+    command: bash -c "alembic upgrade head && gunicorn -k uvicorn.workers.UvicornWorker -b 0.0.0.0:8000 --reload --forwarded-allow-ips=*"
     volumes:
       - static-volume:/API/static/
       - /var/run/docker.sock:/var/run/docker.sock
