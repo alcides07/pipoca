@@ -18,6 +18,7 @@ import {
   Form,
   FormControl,
   FormField,
+  FormLabel,
   FormItem,
   FormMessage,
 } from "@/components/ui/form";
@@ -37,8 +38,20 @@ import type { iProblemaResposta } from "@/interfaces/services/iProblemaResposta"
 import ProblemaRespostaService from "@/services/models/problemaRespostaService";
 import { DataTable } from "@/components/table";
 import { verificadorProblemaColumns } from "@/components/table/columns/verificadorProblemaColumns";
+import { iVerificador } from "@/interfaces/services/iVerificador";
+import verificadorService from "@/services/models/verificadorService";
+import { toast } from "@/components/ui/use-toast";
+import { Input } from "@/components/ui/input";
 
 const FormSchema = z.object({
+  nome: z
+    .string()
+    .min(3, {
+      message: "O nome do verificador deve ter pelo menos 3 caracteres.",
+    })
+    .max(64, {
+      message: "O nome do verificador deve ter no máximo 64 caracteres.",
+    }),
   linguagem: z.string().nonempty("Selecione uma linguagem de programação!"),
   resposta: z
     .string()
@@ -66,21 +79,48 @@ function VerificadorProblema() {
   });
 
   async function onSubmit(values: z.infer<typeof FormSchema>) {
+    console.log("Verificador values", values);
+
     setIsLoading(true);
-    const data: iProblemaResposta = {
-      resposta: values.resposta,
+    const data: iVerificador = {
+      nome: values.nome,
+      corpo: values.corpo,
       linguagem: values.linguagem,
       problema_id: parseInt(id),
     };
 
-    console.log("Resposta", data);
+    console.log("Verificador", data);
 
-    await ProblemaRespostaService.respondeProblema(data)
-      .then(() => {})
-      .catch(() => {})
-      .finally(() => {
-        setIsLoading(false);
-      });
+    // await verificadorService
+    //   .criaVerificador(data)
+    //   .then((response: any) => {
+    //     if (response.erro) {
+    //       toast({
+    //         title: "Erro.",
+    //         description: response.data.erro,
+    //         variant: "destructive",
+    //         duration: 5000,
+    //       });
+    //     } else {
+    //       toast({
+    //         title: "Sucesso.",
+    //         description: "Verificador cadastrado!",
+    //         variant: "success",
+    //         duration: 5000,
+    //       });
+    //     }
+    //   })
+    //   .catch((error) => {
+    //     toast({
+    //       title: "Erro.",
+    //       description: error.message,
+    //       variant: "destructive",
+    //       duration: 5000,
+    //     });
+    //   })
+    //   .finally(() => {
+    //     setIsLoading(false);
+    //   });
   }
 
   useEffect(() => {
@@ -121,6 +161,7 @@ function VerificadorProblema() {
                 columns={verificadorProblemaColumns}
                 data={testes}
                 busca
+                filtro="entrada"
               >
                 <Button variant="outline">Adicionar testes</Button>
                 <Button variant="outline">Executar testes</Button>
@@ -138,7 +179,7 @@ function VerificadorProblema() {
         <ResizableHandle withHandle />
         <ResizablePanel defaultSize={40}>
           <ScrollArea className="h-full w-full px-6">
-            <div className="flex h-full justify-center py-6">
+            <div className="flex h-full justify-center py-6 px-1">
               <Button variant="outline" className="w-full" disabled={isLoading}>
                 {isLoading ? <Loading isLoading={isLoading} /> : "Importar"}
               </Button>
@@ -149,8 +190,21 @@ function VerificadorProblema() {
               <Form {...form}>
                 <form
                   onSubmit={form.handleSubmit(onSubmit)}
-                  className="w-full space-y-6"
+                  className="w-full space-y-6 px-1"
                 >
+                  <FormField
+                    control={form.control}
+                    name="nome"
+                    render={({ field }) => (
+                      <FormItem>
+                        {/* <FormLabel>Nome</FormLabel> */}
+                        <FormControl>
+                          <Input placeholder="Nome do verificador" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                   <FormField
                     control={form.control}
                     name="linguagem"
@@ -178,7 +232,7 @@ function VerificadorProblema() {
                   />
                   <FormField
                     control={form.control}
-                    name="resposta"
+                    name="corpo"
                     render={({ field }) => (
                       <FormItem>
                         <FormControl>

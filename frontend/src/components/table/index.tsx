@@ -76,7 +76,7 @@ export function DataTable<TData, TValue>({
         {busca ? (
           <div className="flex w-3/5 py-2 gap-3">
             <Input
-              placeholder="Filter nome..."
+              placeholder={`Buscar por ${filtro}`}
               value={
                 (table.getColumn(`${filtro}`)?.getFilterValue() as string) ?? ""
               }

@@ -1,4 +1,3 @@
-import { iRespondeProblema } from "@/interfaces/services/iRespondeProblema";
 import axiosInstance from "../axiosInstance";
 
 class ProblemaService {
