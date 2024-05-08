@@ -2,7 +2,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { Edit2, ClipboardPenLine } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { iTesteVerificador } from "../../../interfaces/models/iTesteVerificador";
+import { iTesteVerificador } from "../../../interfaces/models/iVerificador";
 
 export const verificadorProblemaColumns: ColumnDef<iTesteVerificador>[] = [
   {
