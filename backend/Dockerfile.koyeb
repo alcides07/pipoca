@@ -1,6 +1,11 @@
-FROM docker:dind
+FROM koyeb/docker-compose
+
+RUN apk --no-cache add py3-pip
 
 WORKDIR /API
+
+COPY requirements.txt .
+RUN python -m venv /venv && /venv/bin/pip install -r requirements.txt
 
 COPY ./dependencies ./dependencies
 COPY ./models ./models
@@ -18,9 +23,5 @@ COPY compilers.py .
 COPY constants.py .
 COPY main.py .
 COPY alembic.ini .
-COPY koyeb-entrypoint.sh /koyeb-entrypoint.sh
-COPY docker-compose.koyeb.yml .
 
-ENTRYPOINT ["/koyeb-entrypoint.sh"]
-CMD ["docker", "compose", "-f", "docker-compose.koyeb.yml", "up"]
-
+CMD ["gunicorn","main:app","-k","uvicorn.workers.UvicornWorker","-b","0.0.0.0:8000","--forwarded-allow-ips=*"]
