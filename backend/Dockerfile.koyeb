@@ -24,4 +24,4 @@ COPY constants.py .
 COPY main.py .
 COPY alembic.ini .
 
-CMD ["main:app","-k","uvicorn.workers.UvicornWorker","-b","0.0.0.0:8000","--forwarded-allow-ips=*"]
+CMD ["gunicorn","main:app","-k","uvicorn.workers.UvicornWorker","-b","0.0.0.0:8000","--forwarded-allow-ips=*"]
