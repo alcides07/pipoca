@@ -288,8 +288,6 @@ async def create_token_ativacao_conta_and_send_email(
         ''',
     )
 
-    return
-
 
 async def verify_conta_user_resend_email(
     email: str,
@@ -308,5 +306,3 @@ async def verify_conta_user_resend_email(
             status.HTTP_400_BAD_REQUEST,
             "A conta do usuário já está ativa!"
         )
-
-    return
