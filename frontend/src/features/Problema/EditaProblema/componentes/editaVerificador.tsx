@@ -6,7 +6,6 @@ import {
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
 import problemaService from "@/services/models/problemaService";
-import { useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -34,12 +33,9 @@ import {
 import linguagens from "@/utils/linguagem";
 import { Toaster } from "@/components/ui/toaster";
 import Loading from "@/components/loading";
-import type { iProblemaResposta } from "@/interfaces/services/iProblemaResposta";
-import ProblemaRespostaService from "@/services/models/problemaRespostaService";
 import { DataTable } from "@/components/table";
 import { verificadorProblemaColumns } from "@/components/table/columns/verificadorProblemaColumns";
 import { iVerificador } from "@/interfaces/services/iVerificador";
-import { toast } from "@/components/ui/use-toast";
 import { Input } from "@/components/ui/input";
 
 const FormSchema = z.object({
@@ -52,7 +48,7 @@ const FormSchema = z.object({
       message: "O nome do verificador deve ter no máximo 64 caracteres.",
     }),
   linguagem: z.string().nonempty("Selecione uma linguagem de programação!"),
-  resposta: z
+  corpo: z
     .string()
     .nonempty("Informe o seu código!")
     .refine(
@@ -61,21 +57,52 @@ const FormSchema = z.object({
     ),
 });
 
-function VerificadorProblema() {
-  const { id } = useParams();
+interface EditaVerificadorProps {
+  problemaId: number;
+}
+
+function EditaVerificador({ problemaId }: EditaVerificadorProps) {
   const [rows, setRows] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [verificador, setVerificador] = useState<iVerificador>();
   const [loadingTesteVerificador, setLoadingTesteVerificador] = useState(true);
   const [testes, setTestes] = useState([]);
 
+  useEffect(() => {
+    if (problemaId) {
+      consultaVerificador(problemaId);
+    }
+  }, []);
+
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
-    defaultValues: {
-      linguagem: "",
-      resposta: "",
-    },
+    defaultValues: {},
+    mode: "onChange",
   });
+
+  async function consultaVerificador(id: number) {
+    console.log("Entrei aqui!");
+    await problemaService.verificadorProblema(id).then((response) => {
+      console.log("Verificar edita", response.data);
+
+      if (response.data != undefined) {
+        form.reset({
+          nome: response.data.nome,
+          linguagem: response.data.linguagem,
+          corpo: response.data.corpo,
+        });
+      }
+
+      setVerificador(response.data);
+
+      if (response.data && response.data.testes) {
+        setTestes(response.data.testes);
+      } else {
+        setTestes(null);
+      }
+    });
+    setLoadingTesteVerificador(false);
+  }
 
   async function onSubmit(values: z.infer<typeof FormSchema>) {
     console.log("Verificador values", values);
@@ -85,29 +112,10 @@ function VerificadorProblema() {
       nome: values.nome,
       corpo: values.corpo,
       linguagem: values.linguagem,
-      problema_id: parseInt(id),
+      problema_id: problemaId,
     };
 
     console.log("Verificador", data);
-  }
-
-  useEffect(() => {
-    consultaVerificador(id);
-  }, []);
-
-  async function consultaVerificador(id: number) {
-    console.log("Entrei aqui!");
-    setLoadingTesteVerificador(true);
-    await problemaService.verificadorProblema(id).then((response) => {
-      console.log("Verificar", response.data);
-      setVerificador(response.data);
-      if (response.data && response.data.testes) {
-        setTestes(response.data.testes);
-      } else {
-        setTestes(null);
-      }
-    });
-    setLoadingTesteVerificador(false);
   }
 
   return (
@@ -178,8 +186,12 @@ function VerificadorProblema() {
                     name="linguagem"
                     render={({ field }) => (
                       <FormItem>
+                        <FormLabel>Idioma</FormLabel>
                         <FormControl>
-                          <Select onValueChange={field.onChange}>
+                          <Select
+                            value={field.value}
+                            onValueChange={field.onChange}
+                          >
                             <SelectTrigger className="w-full">
                               <SelectValue placeholder="Selecione uma linguagem" />
                             </SelectTrigger>
@@ -222,6 +234,9 @@ function VerificadorProblema() {
                     type="submit"
                     className="w-full text-white"
                     disabled={isLoading}
+                    onClick={() => {
+                      form.handleSubmit(onSubmit)();
+                    }}
                   >
                     {isLoading ? (
                       <Loading isLoading={isLoading} />
@@ -241,4 +256,4 @@ function VerificadorProblema() {
   );
 }
 
-export default VerificadorProblema;
+export default EditaVerificador;

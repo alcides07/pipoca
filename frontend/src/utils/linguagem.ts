@@ -10,16 +10,10 @@ const linguagens = [
   "csharp.mono",
   "java11",
   "java8",
-  "kotlin",
-  "kotlin16",
-  "kotlin17",
-  "kotlin19",
-  "php.5",
   "python.2",
   "python.3",
   "python.pypy2",
   "python.pypy3",
-  "scala",
 ];
 
 export default linguagens;

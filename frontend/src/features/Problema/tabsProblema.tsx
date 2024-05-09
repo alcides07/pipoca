@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { iIntegridade } from "@/interfaces/models/iProblema";
 import problemaService from "@/services/models/problemaService";
 import EditaDeclaracao from "./EditaProblema/componentes/editaDeclaracao";
+import EditaVerificador from "./EditaProblema/componentes/editaVerificador";
 import VerificadorProblema from "../Problema/CadastraProblema/components/verificadorProblema";
 
 function TabsProblema() {
@@ -46,7 +47,6 @@ function TabsProblema() {
           ) : (
             <FormDeclaracao problemaId={parseInt(id)} />
           )}
-          {/* <FormDeclaracao problemaId={parseInt(id)} /> */}
         </TabsContent>
         <TabsContent value="arquivos">
           <FormLogin />
@@ -55,7 +55,11 @@ function TabsProblema() {
           <FormLogin />
         </TabsContent>
         <TabsContent value="verificador">
-          <VerificadorProblema />
+          {integridade?.verificador ? (
+            <EditaVerificador problemaId={parseInt(id)} />
+          ) : (
+            <VerificadorProblema />
+          )}
         </TabsContent>
         <TabsContent value="testes">
           <FormLogin />

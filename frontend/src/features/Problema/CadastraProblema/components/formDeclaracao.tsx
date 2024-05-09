@@ -281,7 +281,7 @@ function FormDeclaracao({ problemaId }: FormDeclaracaoProps) {
             />
 
             <Button className="w-full" type="submit">
-              Editar
+              Cadastrar
             </Button>
           </form>
         </Form>
