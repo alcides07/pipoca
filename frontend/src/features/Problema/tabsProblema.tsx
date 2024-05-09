@@ -58,7 +58,7 @@ function TabsProblema() {
           {integridade?.verificador ? (
             <EditaVerificador problemaId={parseInt(id)} />
           ) : (
-            <VerificadorProblema />
+            <VerificadorProblema problemaId={parseInt(id)} />
           )}
         </TabsContent>
         <TabsContent value="testes">

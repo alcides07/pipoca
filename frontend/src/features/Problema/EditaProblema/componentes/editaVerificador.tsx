@@ -107,7 +107,6 @@ function EditaVerificador({ problemaId }: EditaVerificadorProps) {
   async function onSubmit(values: z.infer<typeof FormSchema>) {
     console.log("Verificador values", values);
 
-    setIsLoading(true);
     const data: iVerificador = {
       nome: values.nome,
       corpo: values.corpo,

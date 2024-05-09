@@ -6,7 +6,6 @@ import {
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
 import problemaService from "@/services/models/problemaService";
-import { useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -18,7 +17,6 @@ import {
   Form,
   FormControl,
   FormField,
-  FormLabel,
   FormItem,
   FormMessage,
 } from "@/components/ui/form";
@@ -34,8 +32,7 @@ import {
 import linguagens from "@/utils/linguagem";
 import { Toaster } from "@/components/ui/toaster";
 import Loading from "@/components/loading";
-import type { iProblemaResposta } from "@/interfaces/services/iProblemaResposta";
-import ProblemaRespostaService from "@/services/models/problemaRespostaService";
+import verificadorService from "@/services/models/verificadorService";
 import { DataTable } from "@/components/table";
 import { verificadorProblemaColumns } from "@/components/table/columns/verificadorProblemaColumns";
 import { iVerificador } from "@/interfaces/services/iVerificador";
@@ -52,17 +49,22 @@ const FormSchema = z.object({
       message: "O nome do verificador deve ter no máximo 64 caracteres.",
     }),
   linguagem: z.string().nonempty("Selecione uma linguagem de programação!"),
-  resposta: z
+  corpo: z
     .string()
     .nonempty("Informe o seu código!")
-    .refine(
-      (val: string) => val.length >= 10,
-      "A resposta deve ter pelo menos 10 caracteres!"
-    ),
+    .min(10, {
+      message: "O código do verificador deve ter pelo menos 10 caracteres.",
+    })
+    .max(250000, {
+      message: "O código do verificador deve ter no máximo 250000 caracteres.",
+    }),
 });
 
-function VerificadorProblema() {
-  const { id } = useParams();
+interface CadastraVerificadorProps {
+  problemaId: number;
+}
+
+function VerificadorProblema({ problemaId }: CadastraVerificadorProps) {
   const [rows, setRows] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [verificador, setVerificador] = useState<iVerificador>();
@@ -71,28 +73,47 @@ function VerificadorProblema() {
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
-    defaultValues: {
-      linguagem: "",
-      resposta: "",
-    },
+    defaultValues: {},
+    mode: "onChange",
   });
 
   async function onSubmit(values: z.infer<typeof FormSchema>) {
+    setIsLoading(true);
     console.log("Verificador values", values);
 
-    setIsLoading(true);
     const data: iVerificador = {
       nome: values.nome,
       corpo: values.corpo,
       linguagem: values.linguagem,
-      problema_id: parseInt(id),
+      problema_id: problemaId,
     };
 
+    await verificadorService
+      .criaVerificador(data)
+      .then(() => {
+        window.scrollTo(0, 0);
+        consultaVerificador(problemaId);
+
+        toast({
+          title: "Sucesso",
+          description: "Verificador cadastrada!",
+        });
+      })
+      .catch(() => {
+        window.scrollTo(0, 0);
+        toast({
+          variant: "destructive",
+          title: "Erro.",
+          description: "O cadastro do verificador falhou. Tente novamente!",
+        });
+      });
+
     console.log("Verificador", data);
+    setIsLoading(false);
   }
 
   useEffect(() => {
-    consultaVerificador(id);
+    consultaVerificador(problemaId);
   }, []);
 
   async function consultaVerificador(id: number) {
@@ -125,6 +146,16 @@ function VerificadorProblema() {
                 className="text-gray-300 w-[3rem] h-[3rem] flex justify-center items-center"
               />
             ) : testes != null ? (
+              <DataTable
+                columns={verificadorProblemaColumns}
+                data={testes}
+                busca
+                filtro="entrada"
+              >
+                <Button variant="outline">Adicionar testes</Button>
+                <Button variant="outline">Executar testes</Button>
+              </DataTable>
+            ) : verificador != null ? (
               <DataTable
                 columns={verificadorProblemaColumns}
                 data={testes}
