@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 from utils.translate import translate
 from utils.errors import errors
 from openapi.validation_exception import validation_exception_handler
@@ -35,11 +36,16 @@ app = FastAPI(docs_url=None,
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=[
+        "http://localhost:5173"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"]
 )
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
 
 for router in routes:
     app.include_router(router)

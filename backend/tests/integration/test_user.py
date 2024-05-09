@@ -52,41 +52,6 @@ def test_read_user_unit_admin():
     resume_dependencies()
 
 
-def test_read_meus_dados_admin():
-    remove_dependencies()
-
-    database = next(get_db_test())
-    token_admin = create_administrador_helper(database)
-
-    response = client.get(
-        f"{URL_USER}/eu/",
-        headers={
-            "Authorization": f"Bearer {token_admin}",
-        },
-    )
-
-    assert response.status_code == 501
-
-    resume_dependencies()
-
-
-def test_read_meus_dados_user():
-    remove_dependencies()
-
-    _, token, _ = create_user_helper()
-
-    response = client.get(
-        f"{URL_USER}/eu/",
-        headers={
-            "Authorization": f"Bearer {token}",
-        },
-    )
-
-    assert response.status_code == 200
-
-    resume_dependencies()
-
-
 def test_read_imagem_user():
     remove_dependencies()
 

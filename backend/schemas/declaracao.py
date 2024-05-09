@@ -55,6 +55,11 @@ class DeclaracaoReadFull(DeclaracaoBaseFull):
         description=PROBLEMA_ID_DESCRIPTION
     )
 
+    imagens: list[str] = Field(
+        default=[],
+        description="Imagens exibidas na declaração do problema"
+    )
+
 
 class DeclaracaoReadSimple(DeclaracaoBase):
     id: int = Field(
@@ -66,8 +71,20 @@ class DeclaracaoReadSimple(DeclaracaoBase):
     )
 
 
+class DeclaracaoImagem(BaseModel):
+    nome: str = Field(
+        description="Nome da imagem da declaração"
+    )
+
+    conteudo: bytes = Field(
+        description="Conteúdo da imagem da declaração"
+    )
+
+
 class DeclaracaoCreate(DeclaracaoBaseFull):
-    pass
+    imagens: list[DeclaracaoImagem] = Field(
+        description="Imagens da declaração de um problema"
+    )
 
 
 class DeclaracaoCreateSingle(DeclaracaoBaseFull):

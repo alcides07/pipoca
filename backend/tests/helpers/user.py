@@ -10,7 +10,7 @@ client = TestClient(app)
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 URL_USER = "/usuarios"
-URL_AUTH = "/auth"
+URL_AUTH = "/autenticacao"
 
 
 def create_user_helper():

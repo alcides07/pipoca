@@ -15,9 +15,21 @@ class ResponsePaginationSchema(BaseModel, Generic[T]):
     )
 
 
+class ResponseListSchema(BaseModel, Generic[T]):
+    data: List[T] = Field(
+        description="Lista de objetos retornados"
+    )
+
+
 class ResponseUnitSchema(BaseModel, Generic[T]):
     data: T | None = Field(
         default=None,
+        description="Objeto retornado"
+    )
+
+
+class ResponseUnitRequiredSchema(BaseModel, Generic[T]):
+    data: T = Field(
         description="Objeto retornado"
     )
 
