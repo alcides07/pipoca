@@ -23,6 +23,5 @@ COPY compilers.py .
 COPY constants.py .
 COPY main.py .
 COPY alembic.ini .
-COPY koyeb-entrypoint.sh .
 
 # USER user
