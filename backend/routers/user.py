@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 from orm.user import create_imagem_user, create_token_ativacao_conta_and_send_email, create_user, delete_imagem_user, get_imagem_user, update_user
 from schemas.common.response import ResponseDataWithMessageSchema, ResponsePaginationSchema, ResponseUnitRequiredSchema
 from passlib.context import CryptContext
+from decouple import config
 
 USER_ID_DESCRIPTION = "identificador do usuário"
 
@@ -108,16 +109,24 @@ async def create(
     db: Session = Depends(get_db),
 ):
     data = create_user(db=db, user=user)
-    await create_token_ativacao_conta_and_send_email(
-        data_token={
-            "sub": data.email
-        },
-        destinatario=str(data.email)
-    )
+
+    producao = int(config("PRODUCAO", default=0))
+    if (producao):
+        await create_token_ativacao_conta_and_send_email(
+            data_token={
+                "sub": data.email
+            },
+            destinatario=str(data.email)
+        )
+
+        return ResponseDataWithMessageSchema(
+            data=data,
+            message="Uma confirmação foi enviada para o e-mail fornecido!",
+        )
 
     return ResponseDataWithMessageSchema(
         data=data,
-        message="Uma confirmação foi enviada para o e-mail fornecido!",
+        message="A conta do usuário foi cadastrada!",
     )
 
 
