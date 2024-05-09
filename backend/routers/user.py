@@ -14,7 +14,7 @@ from orm.user import create_imagem_user, create_token_ativacao_conta_and_send_em
 from schemas.common.response import ResponseDataWithMessageSchema, ResponsePaginationSchema, ResponseUnitRequiredSchema
 from passlib.context import CryptContext
 
-USER_ID_DESCRIPTION = "identificador do usuário."
+USER_ID_DESCRIPTION = "identificador do usuário"
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
