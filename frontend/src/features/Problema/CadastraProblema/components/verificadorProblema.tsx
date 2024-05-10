@@ -65,7 +65,7 @@ interface CadastraVerificadorProps {
 }
 
 function VerificadorProblema({ problemaId }: CadastraVerificadorProps) {
-  const [rows, setRows] = useState(1);
+  const [rows, setRows] = useState<number>(1);
   const [isLoading, setIsLoading] = useState(false);
   const [verificador, setVerificador] = useState<iVerificador>();
   const [loadingTesteVerificador, setLoadingTesteVerificador] = useState(true);
@@ -93,7 +93,6 @@ function VerificadorProblema({ problemaId }: CadastraVerificadorProps) {
       .then(() => {
         window.scrollTo(0, 0);
         consultaVerificador(problemaId);
-
         toast({
           title: "Sucesso",
           description: "Verificador cadastrada!",

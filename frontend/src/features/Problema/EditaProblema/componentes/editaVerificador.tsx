@@ -37,6 +37,8 @@ import { DataTable } from "@/components/table";
 import { verificadorProblemaColumns } from "@/components/table/columns/verificadorProblemaColumns";
 import { iVerificador } from "@/interfaces/services/iVerificador";
 import { Input } from "@/components/ui/input";
+import verificadorService from "@/services/models/verificadorService";
+import { toast } from "@/components/ui/use-toast";
 
 const FormSchema = z.object({
   nome: z
@@ -51,10 +53,12 @@ const FormSchema = z.object({
   corpo: z
     .string()
     .nonempty("Informe o seu código!")
-    .refine(
-      (val: string) => val.length >= 10,
-      "A resposta deve ter pelo menos 10 caracteres!"
-    ),
+    .min(10, {
+      message: "O código do verificador deve ter pelo menos 10 caracteres.",
+    })
+    .max(250000, {
+      message: "O código do verificador deve ter no máximo 250000 caracteres.",
+    }),
 });
 
 interface EditaVerificadorProps {
@@ -62,7 +66,8 @@ interface EditaVerificadorProps {
 }
 
 function EditaVerificador({ problemaId }: EditaVerificadorProps) {
-  const [rows, setRows] = useState(1);
+  const [rows, setRows] = useState<number>(1);
+  const [idVerificador, setIdVerificador] = useState<number>();
   const [isLoading, setIsLoading] = useState(false);
   const [verificador, setVerificador] = useState<iVerificador>();
   const [loadingTesteVerificador, setLoadingTesteVerificador] = useState(true);
@@ -84,7 +89,7 @@ function EditaVerificador({ problemaId }: EditaVerificadorProps) {
     console.log("Entrei aqui!");
     await problemaService.verificadorProblema(id).then((response) => {
       console.log("Verificar edita", response.data);
-
+      setIdVerificador(response.data.id);
       if (response.data != undefined) {
         form.reset({
           nome: response.data.nome,
@@ -105,6 +110,7 @@ function EditaVerificador({ problemaId }: EditaVerificadorProps) {
   }
 
   async function onSubmit(values: z.infer<typeof FormSchema>) {
+    setIsLoading(true);
     console.log("Verificador values", values);
 
     const data: iVerificador = {
@@ -114,7 +120,28 @@ function EditaVerificador({ problemaId }: EditaVerificadorProps) {
       problema_id: problemaId,
     };
 
+    await verificadorService
+      .atualizaVerificador(idVerificador, data)
+      .then((res) => {
+        console.log("Verificador atualizado", res);
+        window.scrollTo(0, 0);
+        consultaVerificador(problemaId);
+        toast({
+          title: "Sucesso",
+          description: "Verificador atualizado!",
+        });
+      })
+      .catch(() => {
+        window.scrollTo(0, 0);
+        toast({
+          variant: "destructive",
+          title: "Erro.",
+          description: "A Atualização do verificador falhou. Tente novamente!",
+        });
+      });
+
     console.log("Verificador", data);
+    setIsLoading(false);
   }
 
   return (
@@ -132,6 +159,16 @@ function EditaVerificador({ problemaId }: EditaVerificadorProps) {
                 className="text-gray-300 w-[3rem] h-[3rem] flex justify-center items-center"
               />
             ) : testes != null ? (
+              <DataTable
+                columns={verificadorProblemaColumns}
+                data={testes}
+                busca
+                filtro="entrada"
+              >
+                <Button variant="outline">Adicionar testes</Button>
+                <Button variant="outline">Executar testes</Button>
+              </DataTable>
+            ) : verificador != null ? (
               <DataTable
                 columns={verificadorProblemaColumns}
                 data={testes}
@@ -240,7 +277,7 @@ function EditaVerificador({ problemaId }: EditaVerificadorProps) {
                     {isLoading ? (
                       <Loading isLoading={isLoading} />
                     ) : (
-                      "Cadastrar Verificador"
+                      "Editar Verificador"
                     )}
                   </Button>
                 </form>
