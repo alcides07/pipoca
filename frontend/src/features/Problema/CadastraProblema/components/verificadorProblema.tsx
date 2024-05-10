@@ -135,7 +135,7 @@ function VerificadorProblema({ problemaId }: CadastraVerificadorProps) {
       <ResizablePanelGroup direction="horizontal" className="min-h-[300px]">
         <ResizablePanel defaultSize={60}>
           <div className="h-full px-6 py-3">
-            <p className="text-3xl font-semibold tracking-tight my-5">
+            <p className="text-2xl font-semibold tracking-tight my-5">
               Testes do Verificador
             </p>
             <Separator className="my-4" />

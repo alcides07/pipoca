@@ -115,7 +115,7 @@ function FormCadastro() {
   return (
     <Card>
       <CardHeader className="">
-        <CardTitle className="text-3xl">Cadastro de Problema</CardTitle>
+        <CardTitle className="text-2xl">Cadastro de Problema</CardTitle>
         <CardDescription>
           Preencha o formulário para cadastrar um problema.
         </CardDescription>

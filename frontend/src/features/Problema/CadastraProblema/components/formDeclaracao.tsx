@@ -121,7 +121,7 @@ function FormDeclaracao({ problemaId }: FormDeclaracaoProps) {
   return (
     <Card>
       <CardHeader className="">
-        <CardTitle>Declaração</CardTitle>
+        <CardTitle className="text-2xl">Declaração</CardTitle>
         <CardDescription>
           Para cadastrar as informações do problema, preencha o formulário
           baixo.
