@@ -1,4 +1,4 @@
-export interface iVerificador {
+export interface iVerificadorService {
   nome: string;
   corpo: string;
   linguagem: string;

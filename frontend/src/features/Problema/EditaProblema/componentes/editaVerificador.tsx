@@ -35,7 +35,7 @@ import { Toaster } from "@/components/ui/toaster";
 import Loading from "@/components/loading";
 import { DataTable } from "@/components/table";
 import { verificadorProblemaColumns } from "@/components/table/columns/verificadorProblemaColumns";
-import type { iVerificador } from "@/interfaces/services/iVerificador";
+import type { iVerificadorService } from "@/interfaces/services/iVerificador";
 import { Input } from "@/components/ui/input";
 import verificadorService from "@/services/models/verificadorService";
 import { toast } from "@/components/ui/use-toast";
@@ -115,7 +115,7 @@ function EditaVerificador({ problemaId }: EditaVerificadorProps) {
     setIsLoading(true);
     console.log("Verificador values", values);
 
-    const data: iVerificador = {
+    const data: iVerificadorService = {
       nome: values.nome,
       corpo: values.corpo,
       linguagem: values.linguagem,
