@@ -35,10 +35,11 @@ import { Toaster } from "@/components/ui/toaster";
 import Loading from "@/components/loading";
 import { DataTable } from "@/components/table";
 import { verificadorProblemaColumns } from "@/components/table/columns/verificadorProblemaColumns";
-import { iVerificador } from "@/interfaces/services/iVerificador";
+import type { iVerificador } from "@/interfaces/services/iVerificador";
 import { Input } from "@/components/ui/input";
 import verificadorService from "@/services/models/verificadorService";
 import { toast } from "@/components/ui/use-toast";
+import type { iTesteVerificador } from "@/interfaces/models/iVerificador";
 
 const FormSchema = z.object({
   nome: z
@@ -68,10 +69,11 @@ interface EditaVerificadorProps {
 function EditaVerificador({ problemaId }: EditaVerificadorProps) {
   const [rows, setRows] = useState<number>(1);
   const [idVerificador, setIdVerificador] = useState<number>();
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [verificador, setVerificador] = useState<iVerificador>();
-  const [loadingTesteVerificador, setLoadingTesteVerificador] = useState(true);
-  const [testes, setTestes] = useState([]);
+  const [loadingTesteVerificador, setLoadingTesteVerificador] =
+    useState<boolean>(true);
+  const [testes, setTestes] = useState<iTesteVerificador[]>([]);
 
   useEffect(() => {
     if (problemaId) {

@@ -35,9 +35,10 @@ import Loading from "@/components/loading";
 import verificadorService from "@/services/models/verificadorService";
 import { DataTable } from "@/components/table";
 import { verificadorProblemaColumns } from "@/components/table/columns/verificadorProblemaColumns";
-import { iVerificador } from "@/interfaces/services/iVerificador";
+import type { iVerificador } from "@/interfaces/services/iVerificador";
 import { toast } from "@/components/ui/use-toast";
 import { Input } from "@/components/ui/input";
+import type { iTesteVerificador } from "@/interfaces/models/iVerificador";
 
 const FormSchema = z.object({
   nome: z
@@ -66,10 +67,11 @@ interface CadastraVerificadorProps {
 
 function VerificadorProblema({ problemaId }: CadastraVerificadorProps) {
   const [rows, setRows] = useState<number>(1);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [verificador, setVerificador] = useState<iVerificador>();
-  const [loadingTesteVerificador, setLoadingTesteVerificador] = useState(true);
-  const [testes, setTestes] = useState([]);
+  const [loadingTesteVerificador, setLoadingTesteVerificador] =
+    useState<boolean>(true);
+  const [testes, setTestes] = useState<iTesteVerificador[]>([]);
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -95,7 +97,7 @@ function VerificadorProblema({ problemaId }: CadastraVerificadorProps) {
         consultaVerificador(problemaId);
         toast({
           title: "Sucesso",
-          description: "Verificador cadastrada!",
+          description: "Verificador cadastrado!",
         });
       })
       .catch(() => {
