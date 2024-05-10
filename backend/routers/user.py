@@ -10,7 +10,7 @@ from schemas.user import UserCreate, UserReadFull, UserUpdatePartial, UserUpdate
 from schemas.common.pagination import PaginationSchema
 from dependencies.database import get_db
 from sqlalchemy.orm import Session
-from orm.user import create_imagem_user, create_token_ativacao_conta_and_send_email, create_user, delete_imagem_user, get_imagem_user, update_user
+from orm.user import activate_acccount_simple, create_imagem_user, create_token_ativacao_conta_and_send_email, create_user, delete_imagem_user, get_imagem_user, update_user
 from schemas.common.response import ResponseDataWithMessageSchema, ResponsePaginationSchema, ResponseUnitRequiredSchema
 from passlib.context import CryptContext
 from decouple import config
@@ -109,8 +109,9 @@ async def create(
     db: Session = Depends(get_db),
 ):
     data = create_user(db=db, user=user)
-
+    message = "A conta do usuário foi cadastrada!"
     producao = int(config("PRODUCAO", default=0))
+
     if (producao):
         await create_token_ativacao_conta_and_send_email(
             data_token={
@@ -119,14 +120,14 @@ async def create(
             destinatario=str(data.email)
         )
 
-        return ResponseDataWithMessageSchema(
-            data=data,
-            message="Uma confirmação foi enviada para o e-mail fornecido!",
-        )
+        message = "Uma confirmação foi enviada para o e-mail fornecido!"
+
+    else:
+        await activate_acccount_simple(db, data)
 
     return ResponseDataWithMessageSchema(
         data=data,
-        message="A conta do usuário foi cadastrada!",
+        message=message
     )
 
 
