@@ -1,7 +1,7 @@
 """insere coluna ativa em user
 
 Revision ID: 8d2b22e72604
-Revises: 1a1487cd8300
+Revises: 7289f9a18ec4
 Create Date: 2024-03-30 20:59:54.112979
 
 """
@@ -11,7 +11,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = '8d2b22e72604'
-down_revision = '1a1487cd8300'
+down_revision = '7289f9a18ec4'
 branch_labels = None
 depends_on = None
 
