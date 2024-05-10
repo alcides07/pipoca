@@ -157,7 +157,7 @@ function FormDeclaracao({ problemaId }: FormDeclaracaoProps) {
                         <SelectTrigger className="w-full">
                           <SelectValue placeholder="Selecione o idioma" />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="h-56">
                           <SelectGroup>
                             {idiomas.map((idioma: string) => (
                               <SelectItem key={idioma} value={idioma}>

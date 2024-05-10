@@ -39,6 +39,7 @@ interface DataTableProps<TData, TValue> {
   children: React.ReactNode;
   busca: boolean;
   filtro?: string;
+  mensagem: string;
 }
 
 export function DataTable<TData, TValue>({
@@ -47,6 +48,7 @@ export function DataTable<TData, TValue>({
   children,
   busca,
   filtro,
+  mensagem,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -75,16 +77,21 @@ export function DataTable<TData, TValue>({
       <div className="flex justify-between">
         {busca ? (
           <div className="flex w-3/5 py-2 gap-3">
-            <Input
-              placeholder={`Buscar por ${filtro}`}
-              value={
-                (table.getColumn(`${filtro}`)?.getFilterValue() as string) ?? ""
-              }
-              onChange={(event) =>
-                table.getColumn(`${filtro}`)?.setFilterValue(event.target.value)
-              }
-              // className="max-w-sm"
-            />
+            <div className="w-auto">
+              <Input
+                placeholder={`Buscar por ${filtro}`}
+                value={
+                  (table.getColumn(`${filtro}`)?.getFilterValue() as string) ??
+                  ""
+                }
+                onChange={(event) =>
+                  table
+                    .getColumn(`${filtro}`)
+                    ?.setFilterValue(event.target.value)
+                }
+                // className="max-w-sm"
+              />
+            </div>
           </div>
         ) : (
           <div></div> // Elemento vazio como espaço reservado
@@ -167,7 +174,7 @@ export function DataTable<TData, TValue>({
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  No results.
+                  <h1 className="font-bold">{mensagem}</h1>
                 </TableCell>
               </TableRow>
             )}

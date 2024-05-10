@@ -150,6 +150,7 @@ function VerificadorProblema({ problemaId }: CadastraVerificadorProps) {
                 data={testes}
                 busca
                 filtro="entrada"
+                mensagem="Não há testes cadastrados!"
               >
                 <Button variant="outline">Adicionar testes</Button>
                 <Button variant="outline">Executar testes</Button>
@@ -160,6 +161,7 @@ function VerificadorProblema({ problemaId }: CadastraVerificadorProps) {
                 data={testes}
                 busca
                 filtro="entrada"
+                mensagem="Não há testes cadastrados!"
               >
                 <Button variant="outline">Adicionar testes</Button>
                 <Button variant="outline">Executar testes</Button>
@@ -213,7 +215,7 @@ function VerificadorProblema({ problemaId }: CadastraVerificadorProps) {
                             <SelectTrigger className="w-full">
                               <SelectValue placeholder="Selecione uma linguagem" />
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent className="h-56">
                               <SelectGroup>
                                 {linguagens.map((linguagem: string) => (
                                   <SelectItem key={linguagem} value={linguagem}>

@@ -293,7 +293,7 @@ function RespondeProblema() {
                                 <SelectTrigger className="w-full">
                                   <SelectValue placeholder="Selecione uma linguagem" />
                                 </SelectTrigger>
-                                <SelectContent>
+                                <SelectContent className="h-56">
                                   <SelectGroup>
                                     {linguagens.map((linguagem: string) => (
                                       <SelectItem
