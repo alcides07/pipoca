@@ -265,6 +265,15 @@ async def activate_account(
         raise credentials_exception
 
 
+async def activate_acccount_simple(
+    db: Session,
+    db_user: User
+):
+    db_user.ativa = True  # type: ignore
+    db.commit()
+    db.refresh(db_user)
+
+
 async def create_token_ativacao_conta_and_send_email(
     data_token: dict,
     destinatario: str,
