@@ -11,7 +11,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from decouple import config
 
-TEST_ENV = str(config("TEST_ENV"))
+TEST_ENV = int(config("TEST_ENV", default=0))
 
 
 def get_config_database():
@@ -19,7 +19,7 @@ def get_config_database():
     return engine, Base
 
 
-if (TEST_ENV != "1"):
+if (not TEST_ENV):
     engine, Base = get_config_database()
     Base.metadata.create_all(bind=engine)
 
