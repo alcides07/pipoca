@@ -44,7 +44,7 @@ def activate_account_user_helper(email: str):
         expires_delta=access_token_expires
     )
 
-    client.get(
+    client.post(
         f"{URL_AUTH}/ativacao/?codigo={token_ativacao}",
     )
 

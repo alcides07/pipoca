@@ -86,15 +86,14 @@ async def login(
     return data
 
 
-@router.get("/ativacao/",
-            summary="Ativa a conta de um usuário",
-            response_model=ResponseMessageSchema,
-            status_code=200,
-            responses={
-                422: errors[422]
-            },
-            include_in_schema=False
-            )
+@router.post("/ativacao/",
+             summary="Ativa a conta de um usuário",
+             response_model=ResponseMessageSchema,
+             status_code=200,
+             responses={
+                 422: errors[422]
+             },
+             )
 async def ativacao(
     codigo: str = Query(
         description="Código de ativação enviado para o e-mail do usuário"
