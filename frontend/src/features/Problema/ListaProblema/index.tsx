@@ -16,6 +16,7 @@ function ListaProblema() {
 
   useEffect(() => {
     handleProblem();
+    localStorage.removeItem("aba");
   }, []);
 
   async function handleProblem() {

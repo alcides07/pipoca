@@ -104,6 +104,7 @@ function ImportaVerificador({
                 title: "Sucesso",
                 description: "Verificador atualizado!",
               });
+              window.location.reload();
             })
             .catch(() => {
               window.scrollTo(0, 0);
