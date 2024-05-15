@@ -25,6 +25,10 @@ class UserReadFull(UserBaseFull):
         description="Data e horário de criação do usuário"
     )
 
+    ativa: bool = Field(
+        description="Indica se a conta do usuário está ativa"
+    )
+
 
 class UserReadSimple(UserBase):
     id: int = Field(
