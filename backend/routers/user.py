@@ -108,11 +108,10 @@ async def create(
     user: UserCreate = Body(description="Dados do usuário"),
     db: Session = Depends(get_db),
 ):
-    data = create_user(db=db, user=user)
-    message = "A conta do usuário foi cadastrada!"
-    producao = int(config("PRODUCAO", default=0))
 
-    if (producao):
+    async def create_producao():
+        data = create_user(db=db, user=user)
+
         await create_token_ativacao_conta_and_send_email(
             data_token={
                 "sub": data.email
@@ -120,15 +119,27 @@ async def create(
             destinatario=str(data.email)
         )
 
-        message = "Uma confirmação foi enviada para o e-mail fornecido!"
+        return ResponseDataWithMessageSchema(
+            data=data,
+            message="Uma confirmação foi enviada para o e-mail fornecido!"
+        )
 
-    else:
+    async def create_local():
+        data = create_user(db=db, user=user)
+
         await activate_acccount_simple(db, data)
 
-    return ResponseDataWithMessageSchema(
-        data=data,
-        message=message
-    )
+        return ResponseDataWithMessageSchema(
+            data=data,
+            message="A conta do usuário foi cadastrada!"
+        )
+
+    producao = int(config("PRODUCAO", default=0))
+
+    if (producao):
+        return await create_producao()
+
+    return await create_local()
 
 
 @router.post("/{id}/imagem/",
