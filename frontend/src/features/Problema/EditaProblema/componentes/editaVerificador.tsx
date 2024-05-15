@@ -39,7 +39,11 @@ import type { iVerificadorService } from "@/interfaces/services/iVerificador";
 import { Input } from "@/components/ui/input";
 import verificadorService from "@/services/models/verificadorService";
 import { toast } from "@/components/ui/use-toast";
-import type { iTesteVerificador } from "@/interfaces/models/iVerificador";
+import type {
+  iTesteVerificador,
+  iVerificador,
+} from "@/interfaces/models/iVerificador";
+import ImportaVerificador from "../../Importe/importaVerificador";
 
 const FormSchema = z.object({
   nome: z
@@ -196,9 +200,14 @@ function EditaVerificador({ problemaId }: EditaVerificadorProps) {
         <ResizablePanel defaultSize={40}>
           <ScrollArea className="h-full w-full px-6">
             <div className="flex h-full justify-center py-6 px-1">
-              <Button variant="outline" className="w-full" disabled={isLoading}>
-                {isLoading ? <Loading isLoading={isLoading} /> : "Importar"}
-              </Button>
+              {isLoading ? (
+                <Loading isLoading={isLoading} />
+              ) : (
+                <ImportaVerificador
+                  problemaId={problemaId}
+                  verificador={verificador}
+                />
+              )}
             </div>
             <Separator />
 

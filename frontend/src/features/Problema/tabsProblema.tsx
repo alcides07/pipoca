@@ -14,12 +14,31 @@ import VerificadorProblema from "../Problema/CadastraProblema/components/verific
 function TabsProblema() {
   const { id } = useParams();
   const [integridade, setIntegridade] = useState<iIntegridade>();
+  const [tabValor, setTabValor] = useState(
+    localStorage.getItem("aba") || "problema"
+  );
 
   console.log("id", id);
 
   useEffect(() => {
     integridadeProblem();
   }, []);
+
+  useEffect(() => {
+    localStorage.setItem("id", id);
+  }, [id]);
+
+  useEffect(() => {
+    const storedId = localStorage.getItem("id");
+    if (storedId !== id) {
+      setTabValor("problema");
+    }
+  }, [id]);
+
+  useEffect(() => {
+    localStorage.setItem("aba", tabValor);
+    console.log("local:", tabValor);
+  }, [tabValor]);
 
   async function integridadeProblem() {
     await problemaService.integridadeProblema(id).then((response) => {
@@ -29,7 +48,7 @@ function TabsProblema() {
 
   return (
     <div>
-      <Tabs defaultValue="problema" className="w-full">
+      <Tabs value={tabValor} onValueChange={setTabValor} className="w-full">
         <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="problema">Problema</TabsTrigger>
           <TabsTrigger value="declaracao">Declaração</TabsTrigger>

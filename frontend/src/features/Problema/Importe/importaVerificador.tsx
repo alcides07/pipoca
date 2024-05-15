@@ -66,7 +66,7 @@ function ImportaVerificador({
     // Lendo o arquivo como texto
     leitor.readAsText(arquivo);
 
-    leitor.onload = function (event) {
+    leitor.onload = async function (event) {
       // Verificando se event.target.result não é null
       if (event.target && event.target.result) {
         let conteudo = event.target.result as string;
@@ -100,7 +100,6 @@ function ImportaVerificador({
             .then((res) => {
               console.log("Verificador atualizado", res);
               window.scrollTo(0, 0);
-              //   consultaVerificador(problemaId);
               toast({
                 title: "Sucesso",
                 description: "Verificador atualizado!",
@@ -136,8 +135,6 @@ function ImportaVerificador({
               });
             });
         }
-
-        // Agora você pode usar 'data' aqui dentro
       }
     };
   }
