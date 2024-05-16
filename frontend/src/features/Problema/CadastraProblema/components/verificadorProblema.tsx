@@ -75,7 +75,7 @@ function VerificadorProblema({ problemaId }: CadastraVerificadorProps) {
   const [verificador, setVerificador] = useState<iVerificador>();
   const [loadingTesteVerificador, setLoadingTesteVerificador] =
     useState<boolean>(true);
-  const [testes, setTestes] = useState<iTesteVerificador[]>([]);
+  const [testes, setTestes] = useState<iTesteVerificador[] | null>(null);
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -185,10 +185,12 @@ function VerificadorProblema({ problemaId }: CadastraVerificadorProps) {
               {isLoading ? (
                 <Loading isLoading={isLoading} />
               ) : (
-                <ImportaVerificador
-                  problemaId={problemaId}
-                  verificador={verificador}
-                />
+                verificador && (
+                  <ImportaVerificador
+                    problemaId={problemaId}
+                    verificador={verificador}
+                  />
+                )
               )}
             </div>
             <Separator />
