@@ -63,10 +63,12 @@ function TabsProblema() {
         </TabsContent>
         <TabsContent value="verificador">
           {integridade?.verificador ? (
-            <EditaVerificador problemaId={parseInt(id)} />
-          ) : (
+            id ? (
+              <EditaVerificador problemaId={parseInt(id)} />
+            ) : null
+          ) : id ? (
             <VerificadorProblema problemaId={parseInt(id)} />
-          )}
+          ) : null}
         </TabsContent>
         <TabsContent value="testes">
           <FormLogin />
