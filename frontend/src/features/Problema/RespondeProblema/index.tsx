@@ -41,7 +41,6 @@ import Latex from "react-latex";
 import {
   Table,
   TableBody,
-  TableCaption,
   TableCell,
   TableHead,
   TableHeader,
@@ -62,13 +61,19 @@ const FormSchema = z.object({
 });
 
 function RespondeProblema() {
-  const { id } = useParams();
   const [problema, setProblema] = useState<iDataProblema>();
   const [rows, setRows] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [testesExemplos, setTestesExemplos] = useState<iTestesExemplos[]>();
   const [loadingProblema, setLoadingProblema] = useState(true);
   const [loadingProblemaExemplos, setLoadingProblemaExemplos] = useState(true);
+  const { id: idParam } = useParams();
+  const id = Number(idParam);
+
+  if (isNaN(id)) {
+    console.error("id is not a number");
+    return;
+  }
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -80,10 +85,11 @@ function RespondeProblema() {
 
   async function onSubmit(values: z.infer<typeof FormSchema>) {
     setIsLoading(true);
+
     const data: iProblemaResposta = {
       resposta: values.resposta,
       linguagem: values.linguagem,
-      problema_id: parseInt(id),
+      problema_id: id,
     };
 
     console.log("Resposta", data);
