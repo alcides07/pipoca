@@ -66,13 +66,15 @@ function FormRegister({ onSuccess }: FormRegisterProps) {
     };
 
     AutenticacaoService.register(data)
-      .then((response) => {
+      .then(() => {
         toast({
           title: "Sucesso.",
           description: "Usuário cadastrado com sucesso!",
           duration: 2000,
         });
-        onSuccess();
+        if (onSuccess) {
+          onSuccess();
+        }
       })
       .catch((error) => {
         toast({
