@@ -11,8 +11,8 @@ def send_email(
     corpo: str
 ):
     try:
-        TEST_ENV = str(config("TEST_ENV"))
-        if (TEST_ENV != "1"):
+        producao = int(config("PRODUCAO", default=0))
+        if (producao):
             mensagem = MIMEText(corpo, "html")
             mensagem['From'] = remetente
             mensagem['Subject'] = assunto
