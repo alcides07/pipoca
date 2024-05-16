@@ -7,26 +7,26 @@
 
 │   ├── filters                         # Classes de filtros para as rotas da API
 
-│   ├── migrations                      # Migrações de banco de dados 
+│   ├── migrations                      # Migrações de banco de dados
 
 │       ├── env.py                      # Configurações das migrações
 
 
 │   ├── models                          # Entidades da aplicação
 
-│       ├── common                      
+│       ├── common
 
 │           ├── index.py                # Barril de exportação de entidades
 
 │   ├── openapi                         # Configurações adicionais do openapi
 
-│   ├── orm                             # Métodos de manipulação de banco de dados
+│   ├── orm                             # Funções de manipulação de banco de dados
 
-│       ├── common                      # Métodos genéricos que são reaproveitados
+│       ├── common                      # Funções genéricas que podem ser reaproveitados
 
 │   ├── routers                         # Rotas da API
 
-│       ├── common                      
+│       ├── common
 
 │           ├── index.py                # Barril de exportação de rotas
 
@@ -34,9 +34,9 @@
 
 │       ├── common                      # Classes globais que são reaproveitadas
 
-│   ├── tests                           # Diferentes tipos de testes da aplicação
+│   ├── tests                           # Diferentes tipos de testes
 
-│       ├── helpers                     # Métodos de ajuda que são reaproveitados em diversos testes
+│       ├── helpers                     # Funções auxiliares para construção dos testes
 
 │       ├── integration                 # Testes de integração
 
@@ -46,11 +46,11 @@
 
 │       ├── database.py                 # Configuração de banco de dados de teste
 
-│   ├── utils                       # Métodos utilitários que são reaproveitados
+│   ├── utils                       # Funções utilitárias globais
 
 │   ├── Dockerfile.koyeb            # Dockerfile exclusivo para ativar o Daemon Docker no Koyeb
 
-│   ├── compilers.py                # Comandos para compilar e executar códigos em diferentes linguagens
+│   ├── compilers.py                # Comandos de compilação e execução de códigos em diferentes linguagens
 
 │   ├── constants.py                # Constantes globais da aplicação
 
@@ -58,7 +58,7 @@
 
 │   ├── main.py                     # Arquivo de inicialização da aplicação
 
-│   ├── sonar-project.properties    # Propriedades do projeto da ferramenta Sonar
+│   ├── sonar-project.properties    # Propriedades do projeto na ferramenta Sonar
 
 │   ├── tox.ini                     # Configuração da ferramenta Tox para execução de testes
 
