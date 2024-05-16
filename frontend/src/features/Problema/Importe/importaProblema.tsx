@@ -87,7 +87,7 @@ function ImportaProblema({ handleProblem }: importaProblemaProps): JSX.Element {
               render={() => {
                 return (
                   <FormItem>
-                    <FormLabel>File</FormLabel>
+                    <FormLabel>Arquivo</FormLabel>
                     <FormControl>
                       <Input type="file" placeholder="shadcn" {...fileRef} />
                     </FormControl>
@@ -117,7 +117,7 @@ function ImportaProblema({ handleProblem }: importaProblemaProps): JSX.Element {
         </Form>
         <AlertDialogFooter>
           <AlertDialogCancel onClick={() => setIsOpen(false)}>
-            Cancel
+            Cancelar
           </AlertDialogCancel>
           <AlertDialogAction
             onClick={() => {

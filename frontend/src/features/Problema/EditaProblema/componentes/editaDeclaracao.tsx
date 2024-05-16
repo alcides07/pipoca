@@ -136,7 +136,7 @@ function EditaDeclaracao({ problemaId }: EditaDeclaracaoProps) {
   return (
     <Card>
       <CardHeader className="">
-        <CardTitle>Declaração</CardTitle>
+        <CardTitle className="text-2xl">Declaração</CardTitle>
         <CardDescription>Atualize os dados abaixo.</CardDescription>
       </CardHeader>
       <CardContent>
@@ -172,7 +172,7 @@ function EditaDeclaracao({ problemaId }: EditaDeclaracaoProps) {
                         <SelectTrigger className="w-full">
                           <SelectValue placeholder="Selecione o idioma" />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="h-56">
                           <SelectGroup>
                             {idiomas.map((idioma: string) => (
                               <SelectItem key={idioma} value={idioma}>

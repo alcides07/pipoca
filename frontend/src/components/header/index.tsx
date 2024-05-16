@@ -27,7 +27,7 @@ export default function Header({ options }: HeaderProps): JSX.Element {
   const navigate = useNavigate();
 
   function handleLogout(): void {
-    localStorage.removeItem("access_token");
+    localStorage.clear();
     navigate("/");
   }
 

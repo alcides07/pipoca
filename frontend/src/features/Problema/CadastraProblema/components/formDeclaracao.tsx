@@ -121,7 +121,7 @@ function FormDeclaracao({ problemaId }: FormDeclaracaoProps) {
   return (
     <Card>
       <CardHeader className="">
-        <CardTitle>Declaração</CardTitle>
+        <CardTitle className="text-2xl">Declaração</CardTitle>
         <CardDescription>
           Para cadastrar as informações do problema, preencha o formulário
           baixo.
@@ -157,7 +157,7 @@ function FormDeclaracao({ problemaId }: FormDeclaracaoProps) {
                         <SelectTrigger className="w-full">
                           <SelectValue placeholder="Selecione o idioma" />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="h-56">
                           <SelectGroup>
                             {idiomas.map((idioma: string) => (
                               <SelectItem key={idioma} value={idioma}>
@@ -281,7 +281,7 @@ function FormDeclaracao({ problemaId }: FormDeclaracaoProps) {
             />
 
             <Button className="w-full" type="submit">
-              Editar
+              Cadastrar
             </Button>
           </form>
         </Form>

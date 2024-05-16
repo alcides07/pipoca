@@ -204,7 +204,7 @@ function RespondeProblema() {
                   <div className="flex h-full w-full px-10">
                     {problema && problema.declaracoes[0] && (
                       <div className="w-full">
-                        <h2 className="text-3xl font-bold my-5">
+                        <h2 className="text-2xl font-bold my-5">
                           {problema.declaracoes[0].titulo}
                         </h2>
                         <Separator className="my-4" />
@@ -293,7 +293,7 @@ function RespondeProblema() {
                                 <SelectTrigger className="w-full">
                                   <SelectValue placeholder="Selecione uma linguagem" />
                                 </SelectTrigger>
-                                <SelectContent>
+                                <SelectContent className="h-56">
                                   <SelectGroup>
                                     {linguagens.map((linguagem: string) => (
                                       <SelectItem

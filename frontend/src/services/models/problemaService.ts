@@ -1,4 +1,3 @@
-import { iRespondeProblema } from "@/interfaces/services/iRespondeProblema";
 import axiosInstance from "../axiosInstance";
 
 class ProblemaService {
@@ -27,6 +26,11 @@ class ProblemaService {
 
   async declaracoesProblema(id: number) {
     const response = await axiosInstance.get(`/problemas/${id}/declaracoes/`);
+    return response.data;
+  }
+
+  async verificadorProblema(id: number) {
+    const response = await axiosInstance.get(`/problemas/${id}/verificadores/`);
     return response.data;
   }
 

@@ -21,15 +21,15 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+// import {
+//   DropdownMenu,
+//   DropdownMenuCheckboxItem,
+//   DropdownMenuContent,
+//   DropdownMenuTrigger,
+// } from "@/components/ui/dropdown-menu";
 
 import { useState } from "react";
-import { Button } from "../ui/button";
+// import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import "./styles.css";
 
@@ -37,12 +37,18 @@ interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   children: React.ReactNode;
+  busca: boolean;
+  filtro?: string;
+  mensagem: string;
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
   children,
+  busca,
+  filtro,
+  mensagem,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -67,19 +73,34 @@ export function DataTable<TData, TValue>({
 
   return (
     <>
-      <div className="flex items-center py-4 gap-3">
-        <Input
-          placeholder="Filter nome..."
-          value={(table.getColumn("nome")?.getFilterValue() as string) ?? ""}
-          onChange={(event) =>
-            table.getColumn("nome")?.setFilterValue(event.target.value)
-          }
-          className="max-w-sm"
-        />
+      {/* <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr" }}> */}
+      <div className="flex justify-between">
+        {busca ? (
+          <div className="flex w-3/5 py-2 gap-3">
+            <div className="w-auto">
+              <Input
+                placeholder={`Buscar por ${filtro}`}
+                value={
+                  (table.getColumn(`${filtro}`)?.getFilterValue() as string) ??
+                  ""
+                }
+                onChange={(event) =>
+                  table
+                    .getColumn(`${filtro}`)
+                    ?.setFilterValue(event.target.value)
+                }
+                // className="max-w-sm"
+              />
+            </div>
+          </div>
+        ) : (
+          <div></div> // Elemento vazio como espaço reservado
+        )}
 
-        {children}
+        <div className="flex justify-end w-2/5 py-2 gap-3">{children}</div>
+      </div>
 
-        <DropdownMenu>
+      {/* <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
               variant="outline"
@@ -107,11 +128,11 @@ export function DataTable<TData, TValue>({
                 );
               })}
           </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-      <div className="rounded-md border no-hover">
+        </DropdownMenu> */}
+      {/* </div> */}
+      <div className="rounded-md border no-hover my-4">
         <Table>
-          <TableHeader>
+          <TableHeader className="">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
@@ -153,7 +174,7 @@ export function DataTable<TData, TValue>({
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  No results.
+                  <h1 className="font-bold">{mensagem}</h1>
                 </TableCell>
               </TableRow>
             )}
