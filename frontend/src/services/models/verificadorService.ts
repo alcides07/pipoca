@@ -1,12 +1,12 @@
-import { iVerificador } from "@/interfaces/services/iVerificador";
+import type { iVerificadorService } from "@/interfaces/services/iVerificador";
 import axiosInstance from "../axiosInstance";
 
 class VerificadorService {
-  async criaVerificador(data: iVerificador) {
+  async criaVerificador(data: iVerificadorService) {
     const response = await axiosInstance.post(`/verificadores/`, data);
     return response;
   }
-  async atualizaVerificador(id: number, data: iVerificador) {
+  async atualizaVerificador(id: number, data: iVerificadorService) {
     const response = await axiosInstance.put(`/verificadores/${id}`, data);
     return response.data;
   }
