@@ -1,4 +1,3 @@
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Form,
   FormControl,
@@ -51,14 +50,11 @@ function ImportaVerificador({
   const fileRef = form.register("verificador");
 
   async function onSubmit(values: z.infer<typeof FormSchema>) {
-    console.log("Importe Verificador", values);
     const formData = new FormData();
     formData.append("verificador", values.verificador[0]);
-    console.log("arquivo Verificador", formData);
 
     // Acessando o arquivo
     const arquivo: any = formData.get("verificador");
-    console.log("Arquivo:", arquivo);
 
     // Criando um novo FileReader
     const leitor = new FileReader();
@@ -80,7 +76,6 @@ function ImportaVerificador({
           java: "java11",
           py: "python.3",
           rb: "ruby.3",
-          // adicione mais mapeamentos conforme necessário
         };
 
         const linguagem = mapaExtensaoLinguagem[extensao];
@@ -92,13 +87,10 @@ function ImportaVerificador({
           problema_id: problemaId,
         };
 
-        console.log("datinha", data);
-
         if (verificador) {
           await verificadorService
             .atualizaVerificador(verificador.id, data)
-            .then((res) => {
-              console.log("Verificador atualizado", res);
+            .then(() => {
               window.scrollTo(0, 0);
               toast({
                 title: "Sucesso",
@@ -120,11 +112,11 @@ function ImportaVerificador({
             .criaVerificador(data)
             .then(() => {
               window.scrollTo(0, 0);
-              //   consultaVerificador(problemaId);
               toast({
                 title: "Sucesso",
                 description: "Verificador cadastrado!",
               });
+              window.location.reload();
             })
             .catch(() => {
               window.scrollTo(0, 0);

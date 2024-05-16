@@ -85,7 +85,6 @@ function VerificadorProblema({ problemaId }: CadastraVerificadorProps) {
 
   async function onSubmit(values: z.infer<typeof FormSchema>) {
     setIsLoading(true);
-    console.log("Verificador values", values);
 
     const data: iVerificadorService = {
       nome: values.nome,
@@ -113,7 +112,6 @@ function VerificadorProblema({ problemaId }: CadastraVerificadorProps) {
         });
       });
 
-    console.log("Verificador", data);
     setIsLoading(false);
   }
 
@@ -122,10 +120,8 @@ function VerificadorProblema({ problemaId }: CadastraVerificadorProps) {
   }, []);
 
   async function consultaVerificador(id: number) {
-    console.log("Entrei aqui!");
     setLoadingTesteVerificador(true);
     await problemaService.verificadorProblema(id).then((response) => {
-      console.log("Verificar", response.data);
       setVerificador(response.data);
       if (response.data && response.data.testes) {
         setTestes(response.data.testes);
@@ -208,7 +204,6 @@ function VerificadorProblema({ problemaId }: CadastraVerificadorProps) {
                     name="nome"
                     render={({ field }) => (
                       <FormItem>
-                        {/* <FormLabel>Nome</FormLabel> */}
                         <FormControl>
                           <Input placeholder="Nome do verificador" {...field} />
                         </FormControl>

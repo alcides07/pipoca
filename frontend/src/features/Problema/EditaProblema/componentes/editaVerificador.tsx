@@ -92,9 +92,7 @@ function EditaVerificador({ problemaId }: EditaVerificadorProps) {
   });
 
   async function consultaVerificador(id: number) {
-    console.log("Entrei aqui!");
     await problemaService.verificadorProblema(id).then((response) => {
-      console.log("Verificar edita", response.data);
       setIdVerificador(response.data.id);
       if (response.data != undefined) {
         form.reset({
@@ -117,7 +115,6 @@ function EditaVerificador({ problemaId }: EditaVerificadorProps) {
 
   async function onSubmit(values: z.infer<typeof FormSchema>) {
     setIsLoading(true);
-    console.log("Verificador values", values);
 
     const data: iVerificadorService = {
       nome: values.nome,
@@ -128,8 +125,7 @@ function EditaVerificador({ problemaId }: EditaVerificadorProps) {
 
     await verificadorService
       .atualizaVerificador(idVerificador, data)
-      .then((res) => {
-        console.log("Verificador atualizado", res);
+      .then(() => {
         window.scrollTo(0, 0);
         consultaVerificador(problemaId);
         toast({
@@ -147,7 +143,6 @@ function EditaVerificador({ problemaId }: EditaVerificadorProps) {
         });
       });
 
-    console.log("Verificador", data);
     setIsLoading(false);
   }
 

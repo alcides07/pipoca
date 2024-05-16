@@ -16,8 +16,6 @@ function TabsProblema() {
   const [integridade, setIntegridade] = useState<iIntegridade>();
   const [tabValor, setTabValor] = useState(localStorage.getItem("aba"));
 
-  console.log("id", id);
-
   useEffect(() => {
     integridadeProblem();
   }, []);
