@@ -84,7 +84,8 @@ type ProfileFormValues = z.infer<typeof profileFormSchema>;
 // }
 
 function EditaProblema() {
-  const { id } = useParams<{ id: number }>();
+  const { id: idString } = useParams();
+  const id = Number(idString);
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
 

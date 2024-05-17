@@ -73,7 +73,7 @@ interface EditaDeclaracaoProps {
 
 function EditaDeclaracao({ problemaId }: EditaDeclaracaoProps) {
   const [rows, setRows] = useState(1);
-  const [idDeclaracao, setIdDeclaracao] = useState<number>();
+  const [idDeclaracao, setIdDeclaracao] = useState<number>(0);
 
   useEffect(() => {
     if (problemaId) {
