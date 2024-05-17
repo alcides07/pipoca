@@ -157,7 +157,7 @@ function VerificadorProblema({ problemaId }: CadastraVerificadorProps) {
                 <Button variant="outline">Adicionar testes</Button>
                 <Button variant="outline">Executar testes</Button>
               </DataTable>
-            ) : verificador != null ? (
+            ) : testes != null && verificador != null ? (
               <DataTable
                 columns={verificadorProblemaColumns}
                 data={testes}
