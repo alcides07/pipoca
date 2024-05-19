@@ -29,6 +29,7 @@ export default function Header({ options }: HeaderProps): JSX.Element {
   function handleLogout(): void {
     localStorage.clear();
     navigate("/");
+    window.location.reload();
   }
 
   return (
@@ -71,9 +72,9 @@ export default function Header({ options }: HeaderProps): JSX.Element {
             </Avatar>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="w-25">
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={handleLogout}>
               <LogOut className="mr-2 h-4 w-4" />
-              <button onClick={handleLogout}>Sair</button>
+              <button>Sair</button>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
