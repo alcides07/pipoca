@@ -55,7 +55,7 @@ function TabsProblema() {
           <EditaProblema />
         </TabsContent>
         <TabsContent value="declaracao">
-          {integridade?.verificador ? (
+          {integridade?.declaracoes ? (
             id ? (
               <EditaDeclaracao problemaId={parseInt(id)} />
             ) : null
