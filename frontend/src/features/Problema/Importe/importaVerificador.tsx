@@ -24,7 +24,6 @@ import { toast } from "@/components/ui/use-toast";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { iVerificadorService } from "@/interfaces/services/iVerificador";
-import { iVerificador } from "@/interfaces/models/iVerificador";
 import verificadorService from "@/services/models/verificadorService";
 
 const FormSchema = z.object({
@@ -33,7 +32,7 @@ const FormSchema = z.object({
 
 interface ImportaVerificadorProps {
   problemaId: number;
-  verificador: iVerificador;
+  verificador: any;
 }
 
 function ImportaVerificador({
@@ -41,6 +40,7 @@ function ImportaVerificador({
   verificador,
 }: ImportaVerificadorProps): JSX.Element {
   const [isOpen, setIsOpen] = useState(false);
+  console.log("Verificador do importe:", verificador);
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -68,7 +68,9 @@ function ImportaVerificador({
         let conteudo = event.target.result as string;
 
         // Obtendo a extensão do arquivo
-        const extensao = arquivo.name.split(".").pop();
+        const extensao = arquivo.name
+          .split(".")
+          .pop() as keyof typeof mapaExtensaoLinguagem;
 
         // Mapeando a extensão para a linguagem
         const mapaExtensaoLinguagem = {
@@ -133,7 +135,7 @@ function ImportaVerificador({
   }
 
   return (
-    <AlertDialog isOpen={isOpen} onDismiss={() => setIsOpen(false)}>
+    <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
       <AlertDialogTrigger asChild className="w-full">
         <Button variant="outline">Importar Verificador</Button>
       </AlertDialogTrigger>

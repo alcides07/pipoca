@@ -75,7 +75,7 @@ function VerificadorProblema({ problemaId }: CadastraVerificadorProps) {
   const [verificador, setVerificador] = useState<iVerificador>();
   const [loadingTesteVerificador, setLoadingTesteVerificador] =
     useState<boolean>(true);
-  const [testes, setTestes] = useState<iTesteVerificador[]>([]);
+  const [testes, setTestes] = useState<iTesteVerificador[] | null>(null);
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -157,7 +157,7 @@ function VerificadorProblema({ problemaId }: CadastraVerificadorProps) {
                 <Button variant="outline">Adicionar testes</Button>
                 <Button variant="outline">Executar testes</Button>
               </DataTable>
-            ) : verificador != null ? (
+            ) : testes != null && verificador != null ? (
               <DataTable
                 columns={verificadorProblemaColumns}
                 data={testes}

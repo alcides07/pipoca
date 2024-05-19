@@ -8,7 +8,7 @@ export interface iVerificador {
 }
 
 export interface iTesteVerificador {
-  numero: string;
+  numero: number;
   veredito: string;
   entrada: string;
   id: number;

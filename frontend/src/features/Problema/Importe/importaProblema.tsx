@@ -73,7 +73,7 @@ function ImportaProblema({ handleProblem }: importaProblemaProps): JSX.Element {
   }
 
   return (
-    <AlertDialog isOpen={isOpen} onDismiss={() => setIsOpen(false)}>
+    <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
       <AlertDialogTrigger asChild>
         <Button variant="outline">Importar</Button>
       </AlertDialogTrigger>

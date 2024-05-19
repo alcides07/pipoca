@@ -55,7 +55,7 @@ function FormLogin({ onLogin }: any) {
           onLogin();
         }
       })
-      .catch((error) => {});
+      .catch(() => {});
   }
   return (
     <Card className="w-full">

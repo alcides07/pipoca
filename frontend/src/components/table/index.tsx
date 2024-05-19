@@ -39,7 +39,7 @@ interface DataTableProps<TData, TValue> {
   children: React.ReactNode;
   busca: boolean;
   filtro?: string;
-  mensagem: string;
+  mensagem?: string;
 }
 
 export function DataTable<TData, TValue>({

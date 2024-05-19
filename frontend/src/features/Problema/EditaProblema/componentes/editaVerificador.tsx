@@ -72,7 +72,7 @@ interface EditaVerificadorProps {
 
 function EditaVerificador({ problemaId }: EditaVerificadorProps) {
   const [rows, setRows] = useState<number>(1);
-  const [idVerificador, setIdVerificador] = useState<number>();
+  const [idVerificador, setIdVerificador] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [verificador, setVerificador] = useState<iVerificador>();
   const [loadingTesteVerificador, setLoadingTesteVerificador] =
@@ -107,7 +107,7 @@ function EditaVerificador({ problemaId }: EditaVerificadorProps) {
       if (response.data && response.data.testes) {
         setTestes(response.data.testes);
       } else {
-        setTestes(null);
+        setTestes([]);
       }
     });
     setLoadingTesteVerificador(false);

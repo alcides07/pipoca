@@ -21,13 +21,19 @@ function TabsProblema() {
   }, []);
 
   useEffect(() => {
-    localStorage.setItem("aba", tabValor);
+    if (tabValor !== null) {
+      localStorage.setItem("aba", tabValor);
+    }
   }, [tabValor]);
 
   async function integridadeProblem() {
-    await problemaService.integridadeProblema(id).then((response) => {
-      setIntegridade(response.data);
-    });
+    if (id !== undefined) {
+      await problemaService
+        .integridadeProblema(parseInt(id))
+        .then((response) => {
+          setIntegridade(response.data);
+        });
+    }
   }
 
   return (
@@ -50,10 +56,12 @@ function TabsProblema() {
         </TabsContent>
         <TabsContent value="declaracao">
           {integridade?.declaracoes ? (
-            <EditaDeclaracao problemaId={parseInt(id)} />
-          ) : (
+            id ? (
+              <EditaDeclaracao problemaId={parseInt(id)} />
+            ) : null
+          ) : id ? (
             <FormDeclaracao problemaId={parseInt(id)} />
-          )}
+          ) : null}
         </TabsContent>
         <TabsContent value="arquivos">
           <FormLogin />
@@ -63,10 +71,12 @@ function TabsProblema() {
         </TabsContent>
         <TabsContent value="verificador">
           {integridade?.verificador ? (
-            <EditaVerificador problemaId={parseInt(id)} />
-          ) : (
+            id ? (
+              <EditaVerificador problemaId={parseInt(id)} />
+            ) : null
+          ) : id ? (
             <VerificadorProblema problemaId={parseInt(id)} />
-          )}
+          ) : null}
         </TabsContent>
         <TabsContent value="testes">
           <FormLogin />
