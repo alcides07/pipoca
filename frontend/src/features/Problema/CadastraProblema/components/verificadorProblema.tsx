@@ -185,12 +185,10 @@ function VerificadorProblema({ problemaId }: CadastraVerificadorProps) {
               {isLoading ? (
                 <Loading isLoading={isLoading} />
               ) : (
-                verificador && (
-                  <ImportaVerificador
-                    problemaId={problemaId}
-                    verificador={verificador}
-                  />
-                )
+                <ImportaVerificador
+                  problemaId={problemaId}
+                  verificador={verificador}
+                />
               )}
             </div>
             <Separator />

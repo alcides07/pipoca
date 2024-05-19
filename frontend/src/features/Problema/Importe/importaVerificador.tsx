@@ -135,7 +135,7 @@ function ImportaVerificador({
   }
 
   return (
-    <AlertDialog open={isOpen} onOpenChange={() => setIsOpen(false)}>
+    <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
       <AlertDialogTrigger asChild className="w-full">
         <Button variant="outline">Importar Verificador</Button>
       </AlertDialogTrigger>

@@ -6,9 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Toaster } from "@/components/ui/toaster";
 import { useNavigate } from "react-router-dom";
-import ImportaProblema from "../Importe/importaProblema";
 import { iDataProblema } from "@/interfaces/models/iProblema";
 import { Separator } from "@/components/ui/separator";
+import ImportaProblema from "../Importe/importaProblema";
 
 function ListaProblema() {
   const [problemas, setProblemas] = useState<iDataProblema[]>([]);
