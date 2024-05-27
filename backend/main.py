@@ -13,6 +13,7 @@ from decouple import config
 
 TEST_ENV = int(config("TEST_ENV", default=0))
 PRODUCAO = int(config("PRODUCAO", default=0))
+VERSION_API = str(config("VERSION_API", default="0.0.0"))
 
 if (PRODUCAO):
     FRONT_BASE_URL = str(config("FRONT_BASE_URL"))
@@ -62,7 +63,7 @@ def custom_openapi():
         return app.openapi_schema
     openapi_schema = get_openapi(
         title="API do sistema PIPOCA",
-        version="0.0.1",
+        version=VERSION_API,
         description="API em desenvolvimento da Plataforma Interativa de Programação On-line e Competições Acadêmicas (PIPOCA)",
         routes=app.routes,
     )
