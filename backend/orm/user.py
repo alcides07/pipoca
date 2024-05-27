@@ -279,13 +279,14 @@ async def create_token_ativacao_conta_and_send_email(
     destinatario: str,
 ):
     EXPIRE_MINUTES = 15
+    FRONT_BASE_URL = str(config("FRONT_BASE_URL"))
     access_token_expires = timedelta(minutes=EXPIRE_MINUTES)
     token = create_token(
         data=data_token,
         expires_delta=access_token_expires
     )
 
-    url_ativacao = f"http://localhost:8000/auth/ativacao/?codigo={token}"
+    url_ativacao = f"{FRONT_BASE_URL}?codigo={token}"
 
     send_email(
         remetente="plataformapipoca@gmail.com",
