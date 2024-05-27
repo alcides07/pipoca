@@ -13,7 +13,7 @@ from decouple import config
 
 TEST_ENV = int(config("TEST_ENV", default=0))
 FRONT_BASE_URL = str(config("FRONT_BASE_URL"))
-PRODUCAO = int(config("PRODUCAO"))
+PRODUCAO = int(config("PRODUCAO", default=0))
 
 if (PRODUCAO):
     ALLOWED_ORIGINS = [FRONT_BASE_URL]
