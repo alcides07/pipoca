@@ -12,10 +12,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from decouple import config
 
 TEST_ENV = int(config("TEST_ENV", default=0))
-FRONT_BASE_URL = str(config("FRONT_BASE_URL"))
 PRODUCAO = int(config("PRODUCAO", default=0))
 
 if (PRODUCAO):
+    FRONT_BASE_URL = str(config("FRONT_BASE_URL"))
     ALLOWED_ORIGINS = [FRONT_BASE_URL]
 
 else:
