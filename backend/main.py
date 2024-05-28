@@ -16,14 +16,12 @@ PRODUCAO = int(config("PRODUCAO", default=0))
 VERSION_API = str(config("VERSION_API", default="0.0.0"))
 
 
-# FRONT_BASE_URL =
+if (PRODUCAO):
+    FRONT_BASE_URL = str(config("FRONT_BASE_URL"))
+    ALLOWED_ORIGINS = [FRONT_BASE_URL]
 
-# if (PRODUCAO):
-#     FRONT_BASE_URL = str(config("FRONT_BASE_URL"))
-#     ALLOWED_ORIGINS = [FRONT_BASE_URL]
-
-# else:
-#     ALLOWED_ORIGINS = ["http://localhost:5173"]
+else:
+    ALLOWED_ORIGINS = ["http://localhost:5173"]
 
 
 def get_config_database():
@@ -48,7 +46,7 @@ app = FastAPI(docs_url=None,
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://plataformapipoca.vercel.app/", "localhost:5173"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"]
