@@ -3,12 +3,12 @@ import axiosInstance from "../axiosInstance";
 
 class DeclaracaoService {
   async getDeclaracao(id: number) {
-    const response = await axiosInstance.get(`/declaracoes/${id}`);
+    const response = await axiosInstance.get(`/declaracoes/${id}/`);
     return response.data;
   }
 
   async atualizaDeclaracao(id: number, data: iDeclaracao) {
-    const response = await axiosInstance.put(`/declaracoes/${id}`, data);
+    const response = await axiosInstance.put(`/declaracoes/${id}/`, data);
     return response.data;
   }
 

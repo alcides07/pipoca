@@ -7,11 +7,11 @@ class VerificadorService {
     return response;
   }
   async atualizaVerificador(id: number, data: iVerificadorService) {
-    const response = await axiosInstance.put(`/verificadores/${id}`, data);
+    const response = await axiosInstance.put(`/verificadores/${id}/`, data);
     return response.data;
   }
   async consultaTesteVerificador(id: number) {
-    const response = await axiosInstance.get(`/verificadores/${id}/testes`);
+    const response = await axiosInstance.get(`/verificadores/${id}/testes/`);
     return response.data;
   }
 }
