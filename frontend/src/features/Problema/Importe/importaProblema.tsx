@@ -21,10 +21,10 @@ import { Input } from "@/components/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { toast } from "@/components/ui/use-toast";
 import problemaService from "@/services/models/problemaService";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { toast } from "react-toastify";
 
 const FormSchema = z.object({
   privado: z.boolean().default(false).optional(),
@@ -56,18 +56,19 @@ function ImportaProblema({ handleProblem }: importaProblemaProps): JSX.Element {
       .uploadFile(formData)
       .then(() => {
         handleProblem();
-        toast({
-          title: "Sucesso.",
-          description: "Problema Importado!",
-          duration: 3000,
+        toast.success("Problema Importado!", {
+          autoClose: 5000,
+          style: {
+            border: "1px solid #07bc0c",
+          },
         });
       })
       .catch((error) => {
-        toast({
-          variant: "destructive",
-          title: "Erro.",
-          description: error.response.data.error,
-          duration: 3000,
+        toast.error(error.response.data.error, {
+          autoClose: 5000,
+          style: {
+            border: "1px solid #e74c3c",
+          },
         });
       });
   }
