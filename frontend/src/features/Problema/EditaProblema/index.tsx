@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/card";
 import problemaService from "@/services/models/problemaService";
 import { Separator } from "@/components/ui/separator";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "react-toastify";
 import { Progress } from "@/components/ui/progress";
 import { useParams } from "react-router-dom";
 
@@ -79,14 +79,9 @@ const profileFormSchema = z.object({
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
-// interface EditaProblemaProps {
-//   id?: number;
-// }
-
 function EditaProblema() {
   const { id: idString } = useParams();
   const id = Number(idString);
-  const { toast } = useToast();
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -128,19 +123,19 @@ function EditaProblema() {
       .updateProblema(id, p)
       .then(() => {
         window.scrollTo(0, 0);
-
-        toast({
-          title: "Sucesso.",
-          description: "Problema atualizado!",
-          duration: 3000,
+        toast.success("Problema atualizado com sucesso!", {
+          autoClose: 5000,
+          style: {
+            border: "1px solid #07bc0c",
+          },
         });
       })
       .catch(() => {
-        toast({
-          variant: "destructive",
-          title: "Erro.",
-          description: "A atualização do problema falhou. Tente novamente!.",
-          duration: 3000,
+        toast.error("A atualização do problema falhou. Tente novamente!.", {
+          autoClose: 5000,
+          style: {
+            border: "1px solid #e74c3c",
+          },
         });
       });
   }
