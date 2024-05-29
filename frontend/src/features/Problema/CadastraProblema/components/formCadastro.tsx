@@ -11,7 +11,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "react-toastify";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -98,17 +98,33 @@ function FormCadastro() {
       .createProblema(data)
       .then((response) => {
         navigate(`/problema/${response.data.data.id}`);
-        toast({
-          title: "Sucesso",
-          description: "Problema criado!",
+        toast.success("Problema cadastrado com sucesso!", {
+          autoClose: 5000,
+          style: {
+            border: "1px solid #07bc0c",
+          },
         });
       })
-      .catch(() => {
-        toast({
-          variant: "destructive",
-          title: "Erro.",
-          description: "O cadastro de problema falhou. Tente novamente!.",
-        });
+      .catch((error) => {
+        if (error.response.status === 422) {
+          toast.error(
+            "O formulário de cadastro foi preenchido incorretamente!",
+            {
+              autoClose: 5000,
+              style: {
+                border: "1px solid #e74c3c",
+              },
+            }
+          );
+        }
+        if (error.response.status === 401) {
+          toast.error(error.message, {
+            autoClose: 5000,
+            style: {
+              border: "1px solid #e74c3c",
+            },
+          });
+        }
       });
   }
 
