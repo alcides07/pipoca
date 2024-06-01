@@ -1,6 +1,6 @@
 from models.problema import Problema
 from models.problemaResposta import ProblemaResposta
-from sqlalchemy import Column, DateTime, Integer, String
+from sqlalchemy import Boolean, Column, DateTime, Integer, String
 from sqlalchemy.orm import relationship
 from database import Base
 from datetime import datetime, timezone
@@ -32,6 +32,11 @@ class User(Base):
     password = Column(
         String(length=64),
         nullable=False,
+    )
+
+    ativa = Column(
+        Boolean(),
+        default=False
     )
 
     criado_em = Column(

@@ -2,7 +2,7 @@ import os
 import base64
 from tests.database import get_db_test
 from tests.helpers.administrador import create_administrador_helper
-from tests.helpers.user import URL_USER, create_user_helper, login_user_helper
+from tests.helpers.user import URL_USER, activate_account_user_helper, create_user_helper, login_user_helper
 from main import app
 from fastapi.testclient import TestClient
 from tests.config_test import remove_dependencies, resume_dependencies
@@ -290,6 +290,8 @@ def test_update_full_user_username_exists():
         URL_USER,
         json=user_repeat
     )
+    email_repeat = user_repeat_response.json().get("data").get("email")
+    activate_account_user_helper(email_repeat)
 
     assert user_repeat_response.status_code == 201
 
@@ -327,6 +329,8 @@ def test_update_full_user_email_exists():
         URL_USER,
         json=user_repeat
     )
+    email_repeat = user_repeat_response.json().get("data").get("email")
+    activate_account_user_helper(email_repeat)
 
     assert user_repeat_response.status_code == 201
 
