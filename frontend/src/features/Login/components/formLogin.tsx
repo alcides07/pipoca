@@ -44,7 +44,7 @@ function FormLogin({ onLogin }: any) {
     if (codigo) {
       console.log("Entrei neste no if do código");
 
-      ativacaoConta({ message: codigo });
+      ativacaoConta({ codigo: codigo });
     }
   }, [codigo]);
 
