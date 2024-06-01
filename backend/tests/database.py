@@ -4,10 +4,10 @@ from sqlalchemy.pool import StaticPool
 from database import Base
 from decouple import config
 
-DATABASE_URL_TEST = str(config("DATABASE_URL_TEST"))
+DATABASE_URL = str(config("DATABASE_URL"))
 
 engine = create_engine(
-    DATABASE_URL_TEST,
+    DATABASE_URL,
     poolclass=StaticPool
 )
 

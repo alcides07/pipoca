@@ -1,11 +1,11 @@
-FROM python:3.10
+FROM koyeb/docker-compose
 
-RUN groupadd -r group && useradd -r -g group user
+RUN apk --no-cache add py3-pip
+
 WORKDIR /API
-RUN chown -R user:group /API
 
-COPY requirements.txt . 
-RUN pip install -r requirements.txt
+COPY requirements.txt .
+RUN python -m venv /venv && /venv/bin/pip install -r requirements.txt
 
 COPY ./dependencies ./dependencies
 COPY ./models ./models
@@ -24,4 +24,6 @@ COPY constants.py .
 COPY main.py .
 COPY alembic.ini .
 
-# USER user
+CMD ["/venv/bin/gunicorn","main:app","-k","uvicorn.workers.UvicornWorker","-b","0.0.0.0:8000","--forwarded-allow-ips=*", "-t", "500"]
+
+
