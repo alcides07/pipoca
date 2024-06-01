@@ -48,10 +48,10 @@ function FormLogin({ onLogin }: any) {
   function ativacaoConta(data: iAtivacao) {
     AutenticacaoService.ativacao(data)
       .then(
-        toast.error("Sua conta foi ativada com sucesso.", {
+        toast.success("Sua conta foi ativada com sucesso.", {
           autoClose: 5000,
           style: {
-            border: "1px solid #e74c3c",
+            border: "1px solid #07bc0c",
           },
         })
       )
