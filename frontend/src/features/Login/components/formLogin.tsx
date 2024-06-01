@@ -19,8 +19,10 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import AutenticacaoService from "@/services/models/autenticacaoService";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
+import { iAtivacao } from "@/interfaces/services/iAutenticacao";
+import { useEffect } from "react";
 
 const formSchema = z.object({
   username: z.string().nonempty({ message: "O nome é obrigatório." }).min(3, {
@@ -33,6 +35,35 @@ const formSchema = z.object({
 
 function FormLogin({ onLogin }: any) {
   const navigate = useNavigate();
+  const location = useLocation();
+  const urlCodigo = new URLSearchParams(location.search);
+  const codigo = urlCodigo.get("codigo");
+
+  useEffect(() => {
+    if (codigo) {
+      ativacaoConta({ message: codigo });
+    }
+  }, [codigo]);
+
+  function ativacaoConta(data: iAtivacao) {
+    AutenticacaoService.ativacao(data)
+      .then(
+        toast.error("Sua conta foi ativada com sucesso.", {
+          autoClose: 5000,
+          style: {
+            border: "1px solid #e74c3c",
+          },
+        })
+      )
+      .catch((error) => {
+        toast.error(error.response.data.error, {
+          autoClose: 5000,
+          style: {
+            border: "1px solid #e74c3c",
+          },
+        });
+      });
+  }
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
