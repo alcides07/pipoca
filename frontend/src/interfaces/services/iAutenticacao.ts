@@ -11,5 +11,5 @@ export interface iRegister {
 }
 
 export interface iAtivacao {
-  message: string;
+  codigo: string;
 }
