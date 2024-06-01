@@ -19,7 +19,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import AutenticacaoService from "@/services/models/autenticacaoService";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "react-toastify";
 
 const formSchema = z.object({
   username: z.string().nonempty({ message: "O nome é obrigatório." }).min(3, {
@@ -45,8 +45,6 @@ interface FormRegisterProps {
 }
 
 function FormRegister({ onSuccess }: FormRegisterProps) {
-  const { toast } = useToast();
-
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -65,23 +63,33 @@ function FormRegister({ onSuccess }: FormRegisterProps) {
       passwordConfirmation: values.passwordConfirmation,
     };
 
+    const Mensagem = ({ email }) => (
+      <div>
+        Cadastrado realizado com sucesso. Acesse o link de ativação enviado para
+        o e-mail <strong>{email}</strong> para ativar sua conta.
+      </div>
+    );
+
     AutenticacaoService.register(data)
       .then(() => {
-        toast({
-          title: "Sucesso.",
-          description: "Usuário cadastrado com sucesso!",
-          duration: 2000,
+        toast.success(<Mensagem email={values.email} />, {
+          progress: undefined,
+          autoClose: false,
+          style: {
+            border: "1px solid #07bc0c",
+          },
         });
+
         if (onSuccess) {
           onSuccess();
         }
       })
       .catch((error) => {
-        toast({
-          variant: "destructive",
-          title: "Erro.",
-          description: error.response.data.error,
-          duration: 2000,
+        toast.error(error.response.data.error, {
+          autoClose: 5000,
+          style: {
+            border: "1px solid #e74c3c",
+          },
         });
       });
   }

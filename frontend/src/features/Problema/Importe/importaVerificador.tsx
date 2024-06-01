@@ -20,7 +20,7 @@ import { Input } from "@/components/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "react-toastify";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { iVerificadorService } from "@/interfaces/services/iVerificador";
@@ -94,40 +94,40 @@ function ImportaVerificador({
             .atualizaVerificador(verificador.id, data)
             .then(() => {
               window.scrollTo(0, 0);
-              toast({
-                title: "Sucesso",
-                description: "Verificador atualizado!",
-              });
+              localStorage.setItem("V", JSON.stringify(true));
               window.location.reload();
             })
             .catch(() => {
               window.scrollTo(0, 0);
-              toast({
-                variant: "destructive",
-                title: "Erro.",
-                description:
-                  "A Atualização do verificador falhou. Tente novamente!",
-              });
+              toast.error(
+                "O cadastro do verificador falhou. Tente novamente!",
+                {
+                  autoClose: 5000,
+                  style: {
+                    border: "1px solid #e74c3c",
+                  },
+                }
+              );
             });
         } else {
           await verificadorService
             .criaVerificador(data)
             .then(() => {
               window.scrollTo(0, 0);
-              toast({
-                title: "Sucesso",
-                description: "Verificador cadastrado!",
-              });
+              localStorage.setItem("V", JSON.stringify(true));
               window.location.reload();
             })
             .catch(() => {
               window.scrollTo(0, 0);
-              toast({
-                variant: "destructive",
-                title: "Erro.",
-                description:
-                  "O cadastro do verificador falhou. Tente novamente!",
-              });
+              toast.error(
+                "O cadastro do verificador falhou. Tente novamente!",
+                {
+                  autoClose: 5000,
+                  style: {
+                    border: "1px solid #e74c3c",
+                  },
+                }
+              );
             });
         }
       }

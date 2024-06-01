@@ -11,7 +11,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "react-toastify";
 import { Button } from "@/components/ui/button";
 
 import {
@@ -119,16 +119,19 @@ function EditaDeclaracao({ problemaId }: EditaDeclaracaoProps) {
       .atualizaDeclaracao(idDeclaracao, data)
       .then(() => {
         window.scrollTo(0, 0);
-        toast({
-          title: "Sucesso",
-          description: "Declaração atualizada!",
+        toast.success("Declaração atualizada com sucesso!", {
+          autoClose: 5000,
+          style: {
+            border: "1px solid #07bc0c",
+          },
         });
       })
       .catch(() => {
-        toast({
-          variant: "destructive",
-          title: "Erro.",
-          description: "A atualização da declaração falhou. Tente novamente!",
+        toast.error("A atualização da declaração falhou. Tente novamente!", {
+          autoClose: 5000,
+          style: {
+            border: "1px solid #e74c3c",
+          },
         });
       });
   }
