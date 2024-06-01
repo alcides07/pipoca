@@ -38,7 +38,7 @@ import { verificadorProblemaColumns } from "@/components/table/columns/verificad
 import type { iVerificadorService } from "@/interfaces/services/iVerificador";
 import { Input } from "@/components/ui/input";
 import verificadorService from "@/services/models/verificadorService";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "react-toastify";
 import type {
   iTesteVerificador,
   iVerificador,
@@ -127,19 +127,21 @@ function EditaVerificador({ problemaId }: EditaVerificadorProps) {
       .atualizaVerificador(idVerificador, data)
       .then(() => {
         window.scrollTo(0, 0);
-        consultaVerificador(problemaId);
-        toast({
-          title: "Sucesso",
-          description: "Verificador atualizado!",
+        toast.success("Verificador atualizado com sucesso!", {
+          autoClose: 5000,
+          style: {
+            border: "1px solid #07bc0c",
+          },
         });
-        window.location.reload();
+        consultaVerificador(problemaId);
       })
       .catch(() => {
         window.scrollTo(0, 0);
-        toast({
-          variant: "destructive",
-          title: "Erro.",
-          description: "A Atualização do verificador falhou. Tente novamente!",
+        toast.error("A Atualização do verificador falhou. Tente novamente!", {
+          autoClose: 5000,
+          style: {
+            border: "1px solid #e74c3c",
+          },
         });
       });
 

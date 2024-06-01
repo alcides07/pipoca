@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/form";
 import AutenticacaoService from "@/services/models/autenticacaoService";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 const formSchema = z.object({
   username: z.string().nonempty({ message: "O nome é obrigatório." }).min(3, {
@@ -53,6 +54,7 @@ function FormLogin({ onLogin }: any) {
           localStorage.setItem("access_token", response.data.access_token);
           navigate("/dashboard");
           onLogin();
+          toast.dismiss();
         }
       })
       .catch(() => {});

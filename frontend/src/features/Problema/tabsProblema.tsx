@@ -10,15 +10,26 @@ import problemaService from "@/services/models/problemaService";
 import EditaDeclaracao from "./EditaProblema/componentes/editaDeclaracao";
 import EditaVerificador from "./EditaProblema/componentes/editaVerificador";
 import VerificadorProblema from "../Problema/CadastraProblema/components/verificadorProblema";
+import { toast } from "react-toastify";
 
 function TabsProblema() {
   const { id } = useParams();
   const [integridade, setIntegridade] = useState<iIntegridade>();
-  const [tabValor, setTabValor] = useState(localStorage.getItem("aba"));
-
+  const [tabValor, setTabValor] = useState<string>(localStorage.getItem("aba"));
+  const [verificadorImporte, setVerificadorImporte] = useState<boolean>(
+    JSON.parse(localStorage.getItem("V") || "false")
+  );
   useEffect(() => {
     integridadeProblem();
   }, []);
+
+  useEffect(() => {
+    if (verificadorImporte === true) {
+      mensagemImporteVerificador();
+      localStorage.removeItem("V");
+      setVerificadorImporte(false);
+    }
+  }, [verificadorImporte]);
 
   useEffect(() => {
     if (tabValor !== null) {
@@ -34,6 +45,15 @@ function TabsProblema() {
           setIntegridade(response.data);
         });
     }
+  }
+
+  function mensagemImporteVerificador() {
+    toast.success("Verificador importado com sucesso!", {
+      autoClose: 5000,
+      style: {
+        border: "1px solid #07bc0c",
+      },
+    });
   }
 
   return (

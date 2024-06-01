@@ -35,7 +35,7 @@ import Loading from "@/components/loading";
 import verificadorService from "@/services/models/verificadorService";
 import { DataTable } from "@/components/table";
 import { verificadorProblemaColumns } from "@/components/table/columns/verificadorProblemaColumns";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "react-toastify";
 import { Input } from "@/components/ui/input";
 import type {
   iTesteVerificador,
@@ -98,17 +98,20 @@ function VerificadorProblema({ problemaId }: CadastraVerificadorProps) {
       .then(() => {
         window.scrollTo(0, 0);
         consultaVerificador(problemaId);
-        toast({
-          title: "Sucesso",
-          description: "Verificador cadastrado!",
+        toast.success("Verificador cadastrado com sucesso!", {
+          autoClose: 5000,
+          style: {
+            border: "1px solid #07bc0c",
+          },
         });
       })
       .catch(() => {
         window.scrollTo(0, 0);
-        toast({
-          variant: "destructive",
-          title: "Erro.",
-          description: "O cadastro do verificador falhou. Tente novamente!",
+        toast.error("O cadastro do verificador falhou. Tente novamente!", {
+          autoClose: 5000,
+          style: {
+            border: "1px solid #e74c3c",
+          },
         });
       });
 
