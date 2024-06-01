@@ -57,7 +57,14 @@ function FormLogin({ onLogin }: any) {
           toast.dismiss();
         }
       })
-      .catch(() => {});
+      .catch((error) => {
+        toast.error(error.response.data.error, {
+          autoClose: 5000,
+          style: {
+            border: "1px solid #e74c3c",
+          },
+        });
+      });
   }
   return (
     <Card className="w-full">
