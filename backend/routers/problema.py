@@ -32,7 +32,7 @@ from schemas.problema import ProblemaCreate, ProblemaCreateUpload, ProblemaReadF
 from schemas.common.pagination import PaginationSchema
 from dependencies.database import get_db
 from sqlalchemy.orm import Session
-from orm.problema import create_problema, create_problema_upload, get_all_problemas, get_arquivos_problema, get_declaracoes_problema, get_meus_problemas, get_problema_by_id, get_respostas_problema, get_integridade_problema, get_tags_problema, get_testes_exemplo_de_problema_executados, get_testes_problema, get_validador_problema, get_verificador_problema, update_problema
+from orm.problema import create_problema, create_problema_upload, get_all_problemas, get_arquivos_problema, get_declaracoes_problema, get_linguagens_problema, get_meus_problemas, get_problema_by_id, get_respostas_problema, get_integridade_problema, get_tags_problema, get_testes_exemplo_de_problema_executados, get_testes_problema, get_validador_problema, get_verificador_problema, update_problema
 from schemas.common.response import ResponseListSchema, ResponsePaginationSchema, ResponseUnitRequiredSchema, ResponseUnitSchema
 
 PROBLEMA_ID_DESCRIPTION = "Identificador do problema"
@@ -261,6 +261,29 @@ async def read_problema_status(
     )
 
 
+@router.get("/{id}/linguagens/",
+            response_model=ResponseListSchema[CompilersEnum],
+            summary="Lista as linguagens de programação aceitas para responder um problema",
+            responses={
+                404: errors[404]
+            }
+            )
+async def read_problema_linguagens(
+    db: Session = Depends(get_db),
+    id: int = Path(description=PROBLEMA_ID_DESCRIPTION),
+    token: str = Depends(oauth2_scheme)
+):
+    linguagens = await get_linguagens_problema(
+        db=db,
+        id=id,
+        token=token
+    )
+
+    return ResponseListSchema(
+        data=linguagens
+    )
+
+
 @router.get("/{id}/verificadores/",
             response_model=ResponseUnitSchema[VerificadorReadFull],
             summary="Lista um verificador pertencente a um problema",
@@ -386,17 +409,22 @@ async def create(
              status_code=201,
              summary="Cadastra um problema via pacote da plataforma Polygon",
              responses={
-                 422: errors[422],
-                 400: errors[400]
-             }
+                 422: errors[422]
+             },
+             description='''
+             **A tentativa de submeter mais de uma linguagem de programação através do OPENAPI resultará em um erro de validação.** <br> <br>
+             Isso ocorre devido ao OPENAPI não processar corretamente o envio de um array de opções, ao menos nesse cenário com **multipart/form-data**. <br> <br>
+             O envio correto deve conter uma chave **linguagens** para cada valor desejado. <br> <br>
+            '''
              )
 async def upload(
     pacote: UploadFile = File(
         description="Pacote **.zip** gerado pelo Polygon"
     ),
     privado: bool = Body(
-        description="Visibilidade do problema (privado/público)"
-    ),
+        description="Visibilidade do problema (privado/público)"),
+    linguagens: list[CompilersEnum] = Body(
+        description="Linguagens de programação aceitas na resolução do problema"),
     db: Session = Depends(get_db),
     token: str = Depends(oauth2_scheme)
 ):
@@ -425,7 +453,8 @@ async def upload(
         validador=ValidadorCreate(
             nome="", linguagem=CompilersEnum.PYTHON_3, corpo="", testes=[]),
         privado=privado,
-        testes=[]
+        testes=[],
+        linguagens=linguagens
     )
 
     def process_files_gerador(data: ET.Element, nome_arquivo_gerador: str):
