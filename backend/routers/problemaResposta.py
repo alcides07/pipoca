@@ -13,6 +13,7 @@ from schemas.common.pagination import PaginationSchema
 from schemas.common.response import ResponsePaginationSchema, ResponseUnitRequiredSchema
 from schemas.problemaResposta import ProblemaRespostaCreate, ProblemaRespostaReadFull, ProblemaRespostaReadSimple
 from sqlalchemy.orm import Session
+from schemas.tarefas import TarefaIdSchema
 from utils.errors import errors
 
 PROBLEMA_RESPOSTA_ID_DESCRIPTION = "Identificador da resposta de um problema"
@@ -147,7 +148,7 @@ async def read_id(
 
 
 @router.post("/",
-             response_model=ResponseUnitRequiredSchema[ProblemaRespostaReadSimple],
+             response_model=TarefaIdSchema,
              status_code=201,
              summary="Cadastra uma resposta para um problema",
              responses={
@@ -160,10 +161,12 @@ async def create(
     db: Session = Depends(get_db),
     token: str = Depends(oauth2_scheme)
 ):
-    problema_resposta = await create_problema_resposta(
+    task_uuid = await create_problema_resposta(
         db=db,
         problema_resposta=problema_resposta,
         token=token
     )
 
-    return ResponseUnitRequiredSchema(data=problema_resposta)
+    return TarefaIdSchema(
+        task_uuid=str(task_uuid)
+    )
