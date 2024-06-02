@@ -25,9 +25,9 @@ class AutenticacaoService {
   }
 
   async ativacao(data: iAtivacao) {
-    const response = await axiosInstance.post(`/autenticacao/ativacao/`, {
-      params: { codigo: data.codigo },
-    });
+    const response = await axiosInstance.post(
+      `/autenticacao/ativacao/?codigo=${data.codigo}`
+    );
     return response;
   }
 }
