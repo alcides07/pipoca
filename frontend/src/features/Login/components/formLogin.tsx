@@ -40,18 +40,14 @@ function FormLogin({ onLogin }: any) {
   const codigo = urlCodigo.get("codigo");
 
   useEffect(() => {
-    console.log("Entrei neste useef");
     if (codigo) {
-      console.log("Entrei neste no if do código");
-
       ativacaoConta({ codigo: codigo });
     }
   }, [codigo]);
 
   function ativacaoConta(data: iAtivacao) {
     AutenticacaoService.ativacao(data)
-      .then((response) => {
-        console.log("response", response);
+      .then(() => {
         toast.success("Sua conta foi ativada com sucesso.", {
           autoClose: 5000,
           style: {
