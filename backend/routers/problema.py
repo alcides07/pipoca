@@ -1,5 +1,6 @@
 import os
 import json
+import re
 import zipfile
 import tempfile
 import xml.etree.ElementTree as ET
@@ -13,7 +14,7 @@ from routers.user import USER_ID_DESCRIPTION
 from schemas.arquivo import ArquivoCreate, ArquivoReadFull, SecaoEnum
 from schemas.common.compilers import CompilersEnum
 from schemas.common.direction_order_by import DirectionOrderByEnum
-from schemas.declaracao import DeclaracaoCreate, DeclaracaoReadFull
+from schemas.declaracao import DeclaracaoCreate, DeclaracaoImagem, DeclaracaoReadFull
 from schemas.idioma import IdiomaEnum
 from schemas.problemaResposta import ProblemaRespostaReadSimple
 from schemas.problemaTeste import ProblemaTesteCreate, ProblemaTesteExecutado, ProblemaTesteReadFull, TipoTesteProblemaEnum
@@ -23,6 +24,7 @@ from schemas.validadorTeste import ValidadorTesteCreate, VereditoValidadorTesteE
 from schemas.verificador import VerificadorCreate, VerificadorReadFull
 from schemas.verificadorTeste import VereditoVerificadorTesteEnum, VerificadorTesteCreate
 from utils.bytes_to_megabytes import bytes_to_megabytes
+from utils.get_values_from_enum import get_values_from_enum
 from utils.language_parser import languages_parser
 from utils.errors import errors
 from dependencies.authenticated_user import get_authenticated_user
@@ -417,7 +419,8 @@ async def create(
              )
 async def upload(
     pacote: UploadFile = File(
-        description="Pacote **.zip** gerado pelo Polygon"),
+        description="Pacote **.zip** gerado pelo Polygon"
+    ),
     privado: bool = Body(
         description="Visibilidade do problema (privado/público)"),
     linguagens: list[CompilersEnum] = Body(
@@ -455,304 +458,458 @@ async def upload(
     )
 
     def process_files_gerador(data: ET.Element, nome_arquivo_gerador: str):
-        path_file = ""
-        filename = ""
+        try:
+            path_file = ""
+            filename = ""
 
-        for source in data.findall('.//files/executables/executable'):
-            gerador = source.find("source")
+            for source in data.findall('.//files/executables/executable'):
+                gerador = source.find("source")
 
-            if (gerador != None):
-                path_file = gerador.get("path")
+                if (gerador != None):
+                    path_file = gerador.get("path")
 
-                if (path_file != None):
-                    fullname = os.path.basename(path_file)
-                    filename, _ = os.path.splitext(fullname)
+                    if (path_file != None):
+                        fullname = os.path.basename(path_file)
+                        filename, _ = os.path.splitext(fullname)
 
-                    if (nome_arquivo_gerador in filename):
-                        linguagem = gerador.get("type")
-                        break
+                        if (nome_arquivo_gerador in filename):
+                            linguagem = gerador.get("type")
+                            break
 
-        if (path_file and fullname and linguagem):
-            with zip.open(path_file) as file:
-                corpo = file.read().decode()
+            if (path_file and fullname and linguagem):
+                with zip.open(path_file) as file:
+                    corpo = file.read().decode()
+
+                if (linguagem not in CompilersEnum.__members__.values()):
+                    linguagens_suportadas = get_values_from_enum(CompilersEnum)
+
+                    raise HTTPException(
+                        status.HTTP_400_BAD_REQUEST,
+                        f"A linguagem de um dos arquivos geradores de testes é {linguagem}, que não é suportada no momento. As linguagens atualmente suportadas são: {linguagens_suportadas}"
+                    )
 
                 arquivo = ArquivoCreate(
                     nome=fullname, corpo=corpo, secao=SecaoEnum.GERADOR, linguagem=CompilersEnum(linguagem))
 
                 problema.arquivos.append(arquivo)
 
+        except Exception:
+            raise HTTPException(
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+                "Ocorreu um erro ao processar o arquivo gerador de testes do problema!"
+            )
+
     def process_files_recursos(data: ET.Element):
-        for file in data.findall('.//resources/file'):
-            path = file.get("path")
+        try:
+            for file in data.findall('.//resources/file'):
+                path = file.get("path")
 
-            if (path != None):
-                with zip.open(path) as file:
-                    nome = file.name.split("/")[-1]
-                    corpo = file.read().decode()
+                if (path != None):
+                    with zip.open(path) as file:
+                        nome = file.name.split("/")[-1]
+                        corpo = file.read().decode()
 
-                    arquivo = ArquivoCreate(
-                        nome=nome, corpo=corpo, secao=SecaoEnum.RECURSO, status=None)
+                        arquivo = ArquivoCreate(
+                            nome=nome, corpo=corpo, secao=SecaoEnum.RECURSO, status=None)
 
-                    problema.arquivos.append(arquivo)
+                        problema.arquivos.append(arquivo)
+
+        except Exception:
+            raise HTTPException(
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+                "Ocorreu um erro ao processar os arquivos de recursos do problema!"
+            )
 
     def process_files_solucao(data: ET.Element):
-        for solution in data.findall('.//solutions/solution'):
-            status = str(solution.get("tag"))
-            source = solution.find('source')
+        try:
+            for solution in data.findall('.//solutions/solution'):
+                status_arquivo_solucao = str(solution.get("tag"))
+                source = solution.find('source')
 
-            if source != None:
-                path = source.get("path")
-                linguagem = source.get("type")
+                if source != None:
+                    path = source.get("path")
+                    linguagem = source.get("type")
 
-            if (path != None):
-                with zip.open(path) as file:
-                    nome = file.name.split("/")[-1]
-                    corpo = file.read().decode()
+                if (path != None):
+                    with zip.open(path) as file:
+                        nome = file.name.split("/")[-1]
+                        corpo = file.read().decode()
+
+                    if (linguagem not in CompilersEnum.__members__.values()):
+                        linguagens_suportadas = get_values_from_enum(
+                            CompilersEnum)
+
+                        raise HTTPException(
+                            status.HTTP_400_BAD_REQUEST,
+                            f"A linguagem de um dos arquivos de solução é {linguagem}, que não é suportada no momento. As linguagens atualmente suportadas são: {linguagens_suportadas}"
+                        )
+
                     arquivo = ArquivoCreate(
-                        nome=nome, corpo=corpo, linguagem=CompilersEnum(linguagem), secao=SecaoEnum.SOLUCAO, status=status)
+                        nome=nome, corpo=corpo, linguagem=CompilersEnum(linguagem), secao=SecaoEnum.SOLUCAO, status=status_arquivo_solucao)
 
                     problema.arquivos.append(arquivo)
 
+        except Exception:
+            raise HTTPException(
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+                "Ocorreu um erro ao processar os arquivos de solução do problema!"
+            )
+
     def process_tempo_limite(data: ET.Element):
-        tempo_limite = data.find('.//time-limit')
-        if tempo_limite != None and tempo_limite.text != None:
-            problema.tempo_limite = int(tempo_limite.text)
+        try:
+            tempo_limite = data.find('.//time-limit')
+            if tempo_limite != None and tempo_limite.text != None:
+                problema.tempo_limite = int(tempo_limite.text)
+
+        except Exception:
+            raise HTTPException(
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+                "Ocorreu um erro ao processar o tempo limite do problema!"
+            )
 
     def process_memoria_limite(data: ET.Element):
-        memoria_limite = data.find('.//memory-limit')
-        if memoria_limite != None and memoria_limite.text != None:
-            memoria_converted = bytes_to_megabytes(int(
-                (memoria_limite.text)))
+        try:
+            memoria_limite = data.find('.//memory-limit')
+            if memoria_limite != None and memoria_limite.text != None:
+                memoria_converted = bytes_to_megabytes(int(
+                    (memoria_limite.text)))
 
-            problema.memoria_limite = memoria_converted
+                problema.memoria_limite = memoria_converted
+
+        except Exception:
+            raise HTTPException(
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+                "Ocorreu um erro ao processar a memória limite do problema!"
+            )
 
     def process_verificador(data: ET.Element):
-        verificador = data.find('.//checker/source')
-        if (verificador != None):
-            path = verificador.get("path")
-            linguagem = verificador.get("type")
+        try:
+            verificador = data.find('.//checker/source')
+            if (verificador != None):
+                path = verificador.get("path")
+                linguagem = verificador.get("type")
+
+                if path != None:
+                    with zip.open(path) as file:
+                        nome = os.path.basename(file.name)
+                        corpo = file.read().decode()
+
+                        if (linguagem not in CompilersEnum.__members__.values()):
+                            linguagens_suportadas = get_values_from_enum(
+                                CompilersEnum)
+
+                            raise HTTPException(
+                                status.HTTP_400_BAD_REQUEST,
+                                f"A linguagem do verificador é {linguagem}, que não é suportada no momento. As linguagens atualmente suportadas são: {linguagens_suportadas}"
+                            )
+
+                        verificador = VerificadorCreate(
+                            nome=nome, corpo=corpo, linguagem=CompilersEnum(linguagem), testes=[])
+
+                        problema.verificador = verificador
+
+        except Exception:
+            raise HTTPException(
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+                "Ocorreu um erro ao processar o verificador do problema!"
+            )
+
+    def process_validador(data: ET.Element):
+        try:
+            validador = data.find(".//validator/source")
+            if (validador != None):
+                path = validador.get("path")
+                linguagem = validador.get("type")
 
             if path != None:
                 with zip.open(path) as file:
                     nome = os.path.basename(file.name)
                     corpo = file.read().decode()
 
-                    verificador = VerificadorCreate(
+                    if (linguagem not in CompilersEnum.__members__.values()):
+                        linguagens_suportadas = get_values_from_enum(
+                            CompilersEnum)
+
+                        raise HTTPException(
+                            status.HTTP_400_BAD_REQUEST,
+                            f"A linguagem do validador é {linguagem}, que não é suportada no momento. As linguagens atualmente suportadas são: {linguagens_suportadas}"
+                        )
+
+                    validador = ValidadorCreate(
                         nome=nome, corpo=corpo, linguagem=CompilersEnum(linguagem), testes=[])
 
-                    problema.verificador = verificador
+                    problema.validador = validador
 
-    def process_validador(data: ET.Element):
-        validador = data.find(".//validator/source")
-        if (validador != None):
-            path = validador.get("path")
-            linguagem = validador.get("type")
-
-        if path != None:
-            with zip.open(path) as file:
-                nome = os.path.basename(file.name)
-                corpo = file.read().decode()
-
-                validador = ValidadorCreate(
-                    nome=nome, corpo=corpo, linguagem=CompilersEnum(linguagem), testes=[])
-
-                problema.validador = validador
+        except Exception:
+            raise HTTPException(
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+                "Ocorreu um erro ao processar o validador do problema!"
+            )
 
     def process_verificador_teste(data: ET.Element):
-        for indice, verificador_teste in enumerate(data.findall(".//checker/testset/tests/test"), start=1):
-            verdict = verificador_teste.get("verdict")
-            verdict_enum = VereditoVerificadorTesteEnum(verdict)
+        try:
+            for indice, verificador_teste in enumerate(data.findall(".//checker/testset/tests/test"), start=1):
+                verdict = verificador_teste.get("verdict")
+                verdict_enum = VereditoVerificadorTesteEnum(verdict)
 
-            verificador_teste = VerificadorTesteCreate(
-                numero=indice,
-                veredito=verdict_enum,
-                entrada=""
+                verificador_teste = VerificadorTesteCreate(
+                    numero=indice,
+                    veredito=verdict_enum,
+                    entrada=""
+                )
+
+                problema.verificador.testes.append(verificador_teste)
+
+        except Exception:
+            raise HTTPException(
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+                "Ocorreu um erro ao processar os testes do verificador do problema!"
             )
-
-            problema.verificador.testes.append(verificador_teste)
 
     def process_validador_teste(data):
-        for indice, validador_teste in enumerate(data.findall(".//validator/testset/tests/test"), start=1):
-            verdict = validador_teste.get("verdict")
-            verdict_enum = VereditoValidadorTesteEnum(verdict)
+        try:
+            for indice, validador_teste in enumerate(data.findall(".//validator/testset/tests/test"), start=1):
+                verdict = validador_teste.get("verdict")
+                verdict_enum = VereditoValidadorTesteEnum(verdict)
 
-            validador_teste = ValidadorTesteCreate(
-                numero=indice,
-                veredito=verdict_enum,
-                entrada=""
+                validador_teste = ValidadorTesteCreate(
+                    numero=indice,
+                    veredito=verdict_enum,
+                    entrada=""
+                )
+
+                problema.validador.testes.append(validador_teste)
+
+        except Exception:
+            raise HTTPException(
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+                "Ocorreu um erro ao processar os testes do validador do problema!"
             )
 
-            problema.validador.testes.append(validador_teste)
-
     def process_name(data: ET.Element):
-        if (data != None):
-            problema.nome = str(data.get("short-name"))
+        try:
+            if (data != None):
+                problema.nome = str(data.get("short-name"))
+
+        except Exception:
+            raise HTTPException(
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+                "Ocorreu um erro ao processar o nome do problema!"
+            )
 
     def process_tags(data: ET.Element):
-        for tag in data.findall('.//tags/tag'):
-            name = str(tag.get("value"))
-            problema.tags.append(name)
+        try:
+            for tag in data.findall('.//tags/tag'):
+                name = str(tag.get("value"))
+                problema.tags.append(name)
+
+        except Exception:
+            raise HTTPException(
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+                "Ocorreu um erro ao processar as tags do problema!"
+            )
 
     def process_tests(data: ET.Element):
-        nome_arquivo_gerador = ""
+        try:
+            nome_arquivo_gerador = ""
 
-        for indice, test in enumerate(data.findall(".//judging/testset/tests/test"), start=1):
-            cmd = test.get("cmd")
-            tipo = test.get("method")
-            exemplo = test.get("sample")
+            for indice, test in enumerate(data.findall(".//judging/testset/tests/test"), start=1):
+                cmd = test.get("cmd")
+                tipo = test.get("method")
+                exemplo = test.get("sample")
 
-            teste = ProblemaTesteCreate(
-                numero=indice, tipo=TipoTesteProblemaEnum.MANUAL, exemplo=False, entrada="")
+                teste = ProblemaTesteCreate(
+                    numero=indice, tipo=TipoTesteProblemaEnum.MANUAL, exemplo=False, entrada="")
 
-            if (cmd != None):
-                nome_arquivo_gerador = cmd.split()[0]
-                teste.entrada = cmd
+                if (cmd != None):
+                    nome_arquivo_gerador = cmd.split()[0]
+                    teste.entrada = cmd
 
-            if (tipo != None):
-                if (tipo == "manual"):
-                    teste.tipo = TipoTesteProblemaEnum.MANUAL
-                elif (tipo == "generated"):
-                    teste.tipo = TipoTesteProblemaEnum.GERADO
+                if (tipo != None):
+                    if (tipo == "manual"):
+                        teste.tipo = TipoTesteProblemaEnum.MANUAL
+                    elif (tipo == "generated"):
+                        teste.tipo = TipoTesteProblemaEnum.GERADO
 
-            if (exemplo != None):
-                if (exemplo == "true"):
-                    teste.exemplo = True
-                elif (exemplo == "false"):
-                    teste.exemplo = False
+                if (exemplo != None):
+                    if (exemplo == "true"):
+                        teste.exemplo = True
+                    elif (exemplo == "false"):
+                        teste.exemplo = False
 
-            problema.testes.append(teste)
+                problema.testes.append(teste)
 
-        if (nome_arquivo_gerador != ""):
-            process_files_gerador(data, nome_arquivo_gerador)
+            if (nome_arquivo_gerador != ""):
+                process_files_gerador(data, nome_arquivo_gerador)
+
+        except Exception:
+            raise HTTPException(
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+                "Ocorreu um erro ao processar os testes do problema!"
+            )
 
     async def process_xml(zip, filename):
         with zip.open(filename) as xml:
             content = xml.read().decode()
             data = ET.fromstring(content)
 
-            # Atribui o tempo limite
             process_tempo_limite(data)
 
-            # Atribui a memória limite
             process_memoria_limite(data)
 
-            # Atribui o nome do problema
             process_name(data)
 
-            # Atribui todos os testes do problema
             process_tests(data)
 
-            # Atribui todas as tags
             process_tags(data)
 
-            # Atribui todos os arquivos de recursos
             process_files_recursos(data)
 
-            # Atribui todos os arquivos de solução
             process_files_solucao(data)
 
-            # Atribui o verificador
             process_verificador(data)
 
-            # Atribui os testes do verificador
             process_verificador_teste(data)
 
-            # Atribui o validador
             process_validador(data)
 
-            # Atribui os testes do validador
             process_validador_teste(data)
 
     def process_declaracoes(zip, filename):
-        with zip.open(filename) as statement:
-            content = statement.read().decode()
-            data = json.loads(content)
+        try:
+            with zip.open(filename) as statement:
+                content = statement.read().decode()
+                data = json.loads(content)
 
-            declaracao = DeclaracaoCreate(
-                titulo=data["name"],
-                contextualizacao=data["legend"],
-                formatacao_entrada=data["input"],
-                formatacao_saida=data["output"],
-                tutorial=data["tutorial"],
-                observacao=data["notes"],
-                idioma=IdiomaEnum[languages_parser.get(
-                    data["language"].capitalize(), "OT")]
-            )
+                nomes_imagens = re.findall(
+                    r'\\includegraphics\[.*\]\{(.*?)\}', data["legend"]
+                )
 
-            problema.declaracoes.append(declaracao)
+                declaracao = DeclaracaoCreate(
+                    titulo=data["name"],
+                    contextualizacao=data["legend"],
+                    formatacao_entrada=data["input"],
+                    formatacao_saida=data["output"],
+                    tutorial=data["tutorial"],
+                    observacao=data["notes"],
+                    imagens=[],
+                    idioma=IdiomaEnum[languages_parser.get(
+                        data["language"].capitalize(), "OT")]
+                )
 
-    def process_entrada_verificador_teste(zip: zipfile.ZipFile, directory: str):
-        indice = 0
-
-        for filename in zip.namelist():
-            if filename != directory and filename.startswith(directory) and "." not in filename:
-                with zip.open(filename) as file:
-                    content = file.read().decode()
-                    verificador_teste = problema.verificador.testes[indice]
-                    verificador_teste.entrada = content
-
-                    indice += 1
-
-    def process_entrada_validador_teste(zip: zipfile.ZipFile, directory: str):
-        indice = 0
-
-        for filename in zip.namelist():
-            if filename != directory and filename.startswith(directory):
-                with zip.open(filename) as file:
-                    content = file.read().decode()
-
-                    validador_teste = problema.validador.testes[indice]
-                    validador_teste.entrada = content
-
-                    indice += 1
-
-    def process_entrada_teste_manual(zip: zipfile.ZipFile, directory: str):
-        indice = 0
-
-        for filename in zip.namelist():
-            if (filename != directory and filename.startswith(directory)):
-                with zip.open(filename) as file:
-                    content = file.read().decode()
-
-                    teste = problema.testes[indice]
-                    if (teste.tipo == TipoTesteProblemaEnum.MANUAL):
-                        teste.entrada = content
-
-                    indice += 1
-
-    try:
-        with zipfile.ZipFile(temp_file, 'r') as zip:
-            for filename in zip.namelist():
-
-                # Processa o xml global do problema
-                if filename.lower() == "problem.xml":
-                    await process_xml(zip, filename)
-
-                    process_entrada_verificador_teste(
-                        zip, "files/tests/checker-tests/")
-                    process_entrada_validador_teste(
-                        zip, "files/tests/validator-tests/")
-
-                    process_entrada_teste_manual(
-                        zip, "tests/"
+                for nome_imagem in nomes_imagens:
+                    partes_filename = filename.split('/')
+                    endereco_statement = '/'.join(partes_filename[:-1])
+                    caminho_imagem = os.path.join(
+                        endereco_statement, nome_imagem
                     )
 
-                # Processa o statement de cada idioma
-                if filename.startswith("statements/") and filename.endswith("problem-properties.json"):
-                    process_declaracoes(zip, filename)
+                    with zip.open(caminho_imagem) as file_imagem:
+                        data = file_imagem.read()
 
-        data = await create_problema_upload(
-            db=db,
-            problema=problema,
-            token=token
-        )
-        return ResponseUnitRequiredSchema(data=data)
+                        declaracao_imagem = DeclaracaoImagem(
+                            nome=nome_imagem,
+                            conteudo=data
+                        )
 
-    except HTTPException:
-        raise HTTPException(
-            status.HTTP_500_INTERNAL_SERVER_ERROR,
-            "Ocorreu um erro no processamento do pacote!"
-        )
+                        declaracao.imagens.append(declaracao_imagem)
+
+                problema.declaracoes.append(declaracao)
+
+        except Exception:
+            raise HTTPException(
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+                "Ocorreu um erro ao processar as declarações do problema!"
+            )
+
+    def process_entrada_verificador_teste(zip: zipfile.ZipFile, directory: str):
+        try:
+            indice = 0
+
+            for filename in zip.namelist():
+                if filename != directory and filename.startswith(directory) and "." not in filename:
+                    with zip.open(filename) as file:
+                        content = file.read().decode()
+                        verificador_teste = problema.verificador.testes[indice]
+                        verificador_teste.entrada = content
+
+                        indice += 1
+
+        except Exception:
+            raise HTTPException(
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+                "Ocorreu um erro ao processar as entradas dos testes do verificador do problema!"
+            )
+
+    def process_entrada_validador_teste(zip: zipfile.ZipFile, directory: str):
+        try:
+            indice = 0
+
+            for filename in zip.namelist():
+                if filename != directory and filename.startswith(directory):
+                    with zip.open(filename) as file:
+                        content = file.read().decode()
+
+                        validador_teste = problema.validador.testes[indice]
+                        validador_teste.entrada = content
+
+                        indice += 1
+
+        except Exception:
+            raise HTTPException(
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+                "Ocorreu um erro ao processar as entradas dos testes do validador do problema!"
+            )
+
+    def process_entrada_teste_manual(zip: zipfile.ZipFile, directory: str):
+        try:
+            indice = 0
+
+            for filename in zip.namelist():
+                if (filename != directory and filename.startswith(directory)):
+                    with zip.open(filename) as file:
+                        content = file.read().decode()
+
+                        teste = problema.testes[indice]
+                        if (teste.tipo == TipoTesteProblemaEnum.MANUAL):
+                            teste.entrada = content
+
+                        indice += 1
+
+        except Exception:
+            raise HTTPException(
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+                "Ocorreu um erro ao processar as entradas dos testes manuais do problema!"
+            )
+
+    with zipfile.ZipFile(temp_file, 'r') as zip:
+        for filename in zip.namelist():
+
+            if filename.lower() == "problem.xml":
+                await process_xml(zip, filename)
+
+                process_entrada_verificador_teste(
+                    zip, "files/tests/checker-tests/"
+                )
+
+                process_entrada_validador_teste(
+                    zip, "files/tests/validator-tests/"
+                )
+
+                process_entrada_teste_manual(
+                    zip, "tests/"
+                )
+
+            if filename.startswith("statements/") and filename.endswith("problem-properties.json"):
+                process_declaracoes(zip, filename)
+
+    data = await create_problema_upload(
+        db=db,
+        problema=problema,
+        token=token
+    )
+
+    return ResponseUnitRequiredSchema(data=data)
 
 
 @router.put("/{id}/",

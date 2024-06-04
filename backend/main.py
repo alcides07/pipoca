@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 from utils.translate import translate
 from utils.errors import errors
 from openapi.validation_exception import validation_exception_handler
@@ -10,7 +11,10 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from decouple import config
 
-TEST_ENV = str(config("TEST_ENV"))
+TEST_ENV = int(config("TEST_ENV", default=0))
+VERSION_API = str(config("VERSION_API", default="0.0.0"))
+FRONT_BASE_URL = str(config("FRONT_BASE_URL", default="http://localhost:5173"))
+ALLOWED_ORIGINS = [FRONT_BASE_URL]
 
 
 def get_config_database():
@@ -18,7 +22,7 @@ def get_config_database():
     return engine, Base
 
 
-if (TEST_ENV != "1"):
+if (not TEST_ENV):
     engine, Base = get_config_database()
     Base.metadata.create_all(bind=engine)
 
@@ -35,11 +39,14 @@ app = FastAPI(docs_url=None,
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"]
 )
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
 
 for router in routes:
     app.include_router(router)
@@ -50,7 +57,7 @@ def custom_openapi():
         return app.openapi_schema
     openapi_schema = get_openapi(
         title="API do sistema PIPOCA",
-        version="0.0.1",
+        version=VERSION_API,
         description="API em desenvolvimento da Plataforma Interativa de Programação On-line e Competições Acadêmicas (PIPOCA)",
         routes=app.routes,
     )
