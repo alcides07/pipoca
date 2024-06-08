@@ -9,7 +9,7 @@ services:
       dockerfile: ./Dockerfile
     command: bash -c "alembic upgrade head && uvicorn main:app --host 0.0.0.0 --reload"
     volumes:
-      - static-volume:/API/static/
+      - imagens-perfil-user:/API/backend/static/users/profile/
       - /var/run/docker.sock:/var/run/docker.sock
     ports:
       - "8000:8000"
@@ -29,5 +29,5 @@ services:
       - "5432:5432"
 
 volumes:
-  static-volume:
+  imagens-perfil-user:
   postgres-data:

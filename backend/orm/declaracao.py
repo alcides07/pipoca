@@ -7,7 +7,6 @@ from models.declaracao import Declaracao
 from models.problema import Problema
 from schemas.declaracao import DeclaracaoCreateSingle, DeclaracaoUpdatePartial, DeclaracaoUpdateTotal
 from schemas.idioma import IdiomaEnum
-from decouple import config
 
 
 async def get_declaracao_by_id(
@@ -123,44 +122,3 @@ async def update_declaracao(
             status.HTTP_500_INTERNAL_SERVER_ERROR,
             "Ocorreu um erro na atualização da declaração!"
         )
-
-
-async def get_imagens_declaracao(
-        db: Session,
-        id: int,
-        token: str
-):
-    db_declaracao = db.query(Declaracao).filter(Declaracao.id == id).first()
-
-    if (not db_declaracao):
-        raise HTTPException(
-            status.HTTP_404_NOT_FOUND,
-            "A declaração não foi encontrada!"
-        )
-
-    user = await get_authenticated_user(token, db)
-
-    if (
-        is_user(user)
-        and
-        db_declaracao.problema.privado == True
-        and
-        db_declaracao.problema.usuario_id != user.id
-    ):
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED)
-
-    lista_imagens: list[str] = []
-    API_BASE_URL = str(config("API_BASE_URL"))
-
-    for caminho_imagem in db_declaracao.imagens:
-        try:
-            with open(str(caminho_imagem), "rb"):
-                lista_imagens.append(API_BASE_URL + "/" + str(caminho_imagem))
-
-        except IOError:
-            raise HTTPException(
-                status.HTTP_500_INTERNAL_SERVER_ERROR,
-                f"Ocorreu um erro ao tentar localizar a imagem: {caminho_imagem}"
-            )
-
-    return lista_imagens
