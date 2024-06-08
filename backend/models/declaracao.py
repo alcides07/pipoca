@@ -1,4 +1,4 @@
-from sqlalchemy import ARRAY, Column, ForeignKey, Integer, String
+from sqlalchemy import Column, ForeignKey, Integer, String
 from database import Base
 from sqlalchemy.orm import relationship
 
@@ -57,9 +57,4 @@ class Declaracao(Base):
     idioma = Column(
         String,
         nullable=False
-    )
-
-    imagens = Column(
-        ARRAY(String()),
-        default=[]
     )

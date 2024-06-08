@@ -3,8 +3,6 @@ import os
 from passlib.context import CryptContext
 from main import app
 from fastapi.testclient import TestClient
-from datetime import timedelta
-from utils.create_token import create_token
 
 client = TestClient(app)
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -29,24 +27,9 @@ def create_user_helper():
         json=JSON_USER
     )
 
-    activate_account_user_helper(JSON_USER["email"])
+    token = login_user_helper(value, password)
 
-    token_login = login_user_helper(value, password)
-    return response, token_login, JSON_USER
-
-
-def activate_account_user_helper(email: str):
-    access_token_expires = timedelta(minutes=5)
-    token_ativacao = create_token(
-        data={
-            "sub": email
-        },
-        expires_delta=access_token_expires
-    )
-
-    client.post(
-        f"{URL_AUTH}/ativacao/?codigo={token_ativacao}",
-    )
+    return response, token, JSON_USER
 
 
 def login_user_helper(username, password):
