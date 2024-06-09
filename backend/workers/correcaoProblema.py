@@ -2,7 +2,6 @@ import io
 import os
 import tarfile
 import tempfile
-import asyncio
 import docker
 from typing import List
 from fastapi import HTTPException
@@ -60,7 +59,7 @@ def correcao_problema(
                 return arquivo
         return None
 
-    async def execute_checker(
+    def execute_checker(
         db_problema: Problema,
         output_codigo_solucao: list[str],
         output_codigo_user: list[str],
@@ -186,7 +185,7 @@ def correcao_problema(
 
         return veredito
 
-    async def execute_teste_gerado(
+    def execute_teste_gerado(
         teste: ProblemaTeste,
         arquivo_gerador: Arquivo
     ):
@@ -285,7 +284,7 @@ def correcao_problema(
 
         return stdout_logs
 
-    async def execute_arquivo_solucao(
+    def execute_arquivo_solucao(
         db_problema: Problema,
         arquivo_solucao: Arquivo,
         output_testes_gerados: List[str]
@@ -387,7 +386,7 @@ def correcao_problema(
 
         return output_codigo_solucao
 
-    async def execute_codigo_user(
+    def execute_codigo_user(
         db_problema: Problema,
         problema_resposta: ProblemaRespostaCreate,
         arquivo_gerador: Arquivo | None
@@ -429,7 +428,7 @@ def correcao_problema(
                             "O arquivo gerador de testes não foi encontrado!"
                         )
 
-                    teste_entrada = await execute_teste_gerado(
+                    teste_entrada = execute_teste_gerado(
                         teste, arquivo_gerador
                     )
 
@@ -497,14 +496,14 @@ def correcao_problema(
 
         return output_codigo_user, output_testes_gerados
 
-    async def execute_processo_resolucao(
+    def execute_processo_resolucao(
         problema_resposta: ProblemaRespostaCreate,
         db_problema: Problema
     ):
         arquivo_solucao = get_arquivo_solucao(db_problema)
         arquivo_gerador = get_arquivo_gerador(db_problema)
 
-        output_codigo_user, output_testes_gerados = await execute_codigo_user(
+        output_codigo_user, output_testes_gerados = execute_codigo_user(
             db_problema,
             problema_resposta,
             arquivo_gerador
@@ -513,13 +512,13 @@ def correcao_problema(
         if (isinstance(output_codigo_user, str)):
             return [], [], [], output_codigo_user
 
-        output_codigo_solucao = await execute_arquivo_solucao(
+        output_codigo_solucao = execute_arquivo_solucao(
             db_problema,
             arquivo_solucao,
             output_testes_gerados
         )
 
-        veredito = await execute_checker(
+        veredito = execute_checker(
             db_problema,
             output_codigo_solucao,
             output_codigo_user,
@@ -535,13 +534,10 @@ def correcao_problema(
             Problema.id == problema_id).first()
 
         problema_resposta = ProblemaRespostaCreate(**problema_resposta_dict)
-        loop = asyncio.get_event_loop()
 
-        veredito, output_user, output_judge, erro = loop.run_until_complete(
-            execute_processo_resolucao(
-                problema_resposta=problema_resposta,
-                db_problema=db_problema
-            )
+        veredito, output_user, output_judge, erro = execute_processo_resolucao(
+            problema_resposta=problema_resposta,
+            db_problema=db_problema
         )
 
         db_problema_resposta = ProblemaResposta(**problema_resposta_dict)
