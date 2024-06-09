@@ -11,7 +11,6 @@ if (ENV == "production"):
     FRONT_BASE_URL = str(config("PRODUCTION_FRONT_BASE_URL"))
     API_BASE_URL = str(config("PRODUCTION_API_BASE_URL"))
     BROKER_URL = str(config("PRODUCTION_BROKER_URL"))
-    PASSWORD_EMAIL = str(config("PRODUCTION_PASSWORD_EMAIL"))
 
 
 elif (ENV == "test"):
