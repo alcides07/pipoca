@@ -17,7 +17,6 @@ from decouple import config
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="autenticacao")
-ALGORITHM = str(config("ALGORITHM"))
 TOKEN_EXPIRE_MINUTES = float(config("TOKEN_EXPIRE_MINUTES"))
 
 

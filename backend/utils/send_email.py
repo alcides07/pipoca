@@ -1,7 +1,7 @@
 import smtplib
-from decouple import config
 from fastapi import HTTPException, status
 from email.mime.text import MIMEText
+from enviroments import ENV, PASSWORD_EMAIL
 
 
 def send_email(
@@ -11,13 +11,11 @@ def send_email(
     corpo: str
 ):
     try:
-        producao = int(config("PRODUCAO", default=0))
-        if (producao):
+        if (ENV == "production"):
             mensagem = MIMEText(corpo, "html")
             mensagem['From'] = remetente
             mensagem['Subject'] = assunto
             mensagem['To'] = destinatario
-            PASSWORD_EMAIL = str(config("PASSWORD_EMAIL"))
 
             with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp_server:
                 smtp_server.login(remetente, PASSWORD_EMAIL)

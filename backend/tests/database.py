@@ -2,9 +2,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 from database import Base
-from decouple import config
+from enviroments import DATABASE_URL
 
-DATABASE_URL = str(config("DATABASE_URL"))
 
 engine = create_engine(
     DATABASE_URL,

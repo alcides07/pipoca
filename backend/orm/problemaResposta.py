@@ -9,6 +9,7 @@ from constants import FILENAME_RUN, INPUT_TEST_FILENAME, OUTPUT_JUDGE_FILENAME, 
 from dependencies.authenticated_user import get_authenticated_user
 from dependencies.authorization_user import is_admin, is_user
 from fastapi import HTTPException, status
+from enviroments import ENV
 from filters.problemaResposta import OrderByFieldsProblemaRespostaEnum, search_fields_problema_resposta
 from models.arquivo import Arquivo
 from models.problemaResposta import ProblemaResposta
@@ -549,9 +550,7 @@ async def create_problema_resposta(
         )
 
     try:
-        TESTE_WORKERS = int(config("TESTE_WORKERS", default=0))
-
-        if (TESTE_WORKERS):
+        if (ENV != "test"):
             problema_resposta_dict = problema_resposta.model_dump()
             task = correcao_problema.apply_async(
                 args=[
