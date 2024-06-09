@@ -18,6 +18,7 @@ COPY ./tests ./tests
 COPY ./utils ./utils
 COPY ./filters ./filters
 COPY ./static ./static
+COPY ./workers ./workers
 COPY database.py .
 COPY compilers.py .
 COPY constants.py .

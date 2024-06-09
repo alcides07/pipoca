@@ -1,12 +1,10 @@
 version: "3.9"
 services:
-  fastapi:
+  api:
     container_name: API
     env_file:
       - .env
-    build:
-      context: ./
-      dockerfile: ./Dockerfile
+    build: .
     command: bash -c "alembic upgrade head && uvicorn main:app --host 0.0.0.0 --reload"
     volumes:
       - static-volume:/API/static/
@@ -15,6 +13,42 @@ services:
       - "8000:8000"
     depends_on:
       - postgres
+
+  worker:
+    container_name: WORKER
+    env_file:
+      - .env
+    build: .
+    command: celery -A workers worker --loglevel=info -n juiz-1@%h -Q correcao-problema
+    depends_on:
+      - api
+      - rabbitmq
+
+  flower:
+    container_name: FLOWER
+    env_file:
+      - .env
+    build: .
+    image: mher/flower
+    command: celery -A workers flower --basic-auth=${FLOWER_BASIC_AUTH}
+    ports:
+      - "5555:5555"
+    depends_on:
+      - rabbitmq
+    environment:
+      - FLOWER_BASIC_AUTH=${FLOWER_BASIC_AUTH}
+
+  rabbitmq:
+    container_name: RABBITMQ
+    env_file:
+      - .env
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS}
 
   postgres:
     container_name: DATABASE
