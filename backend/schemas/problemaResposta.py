@@ -3,6 +3,7 @@ from datetime import datetime
 from typing import Optional
 from pydantic import BaseModel, Field
 from schemas.common.compilers import CompilersEnum
+from schemas.tarefas import TarefaIdSchema
 from schemas.user import UserReadSimple
 
 PROBLEMA_RESPOSTA_ID_DESCRIPTION = "Identificador da resposta do problema"
@@ -88,3 +89,14 @@ class ProblemaRespostaReadSimple(ProblemaRespostaBaseFull):
 
 class ProblemaRespostaCreate(ProblemaRespostaBase):
     pass
+
+
+class ProblemaRespostaOrUUID(BaseModel):
+    task: Optional[TarefaIdSchema] = Field(
+        default=None,
+        description="Objeto de uma tarefa assíncrona"
+    )
+    data: Optional[ProblemaRespostaReadSimple] = Field(
+        default=None,
+        description="Objeto da resposta do problema"
+    )
