@@ -9,3 +9,7 @@ export interface iRegister {
   password: string;
   passwordConfirmation: string;
 }
+
+export interface iAtivacao {
+  codigo: string;
+}

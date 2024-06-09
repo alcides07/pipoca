@@ -7,8 +7,8 @@ import CadastraProblema from "@/features/Problema/CadastraProblema";
 import RespondeProblema from "@/features/Problema/RespondeProblema";
 import EditaProblema from "@/features/Problema/EditaProblema";
 import TabsProblema from "@/features/Problema/tabsProblema.tsx";
-import React, { useState } from "react";
 import Conteiner from "../components/conteiner";
+import { useState } from "react";
 
 const linksHeader = [
   { nome: "Dashboard", link: "/" },

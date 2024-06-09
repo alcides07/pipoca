@@ -1,21 +1,21 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { Edit2, ClipboardPenLine } from "lucide-react";
-import { iDataProblema } from "../../../interfaces/models/iProblema";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { iTesteVerificador } from "../../../interfaces/models/iVerificador";
 
-export const problemaColumns: ColumnDef<iDataProblema>[] = [
+export const verificadorProblemaColumns: ColumnDef<iTesteVerificador>[] = [
   {
-    accessorKey: "nome",
-    header: "Nome",
+    accessorKey: "numero",
+    header: "Número",
   },
   {
-    accessorKey: "usuario.username",
-    header: "Criador",
+    accessorKey: "entrada",
+    header: "Entrada",
   },
   {
-    accessorKey: "privado",
-    header: "privado",
+    accessorKey: "veredito",
+    header: "Veredito",
   },
   {
     id: "actions",

@@ -4,92 +4,85 @@ import { z } from "zod";
 import { useState, useEffect } from "react";
 
 import {
-	Form,
-	FormControl,
-	FormField,
-	FormItem,
-	FormLabel,
-	FormMessage,
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
 } from "@/components/ui/card";
 import problemaService from "@/services/models/problemaService";
 import { Separator } from "@/components/ui/separator";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "react-toastify";
 import { Progress } from "@/components/ui/progress";
 import { useParams } from "react-router-dom";
 
 const profileFormSchema = z.object({
-	privado: z.boolean().default(false).optional(),
-	nome: z
-		.string()
-		.min(3, {
-			message: "O nome do problema deve ter pelo menos 3 caracteres.",
-		})
-		.max(64, {
-			message: "O nome do problema deve ter no máximo 64 caracteres.",
-		}),
-	nome_arquivo_entrada: z
-		.string()
-		.nonempty("O nome do arquivo de entrada é obrigatório.")
-		.max(64, {
-			message:
-				"O nome do arquivo de entrada deve ter no máximo 64 caracteres.",
-		}),
-	nome_arquivo_saida: z
-		.string()
-		.nonempty("O nome do arquivo de saida é obrigatório.")
-		.max(64, {
-			message:
-				"O nome do arquivo de saída deve ter no máximo 64 caracteres.",
-		}),
-	tempo_limite: z
-		.string()
-		.refine((val: string): boolean => /^[0-9]+$/.test(val), {
-			message: "O tempo limite deve ser apenas números.",
-		})
-		.transform((val: string): number => Number(val))
-		.refine((value: number): boolean => value >= 250, {
-			message: "O tempo limite deve ser maior ou igual a 250.",
-		})
-		.refine((value: number): boolean => value <= 150000, {
-			message: "O tempo limite deve ser menor ou igual a 150000.",
-		}),
+  privado: z.boolean().default(false).optional(),
+  nome: z
+    .string()
+    .min(3, {
+      message: "O nome do problema deve ter pelo menos 3 caracteres.",
+    })
+    .max(64, {
+      message: "O nome do problema deve ter no máximo 64 caracteres.",
+    }),
+  nome_arquivo_entrada: z
+    .string()
+    .nonempty("O nome do arquivo de entrada é obrigatório.")
+    .max(64, {
+      message: "O nome do arquivo de entrada deve ter no máximo 64 caracteres.",
+    }),
+  nome_arquivo_saida: z
+    .string()
+    .nonempty("O nome do arquivo de saida é obrigatório.")
+    .max(64, {
+      message: "O nome do arquivo de saída deve ter no máximo 64 caracteres.",
+    }),
+  tempo_limite: z
+    .string()
+    .refine((val: string): boolean => /^[0-9]+$/.test(val), {
+      message: "O tempo limite deve ser apenas números.",
+    })
+    .transform((val: string): number => Number(val))
+    .refine((value: number): boolean => value >= 250, {
+      message: "O tempo limite deve ser maior ou igual a 250.",
+    })
+    .refine((value: number): boolean => value <= 150000, {
+      message: "O tempo limite deve ser menor ou igual a 150000.",
+    }),
 
-	memoria_limite: z
-		.string()
-		.refine((val: string): boolean => /^[0-9]+$/.test(val), {
-			message: "O tempo limite deve ser apenas números.",
-		})
-		.transform((val: string): number => Number(val))
-		.refine((value: number): boolean => value >= 4, {
-			message: "A memória limite deve ser maior ou igual a 4.",
-		})
-		.refine((value: number): boolean => value <= 1024, {
-			message: "A memória limite deve ser menor ou igual a 1024.",
-		}),
+  memoria_limite: z
+    .string()
+    .refine((val: string): boolean => /^[0-9]+$/.test(val), {
+      message: "O tempo limite deve ser apenas números.",
+    })
+    .transform((val: string): number => Number(val))
+    .refine((value: number): boolean => value >= 4, {
+      message: "A memória limite deve ser maior ou igual a 4.",
+    })
+    .refine((value: number): boolean => value <= 1024, {
+      message: "A memória limite deve ser menor ou igual a 1024.",
+    }),
 });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
-// interface EditaProblemaProps {
-//   id?: number;
-// }
-
 function EditaProblema() {
-	const { id } = useParams<{ id: number }>();
-	const [problema, setProblema] = useState<any>();
-	const { toast } = useToast();
-	const [loading, setLoading] = useState(true);
+  const { id: idString } = useParams();
+  const id = Number(idString);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (id) {
@@ -97,54 +90,52 @@ function EditaProblema() {
     }
   }, []);
 
-	async function getProblema(id: number) {
-		await problemaService.getProblemaById(id).then((response) => {
-			setProblema(response.data);
-			setLoading(false);
-			form.reset({
-				nome: response.data.nome,
-				privado: response.data.privado,
-				nome_arquivo_entrada: response.data.nome_arquivo_entrada,
-				nome_arquivo_saida: response.data.nome_arquivo_saida,
-				tempo_limite: response.data.tempo_limite,
-				memoria_limite: response.data.memoria_limite,
-			});
-		});
-	}
+  async function getProblema(id: number) {
+    await problemaService.getProblemaById(id).then((response) => {
+      setLoading(false);
+      form.reset({
+        nome: response.data.nome,
+        privado: response.data.privado,
+        nome_arquivo_entrada: response.data.nome_arquivo_entrada,
+        nome_arquivo_saida: response.data.nome_arquivo_saida,
+        tempo_limite: response.data.tempo_limite,
+        memoria_limite: response.data.memoria_limite,
+      });
+    });
+  }
 
-	const form = useForm<ProfileFormValues>({
-		resolver: zodResolver(profileFormSchema),
-		mode: "onChange",
-	});
+  const form = useForm<ProfileFormValues>({
+    resolver: zodResolver(profileFormSchema),
+    mode: "onChange",
+  });
 
-	async function onSubmit(data: ProfileFormValues) {
-		const p: ProfileFormValues = {
-			nome: data.nome,
-			privado: data.privado,
-			nome_arquivo_entrada: data.nome_arquivo_entrada,
-			nome_arquivo_saida: data.nome_arquivo_saida,
-			tempo_limite: data.tempo_limite,
-			memoria_limite: data.memoria_limite,
-		};
-
+  async function onSubmit(data: ProfileFormValues) {
+    const p: ProfileFormValues = {
+      nome: data.nome,
+      privado: data.privado,
+      nome_arquivo_entrada: data.nome_arquivo_entrada,
+      nome_arquivo_saida: data.nome_arquivo_saida,
+      tempo_limite: data.tempo_limite,
+      memoria_limite: data.memoria_limite,
+    };
 
     await problemaService
       .updateProblema(id, p)
       .then(() => {
         window.scrollTo(0, 0);
-
-        toast({
-          title: "Sucesso.",
-          description: "Problema atualizado!",
-          duration: 3000,
+        toast.success("Problema atualizado com sucesso!", {
+          autoClose: 5000,
+          style: {
+            border: "1px solid #07bc0c",
+          },
         });
       })
       .catch(() => {
-        toast({
-          variant: "destructive",
-          title: "Erro.",
-          description: "A atualização do problema falhou. Tente novamente!.",
-          duration: 3000,
+        toast.error("A atualização do problema falhou. Tente novamente!.", {
+          autoClose: 5000,
+          style: {
+            border: "1px solid #e74c3c",
+          },
         });
       });
   }
