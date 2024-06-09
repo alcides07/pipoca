@@ -542,6 +542,12 @@ async def create_problema_resposta(
                 "O problema o qual se está tentando submeter uma resposta é privado!"
             )
 
+    if (problema_resposta.linguagem not in db_problema.linguagens):
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            "A linguagem de programação fornecida não é aceita nesse problema!"
+        )
+
     try:
         TESTE_WORKERS = int(config("TESTE_WORKERS", default=0))
 

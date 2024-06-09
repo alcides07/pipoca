@@ -22,7 +22,10 @@ def create_problema_resposta_helper(
         response_problema = client.post(
             f"{URL_PROBLEMA}/pacotes/",
             files={"pacote": file},
-            data={"privado": str(problema_privado)},
+            data={
+                "privado": str(problema_privado),
+                "linguagens": ["python.3", "cpp.g++17"]
+            },
             headers={
                 "Authorization": f"Bearer {token_user_criador_problema}",
             },

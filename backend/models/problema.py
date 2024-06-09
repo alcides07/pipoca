@@ -4,7 +4,7 @@ from models.problemaResposta import ProblemaResposta
 from models.problemaTeste import ProblemaTeste
 from models.validador import Validador
 from models.verificador import Verificador
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, CheckConstraint, UniqueConstraint, DateTime
+from sqlalchemy import ARRAY, Boolean, Column, ForeignKey, Integer, String, CheckConstraint, UniqueConstraint, DateTime
 from sqlalchemy.orm import relationship
 from database import Base
 from models.arquivo import Arquivo
@@ -42,6 +42,11 @@ class Problema(Base):
     nome_arquivo_saida = Column(
         String(length=64),
         nullable=False,
+    )
+
+    linguagens = Column(
+        ARRAY(String()),
+        nullable=False
     )
 
     tempo_limite = Column(
