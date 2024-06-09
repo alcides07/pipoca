@@ -1,39 +1,47 @@
-import asyncio
 import io
 import os
 import tarfile
 import tempfile
+import asyncio
 import docker
 from typing import List
 from fastapi import HTTPException
+from fastapi.encoders import jsonable_encoder
+from sqlalchemy.exc import SQLAlchemyError
 from constants import FILENAME_RUN, INPUT_TEST_FILENAME, OUTPUT_JUDGE_FILENAME, OUTPUT_USER_FILENAME
-from dependencies.database import get_session_local
+from dependencies.authorization_user import is_admin
 from models.arquivo import Arquivo
-from models.problema import Problema
+from models.problemaResposta import ProblemaResposta
 from models.problemaTeste import ProblemaTeste
+from models.user import User
 from schemas.arquivo import SecaoEnum
 from schemas.problemaResposta import ProblemaRespostaCreate
 from schemas.problemaTeste import TipoTesteProblemaEnum
 from utils.get_testlib import get_test_lib
-from workers.celery import app
 from fastapi import status
 from docker.errors import DockerException
 from compilers import commands
+from models.problema import Problema
+from workers.celery import app
+from sqlalchemy.orm import configure_mappers
+from database import SessionLocal
 
 
-@app.task(bind=True,
-          queue="correcao-problema",
-          autoretry_for=(Exception,),
-          retry_backoff=True
-          )
+configure_mappers()
+
+
+@app.task(
+    bind=True,
+    queue="correcao-problema",
+    autoretry_for=(Exception,),
+    retry_backoff=True
+)
 def correcao_problema(
     self,
-    problema_resposta: ProblemaRespostaCreate,
-    db_problema: dict
+    problema_resposta_dict: dict,
+    user_id: int,
+    problema_id: int
 ):
-    db_problema = Problema(**db_problema)
-    loop = asyncio.get_event_loop()
-
     def get_arquivo_solucao(
         db_problema: Problema
     ):
@@ -151,8 +159,8 @@ def correcao_problema(
                     container.start()  # type: ignore
                     container.wait()  # type: ignore
 
-                    stderr_logs = container.logs(  # type: ignore
-                        stdout=False, stderr=True).decode()
+                    stderr_logs = container.logs(
+                        stdout=False, stderr=True).decode()  # type: ignore
 
                     if (stderr_logs != ""):
                         veredito_mensagem = stderr_logs.split()
@@ -250,10 +258,10 @@ def correcao_problema(
 
             container.wait()  # type: ignore
 
-            stdout_logs = container.logs(  # type: ignore
-                stdout=True, stderr=False).decode()
-            stderr_logs = container.logs(  # type: ignore
-                stdout=False, stderr=True).decode()
+            stdout_logs = container.logs(
+                stdout=True, stderr=False).decode()  # type: ignore
+            stderr_logs = container.logs(
+                stdout=False, stderr=True).decode()  # type: ignore
 
             if (stderr_logs != ""):
                 raise HTTPException(
@@ -349,10 +357,10 @@ def correcao_problema(
                     container.start()  # type: ignore
                     container.wait()  # type: ignore
 
-                    stdout_logs = container.logs(  # type: ignore
-                        stdout=True, stderr=False).decode()
-                    stderr_logs = container.logs(  # type: ignore
-                        stdout=False, stderr=True).decode()
+                    stdout_logs = container.logs(
+                        stdout=True, stderr=False).decode()  # type: ignore
+                    stderr_logs = container.logs(
+                        stdout=False, stderr=True).decode()  # type: ignore
 
                     output_codigo_solucao.append(stdout_logs)
 
@@ -462,10 +470,10 @@ def correcao_problema(
                     container.start()  # type: ignore
                     container.wait()  # type: ignore
 
-                    stdout_logs = container.logs(  # type: ignore
-                        stdout=True, stderr=False).decode()
-                    stderr_logs = container.logs(  # type: ignore
-                        stdout=False, stderr=True).decode()
+                    stdout_logs = container.logs(
+                        stdout=True, stderr=False).decode()  # type: ignore
+                    stderr_logs = container.logs(
+                        stdout=False, stderr=True).decode()  # type: ignore
 
                     output_codigo_user.append(stdout_logs)
 
@@ -489,35 +497,79 @@ def correcao_problema(
 
         return output_codigo_user, output_testes_gerados
 
-    arquivo_solucao = get_arquivo_solucao(db_problema)
-    arquivo_gerador = get_arquivo_gerador(db_problema)
+    async def execute_processo_resolucao(
+        problema_resposta: ProblemaRespostaCreate,
+        db_problema: Problema
+    ):
+        arquivo_solucao = get_arquivo_solucao(db_problema)
+        arquivo_gerador = get_arquivo_gerador(db_problema)
 
-    output_codigo_user, output_testes_gerados = loop.run_until_complete(
-        execute_codigo_user(
+        output_codigo_user, output_testes_gerados = await execute_codigo_user(
             db_problema,
             problema_resposta,
             arquivo_gerador
         )
-    )
 
-    if (isinstance(output_codigo_user, str)):
-        return [], [], [], output_codigo_user
+        if (isinstance(output_codigo_user, str)):
+            return [], [], [], output_codigo_user
 
-    output_codigo_solucao = loop.run_until_complete(
-        execute_arquivo_solucao(
+        output_codigo_solucao = await execute_arquivo_solucao(
             db_problema,
             arquivo_solucao,
             output_testes_gerados
         )
-    )
 
-    veredito = loop.run_until_complete(
-        execute_checker(
+        veredito = await execute_checker(
             db_problema,
             output_codigo_solucao,
             output_codigo_user,
             output_testes_gerados
         )
-    )
 
-    return "oi"
+        return veredito, output_codigo_user, output_codigo_solucao, None
+
+    try:
+        db = SessionLocal()
+        db_user = db.query(User).filter(User.id == user_id).first()
+        db_problema = db.query(Problema).filter(
+            Problema.id == problema_id).first()
+
+        problema_resposta = ProblemaRespostaCreate(**problema_resposta_dict)
+        loop = asyncio.get_event_loop()
+
+        veredito, output_user, output_judge, erro = loop.run_until_complete(
+            execute_processo_resolucao(
+                problema_resposta=problema_resposta,
+                db_problema=db_problema
+            )
+        )
+
+        db_problema_resposta = ProblemaResposta(**problema_resposta_dict)
+        db_problema_resposta.veredito = veredito  # type: ignore
+        db_problema_resposta.erro = erro  # type: ignore
+        db_problema_resposta.saida_usuario = output_user  # type: ignore
+        db_problema_resposta.saida_esperada = output_judge  # type: ignore
+        db_problema_resposta.usuario = db_user
+
+        # Bloco temporário
+        db_problema_resposta.tempo = 250   # type: ignore
+        db_problema_resposta.memoria = 250  # type: ignore
+        #
+
+        db_problema.respostas.append(db_problema_resposta)
+
+        if (is_admin(db_user)):
+            db_problema_resposta.usuario = None
+
+        db.add(db_problema_resposta)
+        db.commit()
+        db.refresh(db_problema_resposta)
+
+    except SQLAlchemyError:
+        db.rollback()
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            "Ocorreu um erro na criação da resposta para o problema!"
+        )
+
+    return jsonable_encoder(db_problema_resposta)
