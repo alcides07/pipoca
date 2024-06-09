@@ -3,10 +3,9 @@ import io
 import tarfile
 import docker
 import os
-from fastapi.encoders import jsonable_encoder
 from compilers import commands
 from typing import List
-from constants import FILENAME_RUN, INPUT_TEST_FILENAME, OUTPUT_JUDGE_FILENAME, OUTPUT_USER_FILENAME, URL_TEST_LIB
+from constants import FILENAME_RUN, INPUT_TEST_FILENAME, OUTPUT_JUDGE_FILENAME, OUTPUT_USER_FILENAME
 from dependencies.authenticated_user import get_authenticated_user
 from dependencies.authorization_user import is_admin, is_user
 from fastapi import HTTPException, status
@@ -548,44 +547,46 @@ async def create_problema_resposta(
         TESTE_WORKERS = int(config("TESTE_WORKERS", default=0))
 
         if (TESTE_WORKERS):
+            problema_resposta_dict = problema_resposta.model_dump()
             task = correcao_problema.apply_async(
                 args=[
-                    problema_resposta.model_dump(),
-                    jsonable_encoder(db_problema)
+                    problema_resposta_dict,
+                    user.id,
+                    db_problema.id
                 ]
             )
 
             return task.id
 
-        # veredito, output_user, output_judge, erro = await execute_processo_resolucao(
-        #     problema_resposta=problema_resposta,
-        #     db_problema=db_problema
-        # )
+        veredito, output_user, output_judge, erro = await execute_processo_resolucao(
+            problema_resposta=problema_resposta,
+            db_problema=db_problema
+        )
 
-        # db_problema_resposta = ProblemaResposta(
-        #     **problema_resposta.model_dump(exclude=set(["problema", "usuario"])))
+        db_problema_resposta = ProblemaResposta(
+            **problema_resposta.model_dump(exclude=set(["problema", "usuario"])))
 
-        # db_problema.respostas.append(db_problema_resposta)
-        # db_problema_resposta.usuario = user
+        db_problema.respostas.append(db_problema_resposta)
+        db_problema_resposta.usuario = user
 
-        # db_problema_resposta.veredito = veredito  # type: ignore
-        # db_problema_resposta.erro = erro  # type: ignore
-        # db_problema_resposta.saida_usuario = output_user  # type: ignore
-        # db_problema_resposta.saida_esperada = output_judge  # type: ignore
+        db_problema_resposta.veredito = veredito  # type: ignore
+        db_problema_resposta.erro = erro  # type: ignore
+        db_problema_resposta.saida_usuario = output_user  # type: ignore
+        db_problema_resposta.saida_esperada = output_judge  # type: ignore
 
-        # # Bloco temporário
-        # db_problema_resposta.tempo = 250
-        # db_problema_resposta.memoria = 250
-        # #
+        # Bloco temporário
+        db_problema_resposta.tempo = 250    # type: ignore
+        db_problema_resposta.memoria = 250  # type: ignore
+        #
 
-        # if (is_admin(user)):
-        #     db_problema_resposta.usuario = None
+        if (is_admin(user)):
+            db_problema_resposta.usuario = None
 
-        # db.add(db_problema_resposta)
-        # db.commit()
-        # db.refresh(db_problema_resposta)
+        db.add(db_problema_resposta)
+        db.commit()
+        db.refresh(db_problema_resposta)
 
-        # return db_problema_resposta
+        return db_problema_resposta
 
     except SQLAlchemyError:
         db.rollback()
