@@ -550,47 +550,19 @@ async def create_problema_resposta(
         )
 
     try:
-        if (ENV != "test"):
-            problema_resposta_dict = problema_resposta.model_dump()
-            task = correcao_problema.apply_async(
-                args=[
-                    problema_resposta_dict,
-                    user.id,
-                    db_problema.id
-                ]
-            )
-
-            return task.id
-
-        veredito, output_user, output_judge, erro = await execute_processo_resolucao(
-            problema_resposta=problema_resposta,
-            db_problema=db_problema
+        problema_resposta_dict = problema_resposta.model_dump()
+        task = correcao_problema.apply_async(
+            args=[
+                problema_resposta_dict,
+                user.id,
+                db_problema.id
+            ]
         )
 
-        db_problema_resposta = ProblemaResposta(
-            **problema_resposta.model_dump(exclude=set(["problema", "usuario"])))
+        if (ENV == "test"):
+            return task.result
 
-        db_problema.respostas.append(db_problema_resposta)
-        db_problema_resposta.usuario = user
-
-        db_problema_resposta.veredito = veredito  # type: ignore
-        db_problema_resposta.erro = erro  # type: ignore
-        db_problema_resposta.saida_usuario = output_user  # type: ignore
-        db_problema_resposta.saida_esperada = output_judge  # type: ignore
-
-        # Bloco temporário
-        db_problema_resposta.tempo = 250    # type: ignore
-        db_problema_resposta.memoria = 250  # type: ignore
-        #
-
-        if (is_admin(user)):
-            db_problema_resposta.usuario = None
-
-        db.add(db_problema_resposta)
-        db.commit()
-        db.refresh(db_problema_resposta)
-
-        return db_problema_resposta
+        return task.id
 
     except SQLAlchemyError:
         db.rollback()

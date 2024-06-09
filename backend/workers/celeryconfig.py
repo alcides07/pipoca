@@ -1,5 +1,5 @@
 from kombu import Queue
-from enviroments import BROKER_URL, DATABASE_URL
+from enviroments import BROKER_URL, DATABASE_URL, ENV
 
 
 broker_url = BROKER_URL
@@ -12,3 +12,6 @@ task_track_started = True
 
 correcao_problema_queue = Queue("correcao-problema")
 task_queues = (correcao_problema_queue,)
+
+if (ENV == "test"):
+    task_always_eager = True
