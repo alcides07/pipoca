@@ -26,8 +26,7 @@ from docker.errors import DockerException
 from schemas.problemaTeste import TipoTesteProblemaEnum
 from utils.get_testlib import get_test_lib
 from decouple import config
-
-from workers.tasks import correcao_problema
+from workers.correcaoProblema import correcao_problema
 
 
 def get_arquivo_solucao(

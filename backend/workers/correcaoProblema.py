@@ -25,14 +25,14 @@ from models.problema import Problema
 from workers.celery import app
 from sqlalchemy.orm import configure_mappers
 from database import SessionLocal
-
+from workers.celeryconfig import correcao_problema_queue
 
 configure_mappers()
 
 
 @app.task(
     bind=True,
-    queue="correcao-problema",
+    queue=correcao_problema_queue.name,
     autoretry_for=(Exception,),
     retry_backoff=True
 )
