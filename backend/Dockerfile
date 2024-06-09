@@ -23,5 +23,6 @@ COPY compilers.py .
 COPY constants.py .
 COPY main.py .
 COPY alembic.ini .
+COPY enviroments.py .
 
 # USER user
