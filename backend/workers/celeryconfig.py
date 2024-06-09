@@ -1,8 +1,6 @@
-from decouple import config
 from kombu import Queue
+from enviroments import BROKER_URL, DATABASE_URL
 
-DATABASE_URL = str(config("DATABASE_URL"))
-BROKER_URL = str(config("BROKER_URL"))
 
 broker_url = BROKER_URL
 result_backend = f'db+{DATABASE_URL}'
