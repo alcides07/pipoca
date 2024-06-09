@@ -18,19 +18,22 @@ jobs:
         working-directory: backend
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      DATABASE_URL: ${{ secrets.DATABASE_URL_TEST }}
+      TEST_DATABASE_URL: ${{ secrets.TEST_DATABASE_URL }}
+      ENV: ${{ secrets.ENV }}
       ALGORITHM: ${{ secrets.ALGORITHM }}
       SECRET_KEY: ${{ secrets.SECRET_KEY }}
       TOKEN_EXPIRE_MINUTES: ${{ secrets.TOKEN_EXPIRE_MINUTES }}
-      TEST_ENV: ${{ secrets.TEST_ENV }}
       API_BASE_URL: ${{ secrets.API_BASE_URL }}
+      DEV_FRONT_BASE_URL: ${{ secrets.DEV_FRONT_BASE_URL }}
+      DEV_BROKER_URL: ${{ secrets.DEV_BROKER_URL }}
+      DEV_API_BASE_URL: ${{ secrets.DEV_API_BASE_URL }}
     services:
       postgres:
         image: postgres:16
         env:
           POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-          POSTGRES_DB: ${{ secrets.POSTGRES_DB_TEST }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
