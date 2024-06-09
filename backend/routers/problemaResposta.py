@@ -1,4 +1,5 @@
 from constants import DIRECTION_ORDER_BY_DESCRIPTION, FIELDS_ORDER_BY_DESCRIPTION
+from enviroments import ENV
 from fastapi import APIRouter, Depends, Path, Query
 from dependencies.is_admin import is_admin_dependencies
 from filters.problemaResposta import OrderByFieldsProblemaRespostaEnum, search_fields_problema_resposta
@@ -11,7 +12,7 @@ from orm.common.index import get_all
 from schemas.common.direction_order_by import DirectionOrderByEnum
 from schemas.common.pagination import PaginationSchema
 from schemas.common.response import ResponsePaginationSchema, ResponseUnitRequiredSchema
-from schemas.problemaResposta import ProblemaRespostaCreate, ProblemaRespostaReadFull, ProblemaRespostaReadSimple
+from schemas.problemaResposta import ProblemaRespostaCreate, ProblemaRespostaOrUUID, ProblemaRespostaReadFull, ProblemaRespostaReadSimple
 from sqlalchemy.orm import Session
 from schemas.tarefas import TarefaIdSchema
 from utils.errors import errors
@@ -148,7 +149,7 @@ async def read_id(
 
 
 @router.post("/",
-             response_model=TarefaIdSchema,
+             response_model=ProblemaRespostaOrUUID,
              status_code=201,
              summary="Cadastra uma resposta para um problema",
              responses={
@@ -161,12 +162,16 @@ async def create(
     db: Session = Depends(get_db),
     token: str = Depends(oauth2_scheme)
 ):
-    task_uuid = await create_problema_resposta(
+
+    problema_resposta_or_uuid = await create_problema_resposta(
         db=db,
         problema_resposta=problema_resposta,
         token=token
     )
 
-    return TarefaIdSchema(
-        task_uuid=str(task_uuid)
-    )
+    if (ENV != "test"):
+        return TarefaIdSchema(
+            task_uuid=str(problema_resposta_or_uuid)
+        )
+
+    return ResponseUnitRequiredSchema(data=problema_resposta_or_uuid)
