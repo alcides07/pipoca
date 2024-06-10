@@ -12,7 +12,7 @@ from orm.common.index import get_all
 from schemas.common.direction_order_by import DirectionOrderByEnum
 from schemas.common.pagination import PaginationSchema
 from schemas.common.response import ResponsePaginationSchema, ResponseUnitRequiredSchema
-from schemas.problemaResposta import ProblemaRespostaCreate, ProblemaRespostaOrUUID, ProblemaRespostaReadFull, ProblemaRespostaReadSimple
+from schemas.problemaResposta import ProblemaRespostaCreate, ProblemaRespostaReadFull, ProblemaRespostaReadSimple
 from sqlalchemy.orm import Session
 from schemas.tarefas import TarefaIdSchema
 from utils.errors import errors
@@ -149,7 +149,10 @@ async def read_id(
 
 
 @router.post("/",
-             response_model=ProblemaRespostaOrUUID,
+             response_model=ResponseUnitRequiredSchema[
+                 TarefaIdSchema |
+                 ProblemaRespostaReadSimple
+             ],
              status_code=201,
              summary="Cadastra uma resposta para um problema",
              responses={
@@ -170,10 +173,10 @@ async def create(
     )
 
     if (ENV != "test"):
-        return ProblemaRespostaOrUUID(
-            task=TarefaIdSchema(task_uuid=problema_resposta_or_uuid)
+        return ResponseUnitRequiredSchema(
+            data=TarefaIdSchema(task_uuid=problema_resposta_or_uuid)
         )
 
-    return ProblemaRespostaOrUUID(
+    return ResponseUnitRequiredSchema(
         data=problema_resposta_or_uuid
     )
