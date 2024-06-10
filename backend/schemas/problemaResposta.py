@@ -89,14 +89,3 @@ class ProblemaRespostaReadSimple(ProblemaRespostaBaseFull):
 
 class ProblemaRespostaCreate(ProblemaRespostaBase):
     pass
-
-
-class ProblemaRespostaOrUUID(BaseModel):
-    task: Optional[TarefaIdSchema] = Field(
-        default=None,
-        description="Objeto de uma tarefa assíncrona"
-    )
-    data: Optional[ProblemaRespostaReadSimple] = Field(
-        default=None,
-        description="Objeto da resposta do problema"
-    )
