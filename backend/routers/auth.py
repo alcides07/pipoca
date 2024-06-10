@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
 from pydantic import EmailStr
+from enviroments import TOKEN_EXPIRE_MINUTES
 from models.administrador import Administrador
 from schemas.common.response import ResponseMessageSchema
 from utils.create_token import create_token
@@ -12,12 +13,10 @@ from sqlalchemy.orm import Session
 from passlib.context import CryptContext
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from datetime import timedelta
-from decouple import config
 
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="autenticacao")
-TOKEN_EXPIRE_MINUTES = float(config("TOKEN_EXPIRE_MINUTES"))
 
 
 def authenticate_user(db, credential: str, password: str):

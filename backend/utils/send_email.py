@@ -1,8 +1,7 @@
 import smtplib
 from fastapi import HTTPException, status
 from email.mime.text import MIMEText
-from enviroments import ENV
-from decouple import config
+from enviroments import ENV, PASSWORD_EMAIL
 
 
 def send_email(
@@ -13,7 +12,6 @@ def send_email(
 ):
     try:
         if (ENV == "production"):
-            PASSWORD_EMAIL = str(config("PASSWORD_EMAIL"))
 
             mensagem = MIMEText(corpo, "html")
             mensagem['From'] = remetente
