@@ -18,15 +18,14 @@ jobs:
         working-directory: backend
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      TEST_DATABASE_URL: ${{ secrets.TEST_DATABASE_URL }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
       ENV: ${{ secrets.ENV }}
       ALGORITHM: ${{ secrets.ALGORITHM }}
       SECRET_KEY: ${{ secrets.SECRET_KEY }}
       TOKEN_EXPIRE_MINUTES: ${{ secrets.TOKEN_EXPIRE_MINUTES }}
       API_BASE_URL: ${{ secrets.API_BASE_URL }}
-      DEV_FRONT_BASE_URL: ${{ secrets.DEV_FRONT_BASE_URL }}
-      DEV_BROKER_URL: ${{ secrets.DEV_BROKER_URL }}
-      DEV_API_BASE_URL: ${{ secrets.DEV_API_BASE_URL }}
+      FRONT_BASE_URL: ${{ secrets.FRONT_BASE_URL }}
+      BROKER_URL: ${{ secrets.BROKER_URL }}
     services:
       postgres:
         image: postgres:16
