@@ -23,6 +23,8 @@ services:
     depends_on:
       - api
       - rabbitmq
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
 
   flower:
     container_name: FLOWER
