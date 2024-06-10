@@ -170,8 +170,10 @@ async def create(
     )
 
     if (ENV != "test"):
-        return TarefaIdSchema(
-            task_uuid=str(problema_resposta_or_uuid)
+        return ProblemaRespostaOrUUID(
+            task=TarefaIdSchema(task_uuid=problema_resposta_or_uuid)
         )
 
-    return ResponseUnitRequiredSchema(data=problema_resposta_or_uuid)
+    return ProblemaRespostaOrUUID(
+        data=problema_resposta_or_uuid
+    )
