@@ -1,11 +1,12 @@
 import axiosInstance from "../axiosInstance";
+import { iProblema } from "@/interfaces/services/iProblema";
 
 class ProblemaService {
   async getProblemas() {
     const response = await axiosInstance.get("/problemas/");
     return response.data;
   }
-  async createProblema(data: any) {
+  async cadastroProblema(data: iProblema) {
     const response = await axiosInstance.post(`/problemas/`, data);
     return response;
   }

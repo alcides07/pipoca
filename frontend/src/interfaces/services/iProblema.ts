@@ -5,5 +5,6 @@ export interface iProblema {
   nome_arquivo_saida: string;
   tempo_limite: number;
   memoria_limite: number;
+  linguagens: string[];
   id?: number;
 }
