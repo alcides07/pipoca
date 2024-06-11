@@ -239,7 +239,7 @@ function FormCadastro() {
                     <div className="mb-4">
                       <FormLabel className="text-base">Linguagens</FormLabel>
                       <FormDescription>
-                        Selecione as linguagens aceitas na reposta do problema.
+                        Selecione as linguagens aceitas na resposta do problema.
                       </FormDescription>
                     </div>
                     {linguagensPadrao.map((linguagem) => (

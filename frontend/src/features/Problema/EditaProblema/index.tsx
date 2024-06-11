@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -27,6 +28,9 @@ import { Separator } from "@/components/ui/separator";
 import { toast } from "react-toastify";
 import { Progress } from "@/components/ui/progress";
 import { useParams } from "react-router-dom";
+import linguagensPadrao from "@/utils/linguagem";
+import { Checkbox } from "@/components/ui/checkbox";
+import Loading from "@/components/loading";
 
 const profileFormSchema = z.object({
   privado: z.boolean().default(false).optional(),
@@ -75,6 +79,11 @@ const profileFormSchema = z.object({
     .refine((value: number): boolean => value <= 1024, {
       message: "A memória limite deve ser menor ou igual a 1024.",
     }),
+  linguagens: z
+    .array(z.string())
+    .refine((value: string[]) => value.some((item) => item), {
+      message: "Selecione no mínimo uma linguagem.",
+    }),
 });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
@@ -83,6 +92,7 @@ function EditaProblema() {
   const { id: idString } = useParams();
   const id = Number(idString);
   const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -100,6 +110,7 @@ function EditaProblema() {
         nome_arquivo_saida: response.data.nome_arquivo_saida,
         tempo_limite: response.data.tempo_limite,
         memoria_limite: response.data.memoria_limite,
+        linguagens: response.data.linguagens,
       });
     });
   }
@@ -110,6 +121,7 @@ function EditaProblema() {
   });
 
   async function onSubmit(data: ProfileFormValues) {
+    setIsLoading(true);
     const p: ProfileFormValues = {
       nome: data.nome,
       privado: data.privado,
@@ -117,6 +129,7 @@ function EditaProblema() {
       nome_arquivo_saida: data.nome_arquivo_saida,
       tempo_limite: data.tempo_limite,
       memoria_limite: data.memoria_limite,
+      linguagens: data.linguagens,
     };
 
     await problemaService
@@ -137,6 +150,9 @@ function EditaProblema() {
             border: "1px solid #e74c3c",
           },
         });
+      })
+      .finally(() => {
+        setIsLoading(false);
       });
   }
 
@@ -165,23 +181,6 @@ function EditaProblema() {
                     />
                   </FormControl>
                   <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="privado"
-              render={({ field }) => (
-                <FormItem>
-                  <FormControl>
-                    <div className="flex items-center space-x-2">
-                      <Switch
-                        // checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                      <Label htmlFor="airplane-mode">Privado</Label>
-                    </div>
-                  </FormControl>
                 </FormItem>
               )}
             />
@@ -225,7 +224,7 @@ function EditaProblema() {
                 name="tempo_limite"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Tempo Limite</FormLabel>
+                    <FormLabel>Tempo Limite (ms)</FormLabel>
                     <FormControl>
                       <Input placeholder="Informe o tempo limite" {...field} />
                     </FormControl>
@@ -238,7 +237,7 @@ function EditaProblema() {
                 name="memoria_limite"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Memória Limite</FormLabel>
+                    <FormLabel>Memória Limite (MB)</FormLabel>
                     <FormControl>
                       <Input
                         placeholder="Informe a memória limite"
@@ -250,9 +249,87 @@ function EditaProblema() {
                 )}
               />
             </div>
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="linguagens"
+                render={() => (
+                  <FormItem>
+                    <div className="mb-4">
+                      <FormLabel className="text-base">Linguagens</FormLabel>
+                      <FormDescription>
+                        Selecione as linguagens aceitas na resposta do problema.
+                      </FormDescription>
+                    </div>
+                    {linguagensPadrao.map((linguagem) => (
+                      <FormField
+                        key={linguagem}
+                        control={form.control}
+                        name="linguagens"
+                        render={({ field }) => {
+                          return (
+                            <FormItem
+                              key={linguagem}
+                              className="flex flex-row items-start space-x-3 space-y-0"
+                            >
+                              <FormControl>
+                                <Checkbox
+                                  checked={
+                                    field.value
+                                      ? field.value.includes(linguagem)
+                                      : false
+                                  }
+                                  onCheckedChange={(checked) => {
+                                    return checked
+                                      ? field.onChange([
+                                          ...(field.value || []),
+                                          linguagem,
+                                        ])
+                                      : field.onChange(
+                                          (field.value || []).filter(
+                                            (value) => value !== linguagem
+                                          )
+                                        );
+                                  }}
+                                />
+                              </FormControl>
+                              <FormLabel className="text-sm font-normal">
+                                {linguagem}
+                              </FormLabel>
+                            </FormItem>
+                          );
+                        }}
+                      />
+                    ))}
 
-            <Button className="w-full" type="submit">
-              Editar
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="privado"
+                render={({ field }) => (
+                  <FormItem className="col-span-1">
+                    <FormControl>
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          // checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                        <Label htmlFor="airplane-mode">Privado</Label>
+                      </div>
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            </div>
+            <Button
+              type="submit"
+              className="w-full text-white"
+              disabled={isLoading}
+            >
+              {isLoading ? <Loading isLoading={isLoading} /> : "Editar"}
             </Button>
           </form>
         </Form>
