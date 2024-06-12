@@ -59,11 +59,10 @@ const profileFormSchema = z.object({
     .refine((val: string): boolean => /^[0-9]+$/.test(val), {
       message: "O tempo limite deve ser apenas números.",
     })
-    .transform((val: string): number => Number(val))
-    .refine((value: number): boolean => value >= 250, {
+    .refine((value: string): boolean => Number(value) >= 250, {
       message: "O tempo limite deve ser maior ou igual a 250.",
     })
-    .refine((value: number): boolean => value <= 150000, {
+    .refine((value: string): boolean => Number(value) <= 150000, {
       message: "O tempo limite deve ser menor ou igual a 150000.",
     }),
 
@@ -72,11 +71,10 @@ const profileFormSchema = z.object({
     .refine((val: string): boolean => /^[0-9]+$/.test(val), {
       message: "O tempo limite deve ser apenas números.",
     })
-    .transform((val: string): number => Number(val))
-    .refine((value: number): boolean => value >= 4, {
+    .refine((value: string): boolean => Number(value) >= 4, {
       message: "A memória limite deve ser maior ou igual a 4.",
     })
-    .refine((value: number): boolean => value <= 1024, {
+    .refine((value: string): boolean => Number(value) <= 1024, {
       message: "A memória limite deve ser menor ou igual a 1024.",
     }),
   linguagens: z
@@ -108,8 +106,8 @@ function EditaProblema() {
         privado: response.data.privado,
         nome_arquivo_entrada: response.data.nome_arquivo_entrada,
         nome_arquivo_saida: response.data.nome_arquivo_saida,
-        tempo_limite: response.data.tempo_limite,
-        memoria_limite: response.data.memoria_limite,
+        tempo_limite: String(response.data.tempo_limite),
+        memoria_limite: String(response.data.memoria_limite),
         linguagens: response.data.linguagens,
       });
     });
@@ -122,15 +120,18 @@ function EditaProblema() {
 
   async function onSubmit(data: ProfileFormValues) {
     setIsLoading(true);
+
+    console.log("data 1", data);
     const p: ProfileFormValues = {
       nome: data.nome,
       privado: data.privado,
       nome_arquivo_entrada: data.nome_arquivo_entrada,
       nome_arquivo_saida: data.nome_arquivo_saida,
-      tempo_limite: data.tempo_limite,
-      memoria_limite: data.memoria_limite,
+      tempo_limite: String(data.tempo_limite),
+      memoria_limite: String(data.memoria_limite),
       linguagens: data.linguagens,
     };
+    console.log("data 2", data);
 
     await problemaService
       .updateProblema(id, p)
