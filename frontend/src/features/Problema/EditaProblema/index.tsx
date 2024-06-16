@@ -121,7 +121,6 @@ function EditaProblema() {
   async function onSubmit(data: ProfileFormValues) {
     setIsLoading(true);
 
-    console.log("data 1", data);
     const p: ProfileFormValues = {
       nome: data.nome,
       privado: data.privado,
@@ -131,7 +130,6 @@ function EditaProblema() {
       memoria_limite: String(data.memoria_limite),
       linguagens: data.linguagens,
     };
-    console.log("data 2", data);
 
     await problemaService
       .updateProblema(id, p)

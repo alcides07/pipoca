@@ -102,7 +102,6 @@ function FormCadastro() {
   });
 
   async function onSubmit(data: ProfileFormValues) {
-    console.log("data", data);
     await problemaService
       .cadastroProblema(data)
       .then((response) => {
@@ -246,7 +245,7 @@ function FormCadastro() {
                       <FormField
                         key={linguagem}
                         control={form.control}
-                        name="linguagens" // Altere "items" para "linguagens"
+                        name="linguagens"
                         render={({ field }) => {
                           return (
                             <FormItem
@@ -260,7 +259,7 @@ function FormCadastro() {
                                       ? field.value.includes(linguagem)
                                       : false
                                   }
-                                  onCheckedChange={(checked) => {
+                                  onCheckedChange={(checked: boolean) => {
                                     return checked
                                       ? field.onChange([
                                           ...(field.value || []),
@@ -268,7 +267,8 @@ function FormCadastro() {
                                         ])
                                       : field.onChange(
                                           (field.value || []).filter(
-                                            (value) => value !== linguagem
+                                            (value: string) =>
+                                              value !== linguagem
                                           )
                                         );
                                   }}
