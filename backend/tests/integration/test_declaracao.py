@@ -170,7 +170,10 @@ def test_read_declaracao_imagens():
         response_problema = client.post(
             f"{URL_PROBLEMA}/pacotes/",
             files={"pacote": file},
-            data={"privado": "true"},
+            data={
+                "privado": "true",
+                "linguagens": ["python.3", "cpp.g++17"]
+            },
             headers={
                 "Authorization": f"Bearer {token}",
             },
