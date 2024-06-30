@@ -1,5 +1,4 @@
 from fastapi.responses import FileResponse
-from dependencies.authorization_user import is_admin
 from dependencies.is_admin import is_admin_dependencies
 from routers.auth import oauth2_scheme
 from fastapi import APIRouter, Body, Depends, HTTPException, Path, Response, UploadFile, status, File
@@ -11,18 +10,18 @@ from schemas.user import UserCreate, UserReadFull, UserUpdatePartial, UserUpdate
 from schemas.common.pagination import PaginationSchema
 from dependencies.database import get_db
 from sqlalchemy.orm import Session
-from orm.user import create_imagem_user, create_user, get_imagem_user, update_user
-from schemas.common.response import ResponsePaginationSchema, ResponseUnitSchema
+from orm.user import activate_acccount_simple, create_imagem_user, create_token_ativacao_conta_and_send_email, create_user, delete_imagem_user, get_imagem_user, update_user
+from schemas.common.response import ResponseDataWithMessageSchema, ResponsePaginationSchema, ResponseUnitRequiredSchema
 from passlib.context import CryptContext
-
+from decouple import config
 
 USER_ID_DESCRIPTION = "identificador do usuário"
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 router = APIRouter(
-    prefix="/users",
-    tags=["users"],
+    prefix="/usuarios",
+    tags=["usuários"],
 )
 
 
@@ -49,41 +48,9 @@ async def read(
     )
 
 
-@router.get("/me/",
-            response_model=ResponseUnitSchema[UserReadFull],
-            summary="Lista dados do usuário autenticado",
-            dependencies=[Depends(get_authenticated_user)],
-            responses={
-                501: {"501": 501}
-            })
-async def read_me(
-        db: Session = Depends(get_db),
-        token: str = Depends(oauth2_scheme)
-):
-    user_db = await get_authenticated_user(token, db)
-
-    if (is_admin(user_db)):
-        raise HTTPException(
-            status.HTTP_501_NOT_IMPLEMENTED,
-            "Funcionalidade não disponível para administradores!"
-        )
-
-    user = await get_by_id(
-        id=user_db.id,
-        path_has_user_key="user",
-        db=db,
-        model=User,
-        token=token
-    )
-
-    return ResponseUnitSchema(
-        data=user
-    )
-
-
 @router.get("/{id}/imagem/",
-            response_class=FileResponse,
-            summary="Retorna a imagem de perfil de um usuário",
+            response_model=ResponseUnitRequiredSchema[str],
+            summary="Retorna o endereço para a imagem de perfil de um usuário",
             dependencies=[Depends(get_authenticated_user)],
             responses={
                 404: {"404": 404}
@@ -92,16 +59,18 @@ async def get_imagem(
     id: int = Path(description=USER_ID_DESCRIPTION),
     db: Session = Depends(get_db)
 ):
-    data = await get_imagem_user(
+    imagem = await get_imagem_user(
         id=id,
         db=db
     )
 
-    return FileResponse(data)
+    return ResponseUnitRequiredSchema(
+        data=imagem
+    )
 
 
 @router.get("/{id}/",
-            response_model=ResponseUnitSchema[UserReadFull],
+            response_model=ResponseUnitRequiredSchema[UserReadFull],
             summary="Lista um usuário",
             dependencies=[Depends(get_authenticated_user)],
             responses={
@@ -121,32 +90,60 @@ async def read_id(
         path_has_user_key="user"
     )
 
-    return ResponseUnitSchema(
+    return ResponseUnitRequiredSchema(
         data=users
     )
 
 
 @router.post("/",
-             response_model=ResponseUnitSchema[UserReadFull],
+             response_model=ResponseDataWithMessageSchema[UserReadFull],
              status_code=201,
              summary="Cadastra um usuário",
              responses={
                  400: errors[400],
                  422: errors[422],
-
              }
              )
-def create(
+async def create(
     user: UserCreate = Body(description="Dados do usuário"),
     db: Session = Depends(get_db),
 ):
-    data = create_user(db=db, user=user)
 
-    return ResponseUnitSchema(data=data)
+    async def create_producao():
+        data = create_user(db=db, user=user)
+
+        await create_token_ativacao_conta_and_send_email(
+            data_token={
+                "sub": data.email
+            },
+            destinatario=str(data.email)
+        )
+
+        return ResponseDataWithMessageSchema(
+            data=data,
+            message="Uma confirmação foi enviada para o e-mail fornecido!"
+        )
+
+    async def create_local():
+        data = create_user(db=db, user=user)
+
+        await activate_acccount_simple(db, data)
+
+        return ResponseDataWithMessageSchema(
+            data=data,
+            message="A conta do usuário foi cadastrada!"
+        )
+
+    producao = int(config("PRODUCAO", default=0))
+
+    if (producao):
+        return await create_producao()
+
+    return await create_local()
 
 
 @router.post("/{id}/imagem/",
-             response_class=FileResponse,
+             response_model=ResponseUnitRequiredSchema[str],
              status_code=200,
              summary="Cadastra uma imagem de perfil para um usuário",
              dependencies=[Depends(get_authenticated_user)],
@@ -176,11 +173,35 @@ async def upload_imagem(
         id=id
     )
 
-    return FileResponse(path=data)
+    return ResponseUnitRequiredSchema(
+        data=data
+    )
+
+
+@router.delete("/{id}/imagem/",
+               status_code=204,
+               summary="Deleta a imagem de perfil de um usuário",
+               responses={
+                   404: errors[404]
+               }
+               )
+async def delete_image(
+        id: int = Path(description=USER_ID_DESCRIPTION),
+        db: Session = Depends(get_db),
+        token: str = Depends(oauth2_scheme)
+):
+    imagem = await delete_imagem_user(
+        db=db,
+        token=token,
+        id=id
+    )
+
+    if (imagem):
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.put("/{id}/",
-            response_model=ResponseUnitSchema[UserReadFull],
+            response_model=ResponseUnitRequiredSchema[UserReadFull],
             summary="Atualiza um usuário por completo",
             responses={
                 404: errors[404]
@@ -201,13 +222,13 @@ async def total_update(
         token=token
     )
 
-    return ResponseUnitSchema(
+    return ResponseUnitRequiredSchema(
         data=response
     )
 
 
 @router.patch("/{id}/",
-              response_model=ResponseUnitSchema[UserReadFull],
+              response_model=ResponseUnitRequiredSchema[UserReadFull],
               summary="Atualiza um usuário parcialmente",
               responses={
                   400: errors[400],
@@ -229,7 +250,7 @@ async def partial_update(
         token=token
     )
 
-    return ResponseUnitSchema(
+    return ResponseUnitRequiredSchema(
         data=response
     )
 

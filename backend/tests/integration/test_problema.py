@@ -66,10 +66,11 @@ def test_read_problemas_user():
 def test_read_meus_problemas_user():
     remove_dependencies()
 
-    _, token_user, _ = create_user_helper()
+    response_user, token_user, _ = create_user_helper()
+    user_id = response_user.json().get("data").get("id")
 
     response_problema_user = client.get(
-        f"{URL_PROBLEMA}/users/",
+        f"{URL_PROBLEMA}/usuarios/{user_id}/",
         headers={
             "Authorization": f"Bearer {token_user}",
         },
@@ -311,6 +312,43 @@ def test_read_problemas_tags_de_nao_autor_by_problema_id_privado_user():
     resume_dependencies()
 
 
+def test_read_problemas_declaracoes_com_autor():
+    remove_dependencies()
+
+    response_problema_criado, token_criador_problema = create_problema_user_helper()
+    problema_id = response_problema_criado.json().get("data").get("id")
+
+    response = client.get(
+        f"{URL_PROBLEMA}/{problema_id}/declaracoes/",
+        headers={
+            "Authorization": f"Bearer {token_criador_problema}",
+        },
+    )
+
+    assert response.status_code == 200
+
+    resume_dependencies()
+
+
+def test_read_problemas_declaracoes_com_nao_autor():
+    remove_dependencies()
+
+    response_problema_criado, _ = create_problema_user_helper()
+    problema_id = response_problema_criado.json().get("data").get("id")
+    _, token, _ = create_user_helper()
+
+    response = client.get(
+        f"{URL_PROBLEMA}/{problema_id}/declaracoes/",
+        headers={
+            "Authorization": f"Bearer {token}",
+        },
+    )
+
+    assert response.status_code == 401
+
+    resume_dependencies()
+
+
 def test_read_problemas_testes_de_autor_by_problema_id_user():
     remove_dependencies()
 
@@ -443,6 +481,121 @@ def test_read_problemas_testes_de_admin_by_problema_id_user():
 
     resume_dependencies()
 
+
+def test_read_integridade_problema_com_dono():
+    remove_dependencies()
+
+    response_problema_user, token_criador_problema = create_problema_user_helper()
+    id_problema = response_problema_user.json().get("data").get("id")
+
+    response = client.get(
+        f"{URL_PROBLEMA}/{id_problema}/integridade/",
+        headers={
+            "Authorization": f"Bearer {token_criador_problema}",
+        },
+
+    )
+
+    assert response.status_code == 200
+
+    resume_dependencies()
+
+
+def test_read_integridade_falsa_de_problema_com_dono():
+    remove_dependencies()
+
+    response_problema_user, token_criador_problema = create_problema_user_helper()
+    id_problema = response_problema_user.json().get("data").get("id")
+
+    response = client.get(
+        f"{URL_PROBLEMA}/{id_problema}/integridade/",
+        headers={
+            "Authorization": f"Bearer {token_criador_problema}",
+        },
+    )
+    response_json = response.json().get("data")
+
+    assert response.status_code == 200
+    assert response_json.get("declaracoes") is False
+    assert response_json.get("arquivos") is False
+    assert response_json.get("testes") is False
+    assert response_json.get("verificador") is False
+    assert response_json.get("validador") is False
+
+    resume_dependencies()
+
+
+def test_read_linguagens_de_problema_com_dono():
+    remove_dependencies()
+
+    response_problema_user, token_criador_problema = create_problema_user_helper()
+    id_problema = response_problema_user.json().get("data").get("id")
+
+    response = client.get(
+        f"{URL_PROBLEMA}/{id_problema}/linguagens/",
+        headers={
+            "Authorization": f"Bearer {token_criador_problema}",
+        },
+    )
+    response_json = response.json().get("data")
+
+    assert response.status_code == 200
+    assert response_json != []
+
+    resume_dependencies()
+
+
+def test_read_linguagens_de_problema_com_usuario_sem_permissao():
+    remove_dependencies()
+
+    response_problema_user, _ = create_problema_user_helper()
+    _, token_user, _ = create_user_helper()
+    id_problema = response_problema_user.json().get("data").get("id")
+
+    response = client.get(
+        f"{URL_PROBLEMA}/{id_problema}/linguagens/",
+        headers={
+            "Authorization": f"Bearer {token_user}",
+        },
+    )
+    assert response.status_code == 401
+
+    resume_dependencies()
+
+
+def test_read_testes_exemplo_executados():
+    remove_dependencies()
+
+    _, token, _ = create_user_helper()
+
+    with open("./tests/integration/example_problem.zip", 'rb') as file:
+        response_problema = client.post(
+            f"{URL_PROBLEMA}/pacotes/",
+            files={"pacote": file},
+            data={
+                "privado": "true",
+                "linguagens": ["python.3", "cpp.g++17"]
+            },
+            headers={
+                "Authorization": f"Bearer {token}",
+            },
+        )
+
+    assert response_problema.status_code == 201
+    id_problema = response_problema.json().get("data").get("id")
+
+    response = client.get(
+        f"{URL_PROBLEMA}/{id_problema}/testesExemplosExecutados/",
+        headers={
+            "Authorization": f"Bearer {token}",
+        },
+    )
+    data = response.json().get("data")
+
+    assert response.status_code == 200
+    assert data != []
+
+    resume_dependencies()
 
 def test_create_problema_user():
     remove_dependencies()
@@ -590,11 +743,14 @@ def test_upload_problema_user():
 
     _, token, _ = create_user_helper()
 
-    with open("./tests/integration/multiplication_problem.zip", 'rb') as file:
+    with open("./tests/integration/example_problem.zip", 'rb') as file:
         response = client.post(
-            f"{URL_PROBLEMA}/upload/",
+            f"{URL_PROBLEMA}/pacotes/",
             files={"pacote": file},
-            data={"privado": "true"},
+            data={
+                "privado": "true",
+                "linguagens": ["python.3", "cpp.g++17"]
+            },
             headers={
                 "Authorization": f"Bearer {token}",
             },
@@ -611,11 +767,14 @@ def test_upload_problema_admin():
     database = next(get_db_test())
     token = create_administrador_helper(database)
 
-    with open("./tests/integration/multiplication_problem.zip", 'rb') as file:
+    with open("./tests/integration/example_problem.zip", 'rb') as file:
         response = client.post(
-            f"{URL_PROBLEMA}/upload/",
+            f"{URL_PROBLEMA}/pacotes/",
             files={"pacote": file},
-            data={"privado": "true"},
+            data={
+                "privado": "true",
+                "linguagens": ["python.3", "cpp.g++17"]
+            },
             headers={
                 "Authorization": f"Bearer {token}",
             },

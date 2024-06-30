@@ -10,15 +10,18 @@ RUN pip install -r requirements.txt
 COPY ./dependencies ./dependencies
 COPY ./models ./models
 COPY ./openapi ./openapi
+COPY ./migrations ./migrations
 COPY ./orm ./orm
 COPY ./routers ./routers
 COPY ./schemas ./schemas
 COPY ./tests ./tests
 COPY ./utils ./utils
 COPY ./filters ./filters
+COPY ./static ./static
 COPY database.py .
 COPY compilers.py .
 COPY constants.py .
 COPY main.py .
+COPY alembic.ini .
 
-USER user
+# USER user

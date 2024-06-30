@@ -94,3 +94,14 @@ class ProblemaTesteUpdatePartial(BaseModel):
         max_length=250000,
         description="Descrição do teste"
     )
+
+
+class ProblemaTesteExecutado(BaseModel):
+    entrada: str = Field(
+        max_length=1000000,
+        description="Dados de entrada do teste"
+    )
+
+    saida: str = Field(
+        description="Dados de saída do teste"
+    )

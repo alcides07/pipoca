@@ -10,27 +10,29 @@ on:
       - dev-backend
     types: [opened, synchronize, reopened]
 jobs:
-  sonarcloud:
-    name: SonarCloud
+  tests:
+    name: Tests
     runs-on: ubuntu-20.04
     defaults:
       run:
         working-directory: backend
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      DATABASE_URL_TEST: ${{ secrets.DATABASE_URL_TEST }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      ENV: ${{ secrets.ENV }}
       ALGORITHM: ${{ secrets.ALGORITHM }}
       SECRET_KEY: ${{ secrets.SECRET_KEY }}
       TOKEN_EXPIRE_MINUTES: ${{ secrets.TOKEN_EXPIRE_MINUTES }}
-      TEST_ENV: ${{ secrets.TEST_ENV }}
+      API_BASE_URL: ${{ secrets.API_BASE_URL }}
+      FRONT_BASE_URL: ${{ secrets.FRONT_BASE_URL }}
+      BROKER_URL: ${{ secrets.BROKER_URL }}
     services:
       postgres:
         image: postgres:16
         env:
           POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-          POSTGRES_DB: ${{ secrets.POSTGRES_DB_TEST }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -39,17 +41,43 @@ jobs:
         ports:
           - 5432:5432
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - name: Setup Python
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v5
         with:
           python-version: 3.10.12
       - name: Install dependencies
         run: pip install -r requirements.txt
+      - name: Create static directory
+        run: mkdir -p static
       - name: Run tox
         run: tox -e py
+      - name: Upload coverage to artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: backend/coverage.xml
+  sonarcloud:
+    name: SonarCloud
+    needs: tests
+    runs-on: ubuntu-20.04
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Download coverage from artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage
+          path: backend/
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
         with:

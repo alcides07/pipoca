@@ -5,7 +5,7 @@ from tests.helpers.problema import URL_PROBLEMA
 from main import app
 
 client = TestClient(app)
-URL_PROBLEMA_RESPOSTAS = "/problemaRespostas"
+URL_PROBLEMA_RESPOSTAS = "/problemasRespostas"
 
 
 def create_problema_resposta_helper(
@@ -20,9 +20,12 @@ def create_problema_resposta_helper(
 
     with open(path_problema, 'rb') as file:
         response_problema = client.post(
-            f"{URL_PROBLEMA}/upload/",
+            f"{URL_PROBLEMA}/pacotes/",
             files={"pacote": file},
-            data={"privado": str(problema_privado)},
+            data={
+                "privado": str(problema_privado),
+                "linguagens": ["python.3", "cpp.g++17"]
+            },
             headers={
                 "Authorization": f"Bearer {token_user_criador_problema}",
             },
@@ -47,7 +50,7 @@ def create_problema_resposta_helper(
 
 
 JSON_PROBLEMA_RESPOSTA = {
-    "resposta": "string",
-    "linguagem": "python.3",
+    "resposta": "#include <iostream>\r\n#include <vector>\r\n#include <algorithm>\r\n \r\nusing namespace std;\r\n \r\npair<int, int> solve(vector<pair<int, int>>& v, int s) {\r\n    int left = 0, right = v.size() - 1;\r\n    while (left < right) {\r\n        int sum = v[left].first + v[right].first;\r\n        if (sum == s) return { v[left].second,v[right].second };\r\n        if (sum < s) left++;\r\n        else right--;\r\n    }\r\n    return { -1, -1 };\r\n}\r\n \r\nint main() {\r\n    int n, s; cin >> n >> s;\r\n    vector<pair<int, int>> v(n);\r\n    for (int i = 0; i < n; ++i) {\r\n        cin >> v[i].first;\r\n        v[i].second = i + 1;\r\n    }\r\n    sort(v.begin(), v.end());\r\n    auto ans = solve(v, s);\r\n    if (ans.first != -1)\r\n        cout << ans.first << \" \" << ans.second << endl;\r\n    else\r\n        cout << \"IMPOSSIVEL\\n\";\r\n    return 0;\r\n}\r\n",
+    "linguagem": "cpp.g++17",
     "problema_id": 0
 }

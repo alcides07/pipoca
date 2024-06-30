@@ -1,6 +1,6 @@
 from tests.database import get_db_test
 from tests.helpers.administrador import create_administrador_helper
-from tests.helpers.problema import create_problema_admin_helper, create_problema_user_helper
+from tests.helpers.problema import URL_PROBLEMA, create_problema_admin_helper, create_problema_user_helper
 from tests.helpers.user import create_user_helper
 from main import app
 from fastapi.testclient import TestClient
@@ -139,6 +139,60 @@ def test_read_declaracao_by_id_com_admin():
     )
 
     assert response.status_code == 200
+
+    resume_dependencies()
+
+
+def test_read_idiomas_declaracao():
+    remove_dependencies()
+
+    _, token, _ = create_user_helper()
+
+    response = client.get(
+        f"{URL_DECLARACAO}/idiomas/",
+        headers={
+            "Authorization": f"Bearer {token}",
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json().get("data") != []
+
+    resume_dependencies()
+
+
+def test_read_declaracao_imagens():
+    remove_dependencies()
+
+    _, token, _ = create_user_helper()
+
+    with open("./tests/integration/example_problem_with_image.zip", 'rb') as file:
+        response_problema = client.post(
+            f"{URL_PROBLEMA}/pacotes/",
+            files={"pacote": file},
+            data={
+                "privado": "true",
+                "linguagens": ["python.3", "cpp.g++17"]
+            },
+            headers={
+                "Authorization": f"Bearer {token}",
+            },
+        )
+
+    assert response_problema.status_code == 201
+
+    response_json = response_problema.json().get("data")
+    id_declaracao = response_json.get("declaracoes")[0].get("id")
+
+    response = client.get(
+        f"{URL_DECLARACAO}/{id_declaracao}/imagens/",
+        headers={
+            "Authorization": f"Bearer {token}",
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json().get("data") != []
 
     resume_dependencies()
 
@@ -452,7 +506,7 @@ def test_delete_declaracao_com_admin():
 
 JSON_DECLARACAO = {
     "titulo": "string",
-    "idioma": "Africâner",
+    "idioma": "Português",
     "contextualizacao": "string",
     "formatacao_entrada": "string",
     "formatacao_saida": "string",

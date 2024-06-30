@@ -2,7 +2,7 @@ import os
 import base64
 from tests.database import get_db_test
 from tests.helpers.administrador import create_administrador_helper
-from tests.helpers.user import URL_USER, create_user_helper, login_user_helper
+from tests.helpers.user import URL_USER, activate_account_user_helper, create_user_helper, login_user_helper
 from main import app
 from fastapi.testclient import TestClient
 from tests.config_test import remove_dependencies, resume_dependencies
@@ -52,41 +52,6 @@ def test_read_user_unit_admin():
     resume_dependencies()
 
 
-def test_read_meus_dados_admin():
-    remove_dependencies()
-
-    database = next(get_db_test())
-    token_admin = create_administrador_helper(database)
-
-    response = client.get(
-        f"{URL_USER}/me/",
-        headers={
-            "Authorization": f"Bearer {token_admin}",
-        },
-    )
-
-    assert response.status_code == 501
-
-    resume_dependencies()
-
-
-def test_read_meus_dados_user():
-    remove_dependencies()
-
-    _, token, _ = create_user_helper()
-
-    response = client.get(
-        f"{URL_USER}/me/",
-        headers={
-            "Authorization": f"Bearer {token}",
-        },
-    )
-
-    assert response.status_code == 200
-
-    resume_dependencies()
-
-
 def test_read_imagem_user():
     remove_dependencies()
 
@@ -121,6 +86,51 @@ def test_read_imagem_inexistente_user():
     user_id = response_user.json().get("data").get("id")
 
     response = client.get(
+        f"{URL_USER}/{user_id}/imagem/",
+        headers={
+            "Authorization": f"Bearer {token}",
+        },
+    )
+
+    assert response.status_code == 404
+
+    resume_dependencies()
+
+
+def test_delete_imagem_user():
+    remove_dependencies()
+
+    response_user, token, _ = create_user_helper()
+    user_id = response_user.json().get("data").get("id")
+
+    with open("./tests/integration/user.png", 'rb') as file:
+        client.post(
+            f"{URL_USER}/{user_id}/imagem/",
+            files={"imagem": file},
+            headers={
+                "Authorization": f"Bearer {token}",
+            },
+        )
+
+    response = client.delete(
+        f"{URL_USER}/{user_id}/imagem/",
+        headers={
+            "Authorization": f"Bearer {token}",
+        },
+    )
+
+    assert response.status_code == 204
+
+    resume_dependencies()
+
+
+def test_delete_imagem_inexistente_user():
+    remove_dependencies()
+
+    response_user, token, _ = create_user_helper()
+    user_id = response_user.json().get("data").get("id")
+
+    response = client.delete(
         f"{URL_USER}/{user_id}/imagem/",
         headers={
             "Authorization": f"Bearer {token}",
@@ -280,6 +290,8 @@ def test_update_full_user_username_exists():
         URL_USER,
         json=user_repeat
     )
+    email_repeat = user_repeat_response.json().get("data").get("email")
+    activate_account_user_helper(email_repeat)
 
     assert user_repeat_response.status_code == 201
 
@@ -317,6 +329,8 @@ def test_update_full_user_email_exists():
         URL_USER,
         json=user_repeat
     )
+    email_repeat = user_repeat_response.json().get("data").get("email")
+    activate_account_user_helper(email_repeat)
 
     assert user_repeat_response.status_code == 201
 

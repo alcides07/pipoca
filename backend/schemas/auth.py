@@ -1,4 +1,5 @@
 from pydantic import BaseModel, Field
+from schemas.user import ID_USER_DESCRIPTION
 
 
 class UserLogin(BaseModel):
@@ -18,6 +19,12 @@ class UserLoginOut(BaseModel):
 
     token_type: str = Field(
         description="Tipo do token utilizado")
+
+    username: str = Field(description="Apelido do usuário")
+
+    id: int = Field(
+        description=ID_USER_DESCRIPTION
+    )
 
 
 class TokenData(BaseModel):

@@ -24,6 +24,8 @@ def filter_collection(
     if (filters):
         for attr, value in filters.__dict__.items():
             if (hasattr(model, attr) and value != None):
+                if (isinstance(value, Enum)):
+                    value = value.value
                 query = query.filter(getattr(model, attr) == value)
 
     if (pagination and pagination.q and search_fields):
