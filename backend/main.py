@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
+from enviroments import ENV, FRONT_BASE_URL, VERSION_API
 from utils.translate import translate
 from utils.errors import errors
 from openapi.validation_exception import validation_exception_handler
@@ -9,11 +10,7 @@ from fastapi.openapi.utils import get_openapi
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from decouple import config
 
-TEST_ENV = int(config("TEST_ENV", default=0))
-VERSION_API = str(config("VERSION_API", default="0.0.0"))
-FRONT_BASE_URL = str(config("FRONT_BASE_URL", default="http://localhost:5173"))
 ALLOWED_ORIGINS = [FRONT_BASE_URL]
 
 
@@ -22,20 +19,21 @@ def get_config_database():
     return engine, Base
 
 
-if (not TEST_ENV):
+if (ENV != "test"):
     engine, Base = get_config_database()
     Base.metadata.create_all(bind=engine)
 
-app = FastAPI(docs_url=None,
-              redoc_url=None,
-              swagger_ui_parameters={"syntaxHighlight.theme": "nord"},
-              responses={
-                  401: errors[401]
-              },
-              exception_handlers={
-                  RequestValidationError: validation_exception_handler
-              }  # type: ignore
-              )
+app = FastAPI(
+    docs_url=None,
+    redoc_url=None,
+    swagger_ui_parameters={"syntaxHighlight.theme": "nord"},
+    responses={
+        401: errors[401]
+    },
+    exception_handlers={
+        RequestValidationError: validation_exception_handler
+    }  # type: ignore
+)
 
 app.add_middleware(
     CORSMiddleware,

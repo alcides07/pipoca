@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from models.tag import Tag
 from models.problemaResposta import ProblemaResposta
 from models.problemaTeste import ProblemaTeste
 from models.validador import Validador
@@ -68,7 +69,7 @@ class Problema(Base):
     )
 
     tags = relationship(
-        "Tag",
+        Tag,
         secondary=problema_tag_relationship,
         back_populates="problemas",
     )

@@ -3,11 +3,11 @@ from dependencies.authorization_user import is_user
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
+from enviroments import API_BASE_URL
 from models.declaracao import Declaracao
 from models.problema import Problema
 from schemas.declaracao import DeclaracaoCreateSingle, DeclaracaoUpdatePartial, DeclaracaoUpdateTotal
 from schemas.idioma import IdiomaEnum
-from decouple import config
 
 
 async def get_declaracao_by_id(
@@ -150,7 +150,6 @@ async def get_imagens_declaracao(
         raise HTTPException(status.HTTP_401_UNAUTHORIZED)
 
     lista_imagens: list[str] = []
-    API_BASE_URL = str(config("API_BASE_URL"))
 
     for caminho_imagem in db_declaracao.imagens:
         try:
