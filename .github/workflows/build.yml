@@ -23,7 +23,6 @@ jobs:
       ALGORITHM: ${{ secrets.ALGORITHM }}
       SECRET_KEY: ${{ secrets.SECRET_KEY }}
       TOKEN_EXPIRE_MINUTES: ${{ secrets.TOKEN_EXPIRE_MINUTES }}
-      TEST_ENV: ${{ secrets.TEST_ENV }}
       API_BASE_URL: ${{ secrets.API_BASE_URL }}
       FRONT_BASE_URL: ${{ secrets.FRONT_BASE_URL }}
       BROKER_URL: ${{ secrets.BROKER_URL }}
@@ -33,7 +32,7 @@ jobs:
         env:
           POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-          POSTGRES_DB: ${{ secrets.POSTGRES_DB_TEST }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
