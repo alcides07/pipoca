@@ -1,25 +1,3 @@
-const linguagens = [
-  "c.gcc",
-  "cpp.g++",
-  "cpp.g++11",
-  "cpp.g++14",
-  "cpp.g++17",
-  "cpp.gcc11-64-winlibs-g++20",
-  "cpp.ms2017",
-  "cpp.msys2-mingw64-9-g++17",
-  "csharp.mono",
-  "java11",
-  "java8",
-  "kotlin",
-  "kotlin16",
-  "kotlin17",
-  "kotlin19",
-  "php.5",
-  "python.2",
-  "python.3",
-  "python.pypy2",
-  "python.pypy3",
-  "scala",
-];
+const linguagensPadrao = ["cpp.g++17", "java11", "python.3", "ruby.3"];
 
-export default linguagens;
+export default linguagensPadrao;

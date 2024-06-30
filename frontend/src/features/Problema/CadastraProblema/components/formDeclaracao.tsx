@@ -11,7 +11,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "react-toastify";
 import { Button } from "@/components/ui/button";
 
 import {
@@ -104,16 +104,20 @@ function FormDeclaracao({ problemaId }: FormDeclaracaoProps) {
       .createDeclaracao(data)
       .then(() => {
         window.scrollTo(0, 0);
-        toast({
-          title: "Sucesso",
-          description: "Declaração cadastrada!",
+        window.location.reload();
+        toast.success("Declaração cadastrada com sucesso!", {
+          autoClose: 5000,
+          style: {
+            border: "1px solid #07bc0c",
+          },
         });
       })
       .catch(() => {
-        toast({
-          variant: "destructive",
-          title: "Erro.",
-          description: "O cadastro de declaração falhou. Tente novamente!",
+        toast.error("O cadastro de declaração falhou. Tente novamente!", {
+          autoClose: 5000,
+          style: {
+            border: "1px solid #e74c3c",
+          },
         });
       });
   }
@@ -121,7 +125,7 @@ function FormDeclaracao({ problemaId }: FormDeclaracaoProps) {
   return (
     <Card>
       <CardHeader className="">
-        <CardTitle>Declaração</CardTitle>
+        <CardTitle className="text-2xl">Declaração</CardTitle>
         <CardDescription>
           Para cadastrar as informações do problema, preencha o formulário
           baixo.
@@ -157,7 +161,7 @@ function FormDeclaracao({ problemaId }: FormDeclaracaoProps) {
                         <SelectTrigger className="w-full">
                           <SelectValue placeholder="Selecione o idioma" />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="h-56">
                           <SelectGroup>
                             {idiomas.map((idioma: string) => (
                               <SelectItem key={idioma} value={idioma}>
@@ -281,7 +285,7 @@ function FormDeclaracao({ problemaId }: FormDeclaracaoProps) {
             />
 
             <Button className="w-full" type="submit">
-              Editar
+              Cadastrar
             </Button>
           </form>
         </Form>

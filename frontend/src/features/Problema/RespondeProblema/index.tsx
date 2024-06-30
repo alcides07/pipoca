@@ -41,7 +41,6 @@ import Latex from "react-latex";
 import {
   Table,
   TableBody,
-  TableCaption,
   TableCell,
   TableHead,
   TableHeader,
@@ -62,13 +61,19 @@ const FormSchema = z.object({
 });
 
 function RespondeProblema() {
-  const { id } = useParams();
   const [problema, setProblema] = useState<iDataProblema>();
   const [rows, setRows] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [testesExemplos, setTestesExemplos] = useState<iTestesExemplos[]>();
   const [loadingProblema, setLoadingProblema] = useState(true);
   const [loadingProblemaExemplos, setLoadingProblemaExemplos] = useState(true);
+  const { id: idParam } = useParams();
+  const id = Number(idParam);
+
+  if (isNaN(id)) {
+    console.error("id is not a number");
+    return;
+  }
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -80,10 +85,11 @@ function RespondeProblema() {
 
   async function onSubmit(values: z.infer<typeof FormSchema>) {
     setIsLoading(true);
+
     const data: iProblemaResposta = {
       resposta: values.resposta,
       linguagem: values.linguagem,
-      problema_id: parseInt(id),
+      problema_id: id,
     };
 
     console.log("Resposta", data);
@@ -204,7 +210,7 @@ function RespondeProblema() {
                   <div className="flex h-full w-full px-10">
                     {problema && problema.declaracoes[0] && (
                       <div className="w-full">
-                        <h2 className="text-3xl font-bold my-5">
+                        <h2 className="text-2xl font-bold my-5">
                           {problema.declaracoes[0].titulo}
                         </h2>
                         <Separator className="my-4" />
@@ -293,7 +299,7 @@ function RespondeProblema() {
                                 <SelectTrigger className="w-full">
                                   <SelectValue placeholder="Selecione uma linguagem" />
                                 </SelectTrigger>
-                                <SelectContent>
+                                <SelectContent className="h-56">
                                   <SelectGroup>
                                     {linguagens.map((linguagem: string) => (
                                       <SelectItem

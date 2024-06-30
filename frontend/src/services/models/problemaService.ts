@@ -1,22 +1,22 @@
-import { iRespondeProblema } from "@/interfaces/services/iRespondeProblema";
 import axiosInstance from "../axiosInstance";
+import { iProblema } from "@/interfaces/services/iProblema";
 
 class ProblemaService {
   async getProblemas() {
     const response = await axiosInstance.get("/problemas/");
     return response.data;
   }
-  async createProblema(data: any) {
+  async cadastroProblema(data: iProblema) {
     const response = await axiosInstance.post(`/problemas/`, data);
     return response;
   }
   async getProblemaById(id: number) {
-    const response = await axiosInstance.get(`/problemas/${id}`);
+    const response = await axiosInstance.get(`/problemas/${id}/`);
     return response.data;
   }
 
   async updateProblema(id: number, data: any) {
-    const response = await axiosInstance.put(`/problemas/${id}`, data);
+    const response = await axiosInstance.put(`/problemas/${id}/`, data);
     return response.data;
   }
 
@@ -27,6 +27,11 @@ class ProblemaService {
 
   async declaracoesProblema(id: number) {
     const response = await axiosInstance.get(`/problemas/${id}/declaracoes/`);
+    return response.data;
+  }
+
+  async verificadorProblema(id: number) {
+    const response = await axiosInstance.get(`/problemas/${id}/verificadores/`);
     return response.data;
   }
 
