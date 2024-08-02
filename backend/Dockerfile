@@ -18,10 +18,12 @@ COPY ./tests ./tests
 COPY ./utils ./utils
 COPY ./filters ./filters
 COPY ./static ./static
+COPY ./workers ./workers
 COPY database.py .
 COPY compilers.py .
 COPY constants.py .
 COPY main.py .
 COPY alembic.ini .
+COPY enviroments.py .
 
 # USER user
