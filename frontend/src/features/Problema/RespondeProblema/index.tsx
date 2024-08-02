@@ -48,6 +48,7 @@ import {
 } from "@/components/ui/table";
 import type { iProblemaResposta } from "@/interfaces/services/iProblemaResposta";
 import ProblemaRespostaService from "@/services/models/problemaRespostaService";
+import TarefaService from "@/services/models/tarefaService";
 
 const FormSchema = z.object({
   linguagem: z.string().nonempty("Selecione uma linguagem de programação!"),
@@ -69,9 +70,11 @@ function RespondeProblema() {
   const [loadingProblemaExemplos, setLoadingProblemaExemplos] = useState(true);
   const { id: idParam } = useParams();
   const id = Number(idParam);
+  const [taskId, setTaskId] = useState<string>();
+  const [tarefa, setTarefa] = useState<any>();
 
   if (isNaN(id)) {
-    console.error("id is not a number");
+    console.error("Id inválido!");
     return;
   }
 
@@ -95,22 +98,10 @@ function RespondeProblema() {
     console.log("Resposta", data);
 
     await ProblemaRespostaService.respondeProblema(data)
-      .then((response: any) => {
-        if (response.erro) {
-          toast({
-            title: "Erro.",
-            description: response.data.erro,
-            variant: "destructive",
-            duration: 5000,
-          });
-        } else {
-          toast({
-            title: "Sucesso.",
-            description: "Resposta correta!",
-            variant: "success",
-            duration: 5000,
-          });
-        }
+      .then(({ data }) => {
+        console.log("setTaskId", data);
+        console.log("task_uuid", data.data.task_uuid);
+        setTaskId(data.data.task_uuid);
       })
       .catch((error) => {
         toast({
@@ -124,6 +115,18 @@ function RespondeProblema() {
         setIsLoading(false);
       });
   }
+
+  async function respostaSubmissao(taskId: string) {
+    await TarefaService.tarefa(taskId)
+      .then(({ data }) => {
+        setTarefa(data);
+      })
+      .catch(() => {});
+  }
+
+  useEffect(() => {
+    respostaSubmissao(taskId);
+  }, [tarefa]);
 
   useEffect(() => {
     obtemProblema();

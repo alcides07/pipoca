@@ -36,6 +36,10 @@ function Rotas() {
           <Route path="/problema/cadastro" element={<CadastraProblema />} />
           <Route path="/problema/:id" element={<TabsProblema />} />
           <Route path="/problema/:id/responde" element={<RespondeProblema />} />
+          <Route
+            path="/problema/:id/responde/resultados"
+            element={<RespondeProblema />}
+          />
           <Route path="/problema/editar/:id" element={<EditaProblema />} />
           <Route path="/" element={<Login onLogin={handleLogin} />} />
         </Routes>
