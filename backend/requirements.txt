@@ -16,3 +16,6 @@ tox==4.11.4
 coverage==7.4.0
 alembic==1.13.1
 docker==7.1.0
+celery==5.4.0
+flower==2.0.1
+redis==5.0.7

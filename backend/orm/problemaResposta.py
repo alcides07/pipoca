@@ -5,10 +5,11 @@ import docker
 import os
 from compilers import commands
 from typing import List
-from constants import FILENAME_RUN, INPUT_TEST_FILENAME, OUTPUT_JUDGE_FILENAME, OUTPUT_USER_FILENAME, URL_TEST_LIB
+from constants import FILENAME_RUN, INPUT_TEST_FILENAME, OUTPUT_JUDGE_FILENAME, OUTPUT_USER_FILENAME
 from dependencies.authenticated_user import get_authenticated_user
 from dependencies.authorization_user import is_admin, is_user
 from fastapi import HTTPException, status
+from enviroments import ENV
 from filters.problemaResposta import OrderByFieldsProblemaRespostaEnum, search_fields_problema_resposta
 from models.arquivo import Arquivo
 from models.problemaResposta import ProblemaResposta
@@ -25,6 +26,8 @@ from models.problema import Problema
 from docker.errors import DockerException
 from schemas.problemaTeste import TipoTesteProblemaEnum
 from utils.get_testlib import get_test_lib
+from decouple import config
+from workers.correcaoProblema import correcao_problema
 
 
 def get_arquivo_solucao(
@@ -269,7 +272,6 @@ async def execute_checker(
         os.remove(TEMP_TESTLIB)
         volume.remove()  # type: ignore
 
-    print("veredito: ", veredito)
     return veredito
 
 
@@ -548,35 +550,19 @@ async def create_problema_resposta(
         )
 
     try:
-        veredito, output_user, output_judge, erro = await execute_processo_resolucao(
-            problema_resposta=problema_resposta,
-            db_problema=db_problema
+        problema_resposta_dict = problema_resposta.model_dump()
+        task = correcao_problema.apply_async(
+            args=[
+                problema_resposta_dict,
+                user.id,
+                db_problema.id
+            ]
         )
 
-        db_problema_resposta = ProblemaResposta(
-            **problema_resposta.model_dump(exclude=set(["problema", "usuario"])))
+        if (ENV == "test"):
+            return task.result
 
-        db_problema.respostas.append(db_problema_resposta)
-        db_problema_resposta.usuario = user
-
-        db_problema_resposta.veredito = veredito  # type: ignore
-        db_problema_resposta.erro = erro  # type: ignore
-        db_problema_resposta.saida_usuario = output_user  # type: ignore
-        db_problema_resposta.saida_esperada = output_judge  # type: ignore
-
-        # Bloco temporário
-        db_problema_resposta.tempo = 250
-        db_problema_resposta.memoria = 250
-        #
-
-        if (is_admin(user)):
-            db_problema_resposta.usuario = None
-
-        db.add(db_problema_resposta)
-        db.commit()
-        db.refresh(db_problema_resposta)
-
-        return db_problema_resposta
+        return task.id
 
     except SQLAlchemyError:
         db.rollback()

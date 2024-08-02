@@ -1,4 +1,4 @@
-from routers import arquivo, auth, declaracao, openapi, problema, problemaResposta, problemaTeste, tag, user, validador, validadorTeste, verificador, verificadorTeste
+from routers import arquivo, auth, declaracao, openapi, problema, problemaResposta, problemaTeste, tag, user, validador, validadorTeste, verificador, verificadorTeste, tarefas
 
 routes = [
     arquivo.router,
@@ -13,5 +13,6 @@ routes = [
     validador.router,
     validadorTeste.router,
     verificador.router,
-    verificadorTeste.router
+    verificadorTeste.router,
+    tarefas.router
 ]

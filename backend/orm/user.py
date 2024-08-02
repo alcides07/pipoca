@@ -4,6 +4,7 @@ from dependencies.authenticated_user import get_authenticated_user
 from dependencies.authorization_user import is_user
 from sqlalchemy.exc import SQLAlchemyError
 from fastapi import HTTPException, UploadFile, status
+from enviroments import ALGORITHM, API_BASE_URL, FRONT_BASE_URL, SECRET_KEY
 from orm.common.index import get_by_key_value, get_by_key_value_exists
 from sqlalchemy.orm import Session
 from models.user import User
@@ -145,7 +146,6 @@ async def create_imagem_user(
         db.commit()
         db.refresh(db_user)
 
-        API_BASE_URL = str(config("API_BASE_URL"))
         endereco_imagem = API_BASE_URL + "/" + caminho_imagem
 
     except SQLAlchemyError:
@@ -210,7 +210,6 @@ async def get_imagem_user(
             "O usuário não foi encontrado!"
         )
 
-    API_BASE_URL = str(config("API_BASE_URL"))
     caminho_imagem = str(db_user.caminho_imagem)
 
     try:
@@ -235,8 +234,6 @@ async def activate_account(
         status.HTTP_401_UNAUTHORIZED,
         "Não foi possível validar a conta do usuário!",
     )
-    SECRET_KEY = str(config("SECRET_KEY"))
-    ALGORITHM = str(config("ALGORITHM"))
 
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
@@ -279,7 +276,6 @@ async def create_token_ativacao_conta_and_send_email(
     destinatario: str,
 ):
     EXPIRE_MINUTES = 15
-    FRONT_BASE_URL = str(config("FRONT_BASE_URL"))
     access_token_expires = timedelta(minutes=EXPIRE_MINUTES)
     token = create_token(
         data=data_token,

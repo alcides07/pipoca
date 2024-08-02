@@ -1,4 +1,5 @@
 from constants import DIRECTION_ORDER_BY_DESCRIPTION, FIELDS_ORDER_BY_DESCRIPTION
+from enviroments import ENV
 from fastapi import APIRouter, Depends, Path, Query
 from dependencies.is_admin import is_admin_dependencies
 from filters.problemaResposta import OrderByFieldsProblemaRespostaEnum, search_fields_problema_resposta
@@ -13,6 +14,7 @@ from schemas.common.pagination import PaginationSchema
 from schemas.common.response import ResponsePaginationSchema, ResponseUnitRequiredSchema
 from schemas.problemaResposta import ProblemaRespostaCreate, ProblemaRespostaReadFull, ProblemaRespostaReadSimple
 from sqlalchemy.orm import Session
+from schemas.tarefas import TarefaIdSchema
 from utils.errors import errors
 
 PROBLEMA_RESPOSTA_ID_DESCRIPTION = "Identificador da resposta de um problema"
@@ -147,7 +149,10 @@ async def read_id(
 
 
 @router.post("/",
-             response_model=ResponseUnitRequiredSchema[ProblemaRespostaReadSimple],
+             response_model=ResponseUnitRequiredSchema[
+                 TarefaIdSchema |
+                 ProblemaRespostaReadSimple
+             ],
              status_code=201,
              summary="Cadastra uma resposta para um problema",
              responses={
@@ -160,10 +165,18 @@ async def create(
     db: Session = Depends(get_db),
     token: str = Depends(oauth2_scheme)
 ):
-    problema_resposta = await create_problema_resposta(
+
+    problema_resposta_or_uuid = await create_problema_resposta(
         db=db,
         problema_resposta=problema_resposta,
         token=token
     )
 
-    return ResponseUnitRequiredSchema(data=problema_resposta)
+    if (ENV != "test"):
+        return ResponseUnitRequiredSchema(
+            data=TarefaIdSchema(task_uuid=problema_resposta_or_uuid)
+        )
+
+    return ResponseUnitRequiredSchema(
+        data=problema_resposta_or_uuid
+    )
