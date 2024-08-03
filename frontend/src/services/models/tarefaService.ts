@@ -4,7 +4,7 @@ class TarefaService {
   async tarefa(taskId: string) {
     const response = await axiosInstance.get("/tarefas/", {
       params: {
-        taskId: taskId,
+        uuid: taskId,
       },
     });
     return response.data;

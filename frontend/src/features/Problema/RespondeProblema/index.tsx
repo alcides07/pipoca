@@ -6,7 +6,7 @@ import {
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
 import problemaService from "@/services/models/problemaService";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -72,10 +72,11 @@ function RespondeProblema() {
   const id = Number(idParam);
   const [taskId, setTaskId] = useState<string>();
   const [tarefa, setTarefa] = useState<any>();
+  const navigate = useNavigate();
 
   if (isNaN(id)) {
     console.error("Id inválido!");
-    return;
+    return null;
   }
 
   const form = useForm<z.infer<typeof FormSchema>>({
@@ -100,6 +101,7 @@ function RespondeProblema() {
     await ProblemaRespostaService.respondeProblema(data)
       .then(({ data }) => {
         console.log("setTaskId", data);
+        console.log("Status:", data.status);
         console.log("task_uuid", data.data.task_uuid);
         setTaskId(data.data.task_uuid);
       })
@@ -110,23 +112,37 @@ function RespondeProblema() {
           variant: "destructive",
           duration: 5000,
         });
-      })
-      .finally(() => {
-        setIsLoading(false);
       });
   }
 
-  async function respostaSubmissao(taskId: string) {
-    await TarefaService.tarefa(taskId)
-      .then(({ data }) => {
-        setTarefa(data);
-      })
-      .catch(() => {});
-  }
-
   useEffect(() => {
-    respostaSubmissao(taskId);
-  }, [tarefa]);
+    console.log("taskId:", taskId);
+    if (taskId) {
+      respostaSubmissao(taskId);
+    }
+  }, [taskId]);
+
+  async function respostaSubmissao(taskId: string) {
+    console.log("Entrei respostaSubmissao");
+
+    const interval = setInterval(async () => {
+      try {
+        const response = await TarefaService.tarefa(taskId);
+        console.log("Resposta da tarefa:", response); // Adicione este log
+        const status = response.status;
+        console.log("Status:", status);
+
+        if (status === "SUCCESS") {
+          console.log("Status de sucesso:", status);
+          clearInterval(interval);
+          navigate(`/problema/${id}/responde/resultados`);
+        }
+      } catch (error) {
+        console.error("Erro ao obter a tarefa:", error);
+        clearInterval(interval); // Certifique-se de parar o intervalo em caso de erro
+      }
+    }, 5000); // Refaça a requisição a cada 5 segundos
+  }
 
   useEffect(() => {
     obtemProblema();
