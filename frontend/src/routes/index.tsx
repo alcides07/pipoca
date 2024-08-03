@@ -9,6 +9,7 @@ import EditaProblema from "@/features/Problema/EditaProblema";
 import TabsProblema from "@/features/Problema/tabsProblema.tsx";
 import Conteiner from "../components/conteiner";
 import { useState } from "react";
+import ResultadoProblema from "@/features/Problema/RespondeProblema/components/resultadoResposta";
 
 const linksHeader = [
   { nome: "Dashboard", link: "/" },
@@ -36,6 +37,10 @@ function Rotas() {
           <Route path="/problema/cadastro" element={<CadastraProblema />} />
           <Route path="/problema/:id" element={<TabsProblema />} />
           <Route path="/problema/:id/responde" element={<RespondeProblema />} />
+          <Route
+            path="/problema/:id/responde/resultados"
+            element={<ResultadoProblema />}
+          />
           <Route path="/problema/editar/:id" element={<EditaProblema />} />
           <Route path="/" element={<Login onLogin={handleLogin} />} />
         </Routes>
