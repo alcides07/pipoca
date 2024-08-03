@@ -95,13 +95,8 @@ function RespondeProblema() {
       problema_id: id,
     };
 
-    console.log("Resposta", data);
-
     await ProblemaRespostaService.respondeProblema(data)
       .then(({ data }) => {
-        console.log("setTaskId", data);
-        console.log("Status:", data.status);
-        console.log("task_uuid", data.data.task_uuid);
         setTaskId(data.data.task_uuid);
       })
       .catch((error) => {
@@ -115,34 +110,26 @@ function RespondeProblema() {
   }
 
   useEffect(() => {
-    console.log("taskId:", taskId);
     if (taskId) {
       respostaSubmissao(taskId);
     }
   }, [taskId]);
 
   async function respostaSubmissao(taskId: string) {
-    console.log("Entrei respostaSubmissao");
-
     const interval = setInterval(async () => {
       try {
         const response = await TarefaService.tarefa(taskId);
-        console.log("Resposta da tarefa:", response); // Adicione este log
         const status = response.status;
-        console.log("Status:", status);
-
         if (status === "SUCCESS") {
-          console.log("Status de sucesso:", status);
           clearInterval(interval);
           navigate(`/problema/${id}/responde/resultados`, {
             state: { taskId },
           });
         }
       } catch (error) {
-        console.error("Erro ao obter a tarefa:", error);
-        clearInterval(interval); // Certifique-se de parar o intervalo em caso de erro
+        clearInterval(interval);
       }
-    }, 5000); // Refaça a requisição a cada 5 segundos
+    }, 5000);
   }
 
   useEffect(() => {
@@ -157,7 +144,6 @@ function RespondeProblema() {
     setLoadingProblema(true);
 
     await problemaService.getProblemaById(id).then((response) => {
-      console.log("response.data", response.data);
       setProblema(response.data);
     });
     setLoadingProblema(false);
@@ -166,7 +152,6 @@ function RespondeProblema() {
   async function obtemTestesExemplos() {
     setLoadingProblemaExemplos(true);
     await problemaService.testesExemplosProblema(id).then((response) => {
-      console.log("testes:", response.data);
       setTestesExemplos(response.data);
     });
     setLoadingProblemaExemplos(false);

@@ -12,7 +12,6 @@ import {
 import { Toaster } from "@/components/ui/toaster";
 import { Badge } from "@/components/ui/badge";
 import Loading from "@/components/loading";
-import Latex from "react-latex";
 import {
   Table,
   TableBody,
@@ -24,11 +23,11 @@ import {
 import { iDataProblema } from "@/interfaces/models/iProblema";
 import problemaService from "@/services/models/problemaService";
 import { useParams } from "react-router-dom";
+import { Card, CardContent } from "@/components/ui/card";
 
 function ResultadoProblema() {
   const location = useLocation();
   const { taskId } = location.state || {};
-  console.log("taskId:", taskId);
 
   const [resultadoResposta, setResultadoResposta] = useState<any>();
   const [loadingResultado, setLoadingResultado] = useState(true);
@@ -37,20 +36,20 @@ function ResultadoProblema() {
   const id = Number(idParam);
 
   useEffect(() => {
-    tarefa(taskId);
+    if (taskId) {
+      tarefa(taskId);
+    }
     obtemProblema();
   }, []);
 
-  useEffect(() => {
-    console.log("resultadoResposta", resultadoResposta);
-  }, [resultadoResposta]);
+  useEffect(() => {}, [resultadoResposta]);
 
   async function tarefa(taskId: string) {
     setLoadingResultado(true);
 
     await TarefaService.tarefa(taskId).then((response) => {
-      console.log("testes:", response.data);
-      setResultadoResposta(response.data);
+      const { saida_usuario, saida_esperada, veredito } = response.resultado;
+      setResultadoResposta({ saida_usuario, saida_esperada, veredito });
     });
     setLoadingResultado(false);
   }
@@ -59,7 +58,6 @@ function ResultadoProblema() {
     setLoadingResultado(true);
 
     await problemaService.getProblemaById(id).then((response) => {
-      console.log("response.data", response.data);
       setProblema(response.data);
     });
     setLoadingResultado(false);
@@ -116,61 +114,79 @@ function ResultadoProblema() {
         </ResizablePanel>
         <ResizableHandle />
         <ResizablePanel defaultSize={92}>
-          <ResizablePanelGroup direction="horizontal" className="min-h-[200px]">
-            <ResizablePanel defaultSize={100}>
-              {problema != undefined && problema != null ? (
-                <ScrollArea className="h-full w-full">
-                  <div className="flex h-full w-full px-10">
-                    {problema && problema.declaracoes[0] && (
-                      <div className="w-full">
-                        <h2 className="text-2xl font-bold my-5">
-                          {problema.declaracoes[0].titulo}
-                        </h2>
-                        <Separator className="my-4" />
-                        {/* {testesExemplos != undefined ? (
-                          <Table className="border rounded mb-8">
-                            <TableHeader className="bg-slate-100">
-                              <TableRow className="divide-y divide-slate-200">
-                                <TableHead className="text-center">
-                                  Exemplos de Entrada
-                                </TableHead>
-                                <TableHead className="text-center">
-                                  Exemplos de Saída
-                                </TableHead>
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                              {testesExemplos.map((teste, index) => (
+          {problema != undefined && problema != null ? (
+            <ScrollArea className="h-full w-full">
+              <div className="flex h-full w-full px-10">
+                {problema && problema.declaracoes[0] && (
+                  <div className="w-full">
+                    <h2 className="text-2xl font-bold my-5">
+                      {`${problema.declaracoes[0].titulo} - RESULTADOS`}
+                    </h2>
+                    <Separator className="my-4" />
+                    {resultadoResposta ? (
+                      resultadoResposta.saida_usuario.length > 0 &&
+                      resultadoResposta.saida_esperada.length > 0 &&
+                      resultadoResposta.veredito.length > 0 ? (
+                        <Table className="border rounded mb-8">
+                          <TableHeader className="bg-slate-100">
+                            <TableRow className="divide-y divide-slate-200">
+                              <TableHead className="text-center">
+                                Saída do Usuário
+                              </TableHead>
+                              <TableHead className="text-center">
+                                Saída Esperada
+                              </TableHead>
+                              <TableHead className="text-center">
+                                Veredito
+                              </TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {resultadoResposta.saida_usuario.map(
+                              (saida, index) => (
                                 <TableRow key={index}>
                                   <TableCell className="border rounded">
-                                    {teste.entrada}
+                                    {saida}
                                   </TableCell>
-                                  <TableCell className="">
-                                    {teste.saida}
+                                  <TableCell className="border rounded">
+                                    {resultadoResposta.saida_esperada[index]}
+                                  </TableCell>
+                                  <TableCell className="border rounded">
+                                    {resultadoResposta.veredito[index]}
                                   </TableCell>
                                 </TableRow>
-                              ))}
-                            </TableBody>
-                          </Table>
-                        ) : (
-                          <Loading
-                            isLoading={loadingResultado}
-                            className="text-gray-300 w-[3rem] h-[3rem] flex justify-center items-center"
-                          />
-                        )} */}
-                      </div>
+                              )
+                            )}
+                          </TableBody>
+                        </Table>
+                      ) : (
+                        <Card className="h-[50vh] flex justify-center items-center">
+                          <CardContent className="flex flex-col justify-center items-center text-center">
+                            <div>
+                              <p className="font-bold">
+                                Seu código não passou nos testes do problema!
+                              </p>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      )
+                    ) : (
+                      <Loading
+                        isLoading={loadingResultado}
+                        className="text-gray-300 w-[3rem] h-[3rem] flex justify-center items-center"
+                      />
                     )}
                   </div>
-                </ScrollArea>
-              ) : (
-                <Loading
-                  className="text-gray-300 w-[3rem] h-[3rem] flex justify-center items-center"
-                  isLoading={loadingResultado}
-                  divHeight="h-full"
-                />
-              )}
-            </ResizablePanel>
-          </ResizablePanelGroup>
+                )}
+              </div>
+            </ScrollArea>
+          ) : (
+            <Loading
+              className="text-gray-300 w-[3rem] h-[3rem] flex justify-center items-center"
+              isLoading={loadingResultado}
+              divHeight="h-full"
+            />
+          )}
         </ResizablePanel>
       </ResizablePanelGroup>
       <Toaster />
