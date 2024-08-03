@@ -40,8 +40,6 @@ function ResultadoProblema() {
     obtemProblema();
   }, []);
 
-  useEffect(() => {}, [resultadoResposta]);
-
   async function tarefa(taskId: string) {
     setLoadingResultado(true);
 
