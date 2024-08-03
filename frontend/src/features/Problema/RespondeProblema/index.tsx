@@ -109,15 +109,10 @@ function RespondeProblema() {
 
   useEffect(() => {
     if (taskId) {
-      respostaSubmissao(taskId);
+      const cleanup = respostaSubmissao(taskId);
+      return cleanup;
     }
-
-    useEffect(() => {
-      if (taskId) {
-        const cleanup = respostaSubmissao(taskId);
-        return cleanup;
-      }
-    }, [taskId]);
+  }, [taskId]);
 
   async function respostaSubmissao(taskId: string) {
     const interval = setInterval(async () => {
