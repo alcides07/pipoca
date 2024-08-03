@@ -71,7 +71,6 @@ function RespondeProblema() {
   const { id: idParam } = useParams();
   const id = Number(idParam);
   const [taskId, setTaskId] = useState<string>();
-  const [tarefa, setTarefa] = useState<any>();
   const navigate = useNavigate();
 
   if (isNaN(id)) {
@@ -135,7 +134,9 @@ function RespondeProblema() {
         if (status === "SUCCESS") {
           console.log("Status de sucesso:", status);
           clearInterval(interval);
-          navigate(`/problema/${id}/responde/resultados`);
+          navigate(`/problema/${id}/responde/resultados`, {
+            state: { taskId },
+          });
         }
       } catch (error) {
         console.error("Erro ao obter a tarefa:", error);
