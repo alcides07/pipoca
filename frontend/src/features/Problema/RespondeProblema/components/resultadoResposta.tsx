@@ -1,4 +1,4 @@
-import { useLocation } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import TarefaService from "@/services/models/tarefaService";
 import { Separator } from "@/components/ui/separator";
@@ -8,7 +8,6 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
-
 import { Toaster } from "@/components/ui/toaster";
 import { Badge } from "@/components/ui/badge";
 import Loading from "@/components/loading";
@@ -22,7 +21,6 @@ import {
 } from "@/components/ui/table";
 import { iDataProblema } from "@/interfaces/models/iProblema";
 import problemaService from "@/services/models/problemaService";
-import { useParams } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 
 function ResultadoProblema() {
