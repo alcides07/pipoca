@@ -1,6 +1,3 @@
-from decouple import config
-
-
 def get_session_local():
     from database import SessionLocal
     return SessionLocal()

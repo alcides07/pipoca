@@ -3,6 +3,7 @@ from datetime import datetime
 from typing import Optional
 from pydantic import BaseModel, Field
 from schemas.common.compilers import CompilersEnum
+from schemas.tarefas import TarefaIdSchema
 from schemas.user import UserReadSimple
 
 PROBLEMA_RESPOSTA_ID_DESCRIPTION = "Identificador da resposta do problema"

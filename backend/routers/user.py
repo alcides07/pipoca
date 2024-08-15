@@ -1,5 +1,5 @@
-from fastapi.responses import FileResponse
 from dependencies.is_admin import is_admin_dependencies
+from enviroments import ENV
 from routers.auth import oauth2_scheme
 from fastapi import APIRouter, Body, Depends, HTTPException, Path, Response, UploadFile, status, File
 from utils.errors import errors
@@ -134,9 +134,7 @@ async def create(
             message="A conta do usuário foi cadastrada!"
         )
 
-    producao = int(config("PRODUCAO", default=0))
-
-    if (producao):
+    if (ENV == "production"):
         return await create_producao()
 
     return await create_local()
