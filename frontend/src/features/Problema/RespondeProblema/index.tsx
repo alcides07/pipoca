@@ -6,13 +6,11 @@ import {
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
 import problemaService from "@/services/models/problemaService";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -48,6 +46,7 @@ import {
 } from "@/components/ui/table";
 import type { iProblemaResposta } from "@/interfaces/services/iProblemaResposta";
 import ProblemaRespostaService from "@/services/models/problemaRespostaService";
+import TarefaService from "@/services/models/tarefaService";
 
 const FormSchema = z.object({
   linguagem: z.string().nonempty("Selecione uma linguagem de programação!"),
@@ -69,10 +68,12 @@ function RespondeProblema() {
   const [loadingProblemaExemplos, setLoadingProblemaExemplos] = useState(true);
   const { id: idParam } = useParams();
   const id = Number(idParam);
+  const [taskId, setTaskId] = useState<string>();
+  const navigate = useNavigate();
 
   if (isNaN(id)) {
-    console.error("id is not a number");
-    return;
+    console.error("Id inválido!");
+    return null;
   }
 
   const form = useForm<z.infer<typeof FormSchema>>({
@@ -92,25 +93,9 @@ function RespondeProblema() {
       problema_id: id,
     };
 
-    console.log("Resposta", data);
-
     await ProblemaRespostaService.respondeProblema(data)
-      .then((response: any) => {
-        if (response.erro) {
-          toast({
-            title: "Erro.",
-            description: response.data.erro,
-            variant: "destructive",
-            duration: 5000,
-          });
-        } else {
-          toast({
-            title: "Sucesso.",
-            description: "Resposta correta!",
-            variant: "success",
-            duration: 5000,
-          });
-        }
+      .then(({ data }) => {
+        setTaskId(data.data.task_uuid);
       })
       .catch((error) => {
         toast({
@@ -119,10 +104,33 @@ function RespondeProblema() {
           variant: "destructive",
           duration: 5000,
         });
-      })
-      .finally(() => {
-        setIsLoading(false);
       });
+  }
+
+  useEffect(() => {
+    if (taskId) {
+      const cleanup = respostaSubmissao(taskId);
+      return cleanup;
+    }
+  }, [taskId]);
+
+  async function respostaSubmissao(taskId: string) {
+    const interval = setInterval(async () => {
+      try {
+        const response = await TarefaService.tarefa(taskId);
+        const status = response.status;
+        if (status === "SUCCESS") {
+          clearInterval(interval);
+          navigate(`/problema/${id}/responde/resultados`, {
+            state: { taskId },
+          });
+        }
+      } catch (error) {
+        clearInterval(interval);
+      }
+    }, 5000);
+
+    return () => clearInterval(interval);
   }
 
   useEffect(() => {
@@ -137,7 +145,6 @@ function RespondeProblema() {
     setLoadingProblema(true);
 
     await problemaService.getProblemaById(id).then((response) => {
-      console.log("response.data", response.data);
       setProblema(response.data);
     });
     setLoadingProblema(false);
@@ -146,7 +153,6 @@ function RespondeProblema() {
   async function obtemTestesExemplos() {
     setLoadingProblemaExemplos(true);
     await problemaService.testesExemplosProblema(id).then((response) => {
-      console.log("testes:", response.data);
       setTestesExemplos(response.data);
     });
     setLoadingProblemaExemplos(false);
@@ -178,7 +184,7 @@ function RespondeProblema() {
                 Tempo Limite
               </span>
               <span className="p-3">|</span>
-              <Badge className=" py-0" variant="secondary">
+              <Badge className="py-0" variant="secondary">
                 {problema?.tempo_limite} ms
               </Badge>
             </ResizablePanel>
@@ -194,7 +200,7 @@ function RespondeProblema() {
               <span className="">
                 {problema?.tags?.map((tag) => (
                   <Badge variant="secondary" key={tag.id} className="py-0 m-1">
-                    {tag?.nome}{" "}
+                    {tag.nome}
                   </Badge>
                 ))}
               </span>
@@ -205,16 +211,15 @@ function RespondeProblema() {
         <ResizablePanel defaultSize={92}>
           <ResizablePanelGroup direction="horizontal" className="min-h-[200px]">
             <ResizablePanel defaultSize={60}>
-              {problema != undefined && problema != null ? (
+              {problema ? (
                 <ScrollArea className="h-full w-full">
                   <div className="flex h-full w-full px-10">
-                    {problema && problema.declaracoes[0] && (
+                    {problema.declaracoes[0] && (
                       <div className="w-full">
                         <h2 className="text-2xl font-bold my-5">
                           {problema.declaracoes[0].titulo}
                         </h2>
                         <Separator className="my-4" />
-
                         <p className="pb-5 text-justify">
                           <Latex>
                             {problema.declaracoes[0].contextualizacao}
@@ -237,7 +242,7 @@ function RespondeProblema() {
                           </p>
                         </div>
                         <Separator className="my-4" />
-                        {testesExemplos != undefined ? (
+                        {testesExemplos ? (
                           <Table className="border rounded mb-8">
                             <TableHeader className="bg-slate-100">
                               <TableRow className="divide-y divide-slate-200">
@@ -255,9 +260,7 @@ function RespondeProblema() {
                                   <TableCell className="border rounded">
                                     {teste.entrada}
                                   </TableCell>
-                                  <TableCell className="">
-                                    {teste.saida}
-                                  </TableCell>
+                                  <TableCell>{teste.saida}</TableCell>
                                 </TableRow>
                               ))}
                             </TableBody>
@@ -327,9 +330,9 @@ function RespondeProblema() {
                                 placeholder="Informe seu código!"
                                 className="min-h-[17rem] text-ms"
                                 rows={rows}
-                                onInput={(e: any) => {
-                                  setRows(e.target.scrollHeight / 20);
-                                }}
+                                onInput={(e: any) =>
+                                  setRows(e.target.scrollHeight / 20)
+                                }
                                 {...field}
                               />
                             </FormControl>
