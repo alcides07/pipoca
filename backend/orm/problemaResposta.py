@@ -1,3 +1,9 @@
+import os
+import tempfile
+import io
+import tarfile
+import docker
+import os
 from dependencies.authenticated_user import get_authenticated_user
 from dependencies.authorization_user import is_user
 from fastapi import HTTPException, status
@@ -13,7 +19,14 @@ from schemas.problemaResposta import ProblemaRespostaCreate
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 from models.problema import Problema
+from utils.get_testlib import get_test_lib
 from workers.correcaoProblema import correcao_problema
+from docker.errors import DockerException
+from models.arquivo import Arquivo
+from models.problemaResposta import ProblemaResposta
+from models.problemaTeste import ProblemaTeste
+from constants import FILENAME_RUN, INPUT_TEST_FILENAME, OUTPUT_JUDGE_FILENAME, OUTPUT_USER_FILENAME
+from compilers import commands
 
 
 def get_arquivo_solucao(
@@ -34,6 +47,106 @@ def get_arquivo_gerador(db_problema: Problema):
         if (arquivo.secao == SecaoEnum.GERADOR.value):
             return arquivo
     return None
+
+
+async def execute_teste_gerado(
+    teste: ProblemaTeste,
+    arquivo_gerador: Arquivo
+):
+    linguagem_gerador: str = arquivo_gerador.linguagem  # type: ignore
+    extensao_gerador: str = commands[linguagem_gerador]["extension"]
+
+    client = docker.from_env()
+    image = commands[linguagem_gerador]["image"]
+    WORKING_DIR = "/problema/gerador/"
+
+    teste_entrada = " ".join(teste.entrada.split()[1:])
+    client.images.pull(image)
+    volume = client.volumes.create()
+    command = commands[linguagem_gerador]["run_gerador"]
+
+    volumes = {
+        volume.name: {  # type: ignore
+            'bind': WORKING_DIR,
+            'mode': 'rw'
+        }
+    }
+
+    with tempfile.NamedTemporaryFile(delete=False) as temp_testlib:
+        response = get_test_lib()
+        temp_testlib.write(response.encode())
+        TEMP_TESTLIB = temp_testlib.name
+
+    with tempfile.NamedTemporaryFile(delete=False) as temp_codigo_gerador:
+        temp_codigo_gerador.write(arquivo_gerador.corpo.encode())
+        TEMP_CODIGO_GERADOR = temp_codigo_gerador.name
+
+    with tempfile.NamedTemporaryFile(delete=False) as temp_teste_problema:
+        temp_teste_problema.write(teste_entrada.encode())
+        TEMP_TESTE_PROBLEMA = temp_teste_problema.name
+
+    try:
+        container = client.containers.create(
+            image,
+            command,
+            detach=True,
+            volumes=volumes,
+            working_dir=WORKING_DIR
+        )
+
+        tarstream = io.BytesIO()
+        tar = tarfile.TarFile(fileobj=tarstream, mode='w')
+
+        tar.add(
+            name=TEMP_TESTLIB,
+            arcname=f'{WORKING_DIR}/testlib.h'
+        )
+        tar.add(
+            name=TEMP_TESTE_PROBLEMA,
+            arcname=f'{WORKING_DIR}/{INPUT_TEST_FILENAME}'
+        )
+        tar.add(
+            name=TEMP_CODIGO_GERADOR,
+            arcname=f'{WORKING_DIR}/{FILENAME_RUN}{extensao_gerador}'
+        )
+
+        tar.close()
+
+        container.put_archive(  # type: ignore
+            '/',
+            tarstream.getvalue()
+        )
+
+        container.start()  # type: ignore
+
+        container.wait()  # type: ignore
+
+        stdout_logs = container.logs(  # type: ignore
+            stdout=True, stderr=False).decode()
+        stderr_logs = container.logs(  # type: ignore
+            stdout=False, stderr=True).decode()
+
+        if (stderr_logs != ""):
+            raise HTTPException(
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+                "O arquivo gerador de testes do problema possui alguma falha!"
+            )
+
+    except DockerException:
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            "Ocorreu um erro na execução dos testes gerados!"
+        )
+
+    finally:
+        container.stop()  # type: ignore
+        container.remove()  # type: ignore
+        os.remove(TEMP_TESTLIB)
+        os.remove(TEMP_CODIGO_GERADOR)
+        os.remove(TEMP_TESTE_PROBLEMA)
+        volume.remove()  # type: ignore
+
+    return stdout_logs
 
 
 async def create_problema_resposta(
