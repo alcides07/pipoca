@@ -14,12 +14,60 @@ services:
     depends_on:
       - postgres
 
-  worker:
-    container_name: WORKER
+  worker1:
+    container_name: WORKER1
     env_file:
       - .env
     build: .
     command: celery -A workers worker --loglevel=info -n juiz-1@%h -Q correcao-problema
+    depends_on:
+      - api
+      - rabbitmq
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  worker2:
+    container_name: WORKER2
+    env_file:
+      - .env
+    build: .
+    command: celery -A workers worker --loglevel=info -n juiz-2@%h -Q correcao-problema
+    depends_on:
+      - api
+      - rabbitmq
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  worker3:
+    container_name: WORKER3
+    env_file:
+      - .env
+    build: .
+    command: celery -A workers worker --loglevel=info -n juiz-3@%h -Q correcao-problema
+    depends_on:
+      - api
+      - rabbitmq
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  worker4:
+    container_name: WORKER4
+    env_file:
+      - .env
+    build: .
+    command: celery -A workers worker --loglevel=info -n juiz-4@%h -Q correcao-problema
+    depends_on:
+      - api
+      - rabbitmq
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  worker5:
+    container_name: WORKER5
+    env_file:
+      - .env
+    build: .
+    command: celery -A workers worker --loglevel=info -n juiz-5@%h -Q correcao-problema
     depends_on:
       - api
       - rabbitmq
