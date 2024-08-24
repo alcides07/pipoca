@@ -282,7 +282,6 @@ async def persist_saidas_testes(
     try:
         arquivo_solucao = get_arquivo_solucao(db_problema)
         arquivo_gerador: Arquivo | None = get_arquivo_gerador(db_problema)
-        teste_executado: ProblemaTesteExecutado
 
         for teste in db_problema.testes:
             teste_entrada = str(teste.entrada)
@@ -298,16 +297,15 @@ async def persist_saidas_testes(
                     teste, arquivo_gerador
                 )
 
-            teste_executado = await execute_arquivo_solucao_com_testes_exemplo(
+            saida_teste_executado = await execute_arquivo_solucao_com_testes_exemplo(
                 entrada=teste_entrada,
                 arquivo_solucao=arquivo_solucao
             )
 
-            teste.saida = teste_executado.saida
+            teste.saida = saida_teste_executado
 
         db.commit()
         db.refresh(db_problema)
-        return teste_executado
 
     except SQLAlchemyError:
         raise HTTPException(
@@ -848,8 +846,6 @@ async def execute_arquivo_solucao_com_testes_exemplo(
         }
     }
 
-    teste_executado: ProblemaTesteExecutado
-
     try:
         container = client.containers.create(
             image=image,
@@ -903,10 +899,7 @@ async def execute_arquivo_solucao_com_testes_exemplo(
                 "O arquivo de solução oficial do problema possui alguma falha!"
             )
 
-        teste_executado = ProblemaTesteExecutado(
-            entrada=entrada,
-            saida=stdout_logs
-        )
+        saida_teste_executado = stdout_logs
 
     except DockerException:
         raise HTTPException(
@@ -921,7 +914,7 @@ async def execute_arquivo_solucao_com_testes_exemplo(
         os.remove(TEMP_TESTE_PROBLEMA)
         volume.remove()  # type: ignore
 
-    return teste_executado
+    return saida_teste_executado
 
 
 async def get_testes_exemplo_de_problema_executados(
