@@ -24,7 +24,7 @@ from models.validadorTeste import ValidadorTeste
 from models.verificador import Verificador
 from models.verificadorTeste import VerificadorTeste
 from orm.common.index import filter_collection
-from orm.problemaResposta import execute_teste_gerado, get_arquivo_gerador, get_arquivo_solucao
+from orm.problemaResposta import get_arquivo_gerador, get_arquivo_solucao
 from schemas.common.direction_order_by import DirectionOrderByEnum
 from schemas.common.pagination import PaginationSchema
 from sqlalchemy.orm import Session
@@ -36,7 +36,107 @@ from schemas.declaracao import DeclaracaoCreate
 from schemas.problema import ProblemaCreate, ProblemaCreateUpload, ProblemaIntegridade, ProblemaUpdatePartial, ProblemaUpdateTotal
 from models.relationships.problema_tag import problema_tag_relationship
 from schemas.problemaTeste import ProblemaTesteExecutado, TipoTesteProblemaEnum
-from decouple import config
+from utils.get_testlib import get_test_lib
+
+
+async def execute_teste_gerado(
+    teste: ProblemaTeste,
+    arquivo_gerador: Arquivo
+):
+    linguagem_gerador: str = arquivo_gerador.linguagem  # type: ignore
+    extensao_gerador: str = commands[linguagem_gerador]["extension"]
+
+    client = docker.from_env()
+    image = commands[linguagem_gerador]["image"]
+    WORKING_DIR = "/problema/gerador/"
+
+    teste_entrada = " ".join(teste.entrada.split()[1:])
+    client.images.pull(image)
+    volume = client.volumes.create()
+    command = commands[linguagem_gerador]["run_gerador"]
+
+    volumes = {
+        volume.name: {  # type: ignore
+            'bind': WORKING_DIR,
+            'mode': 'rw'
+        }
+    }
+
+    with tempfile.NamedTemporaryFile(delete=False) as temp_testlib:
+        response = get_test_lib()
+        temp_testlib.write(response.encode())
+        TEMP_TESTLIB = temp_testlib.name
+
+    with tempfile.NamedTemporaryFile(delete=False) as temp_codigo_gerador:
+        temp_codigo_gerador.write(arquivo_gerador.corpo.encode())
+        TEMP_CODIGO_GERADOR = temp_codigo_gerador.name
+
+    with tempfile.NamedTemporaryFile(delete=False) as temp_teste_problema:
+        temp_teste_problema.write(teste_entrada.encode())
+        TEMP_TESTE_PROBLEMA = temp_teste_problema.name
+
+    try:
+        container = client.containers.create(
+            image,
+            command,
+            detach=True,
+            volumes=volumes,
+            working_dir=WORKING_DIR
+        )
+
+        tarstream = io.BytesIO()
+        tar = tarfile.TarFile(fileobj=tarstream, mode='w')
+
+        tar.add(
+            name=TEMP_TESTLIB,
+            arcname=f'{WORKING_DIR}/testlib.h'
+        )
+        tar.add(
+            name=TEMP_TESTE_PROBLEMA,
+            arcname=f'{WORKING_DIR}/{INPUT_TEST_FILENAME}'
+        )
+        tar.add(
+            name=TEMP_CODIGO_GERADOR,
+            arcname=f'{WORKING_DIR}/{FILENAME_RUN}{extensao_gerador}'
+        )
+
+        tar.close()
+
+        container.put_archive(  # type: ignore
+            '/',
+            tarstream.getvalue()
+        )
+
+        container.start()  # type: ignore
+
+        container.wait()  # type: ignore
+
+        stdout_logs = container.logs(  # type: ignore
+            stdout=True, stderr=False).decode()
+        stderr_logs = container.logs(  # type: ignore
+            stdout=False, stderr=True).decode()
+
+        if (stderr_logs != ""):
+            raise HTTPException(
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+                "O arquivo gerador de testes do problema possui alguma falha!"
+            )
+
+    except DockerException:
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            "Ocorreu um erro na execução dos testes gerados!"
+        )
+
+    finally:
+        container.stop()  # type: ignore
+        container.remove()  # type: ignore
+        os.remove(TEMP_TESTLIB)
+        os.remove(TEMP_CODIGO_GERADOR)
+        os.remove(TEMP_TESTE_PROBLEMA)
+        volume.remove()  # type: ignore
+
+    return stdout_logs
 
 
 def get_unique_nome_problema(
@@ -175,6 +275,47 @@ def process_imagens_declaracoes(
         )
 
 
+async def persist_saidas_testes(
+    db: Session,
+    db_problema: Problema
+):
+    try:
+        arquivo_solucao = get_arquivo_solucao(db_problema)
+        arquivo_gerador: Arquivo | None = get_arquivo_gerador(db_problema)
+        teste_executado: ProblemaTesteExecutado
+
+        for teste in db_problema.testes:
+            teste_entrada = str(teste.entrada)
+
+            if (bool(teste.tipo == TipoTesteProblemaEnum.GERADO.value)):
+                if (arquivo_gerador is None):
+                    raise HTTPException(
+                        status.HTTP_500_INTERNAL_SERVER_ERROR,
+                        "O arquivo gerador de testes não foi encontrado!"
+                    )
+
+                teste_entrada = await execute_teste_gerado(
+                    teste, arquivo_gerador
+                )
+
+            teste_executado = await execute_arquivo_solucao_com_testes_exemplo(
+                entrada=teste_entrada,
+                arquivo_solucao=arquivo_solucao
+            )
+
+            teste.saida = teste_executado.saida
+
+        db.commit()
+        db.refresh(db_problema)
+        return teste_executado
+
+    except SQLAlchemyError:
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            "Ocorreu um erro na persistência das saídas dos testes do problema!"
+        )
+
+
 async def create_problema_upload(
     db: Session,
     problema: ProblemaCreateUpload,
@@ -214,6 +355,8 @@ async def create_problema_upload(
 
         if (is_admin(user)):
             db_problema.usuario = None
+
+        await persist_saidas_testes(db, db_problema)
 
         db.commit()
         db.refresh(db_problema)
@@ -684,10 +827,10 @@ async def get_integridade_problema(
 
 async def execute_arquivo_solucao_com_testes_exemplo(
     arquivo_solucao: Arquivo,
-    testes: list[str]
+    entrada: str
 ):
     codigo_solucao = str(arquivo_solucao.corpo)
-    linguagem = str(arquivo_solucao.linguagem)
+    linguagem = str(arquivo_solucao.linguagem.value)
     extension = commands[linguagem]["extension"]
 
     client = docker.from_env()
@@ -705,75 +848,65 @@ async def execute_arquivo_solucao_com_testes_exemplo(
         }
     }
 
-    testes_executados: list[ProblemaTesteExecutado] = []
+    teste_executado: ProblemaTesteExecutado
 
     try:
-        for teste in testes:
-            try:
-                container = client.containers.create(
-                    image=image,
-                    command=command,
-                    detach=True,
-                    volumes=volumes,
-                    working_dir=WORKING_DIR
-                )
+        container = client.containers.create(
+            image=image,
+            command=command,
+            detach=True,
+            volumes=volumes,
+            working_dir=WORKING_DIR
+        )
 
-                with tempfile.NamedTemporaryFile(delete=False) as temp_codigo_solucao:
-                    temp_codigo_solucao.write(codigo_solucao.encode())
-                    TEMP_CODIGO_SOLUCAO = temp_codigo_solucao.name
+        with tempfile.NamedTemporaryFile(delete=False) as temp_codigo_solucao:
+            temp_codigo_solucao.write(codigo_solucao.encode())
+            TEMP_CODIGO_SOLUCAO = temp_codigo_solucao.name
 
-                with tempfile.NamedTemporaryFile(delete=False) as temp_teste_problema:
-                    temp_teste_problema.write(teste.encode())
-                    TEMP_TESTE_PROBLEMA = temp_teste_problema.name
+        with tempfile.NamedTemporaryFile(delete=False) as temp_teste_problema:
+            temp_teste_problema.write(entrada.encode())
+            TEMP_TESTE_PROBLEMA = temp_teste_problema.name
 
-                tarstream = io.BytesIO()
-                tar = tarfile.TarFile(fileobj=tarstream, mode='w')
+        tarstream = io.BytesIO()
+        tar = tarfile.TarFile(fileobj=tarstream, mode='w')
 
-                tar.add(
-                    name=TEMP_CODIGO_SOLUCAO,
-                    arcname=f'{WORKING_DIR}/{FILENAME_RUN}{extension}'
-                )
-                tar.add(
-                    name=TEMP_TESTE_PROBLEMA,
-                    arcname=f'{WORKING_DIR}/{INPUT_TEST_FILENAME}'
-                )
+        tar.add(
+            name=TEMP_CODIGO_SOLUCAO,
+            arcname=f'{WORKING_DIR}/{FILENAME_RUN}{extension}'
+        )
+        tar.add(
+            name=TEMP_TESTE_PROBLEMA,
+            arcname=f'{WORKING_DIR}/{INPUT_TEST_FILENAME}'
+        )
 
-                tar.close()
+        tar.close()
 
-                container.put_archive(  # type: ignore
-                    '/',
-                    tarstream.getvalue()
-                )
+        container.put_archive(  # type: ignore
+            '/',
+            tarstream.getvalue()
+        )
 
-                container.start()  # type: ignore
-                container.wait()  # type: ignore
+        container.start()  # type: ignore
+        container.wait()  # type: ignore
 
-                stdout_logs = container.logs(  # type: ignore
-                    stdout=True, stderr=False
-                ).decode()
+        stdout_logs = container.logs(  # type: ignore
+            stdout=True, stderr=False
+        ).decode()
 
-                stderr_logs = container.logs(  # type: ignore
-                    stdout=False, stderr=True
-                ).decode()
+        stderr_logs = container.logs(  # type: ignore
+            stdout=False, stderr=True
+        ).decode()
 
-                if (stderr_logs != ""):
-                    raise HTTPException(
-                        status.HTTP_500_INTERNAL_SERVER_ERROR,
-                        "O arquivo de solução oficial do problema possui alguma falha!"
-                    )
+        if (stderr_logs != ""):
+            raise HTTPException(
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+                "O arquivo de solução oficial do problema possui alguma falha!"
+            )
 
-                teste_executado = ProblemaTesteExecutado(
-                    entrada=teste,
-                    saida=stdout_logs
-                )
-
-                testes_executados.append(teste_executado)
-
-            finally:
-                container.stop()  # type: ignore
-                container.remove()  # type: ignore
-                os.remove(TEMP_CODIGO_SOLUCAO)
-                os.remove(TEMP_TESTE_PROBLEMA)
+        teste_executado = ProblemaTesteExecutado(
+            entrada=entrada,
+            saida=stdout_logs
+        )
 
     except DockerException:
         raise HTTPException(
@@ -782,9 +915,13 @@ async def execute_arquivo_solucao_com_testes_exemplo(
         )
 
     finally:
+        container.stop()  # type: ignore
+        container.remove()  # type: ignore
+        os.remove(TEMP_CODIGO_SOLUCAO)
+        os.remove(TEMP_TESTE_PROBLEMA)
         volume.remove()  # type: ignore
 
-    return testes_executados
+    return teste_executado
 
 
 async def get_testes_exemplo_de_problema_executados(
@@ -810,34 +947,17 @@ async def get_testes_exemplo_de_problema_executados(
         raise HTTPException(status.HTTP_401_UNAUTHORIZED)
 
     try:
-        arquivo_solucao = get_arquivo_solucao(db_problema)
-
         testes_exemplo = db.query(ProblemaTeste).filter(
-            ProblemaTeste.problema_id == id).filter(ProblemaTeste.exemplo == True).all()
+            ProblemaTeste.problema_id == id,
+            ProblemaTeste.exemplo == True
+        ).all()
 
-        arquivo_gerador: Arquivo | None = get_arquivo_gerador(db_problema)
-        entradas_testes: list[str] = []
-
-        for teste in testes_exemplo:
-            teste_entrada = str(teste.entrada)
-
-            if (bool(teste.tipo == TipoTesteProblemaEnum.GERADO.value)):
-                if (arquivo_gerador is None):
-                    raise HTTPException(
-                        status.HTTP_500_INTERNAL_SERVER_ERROR,
-                        "O arquivo gerador de testes não foi encontrado!"
-                    )
-
-                teste_entrada = await execute_teste_gerado(
-                    teste, arquivo_gerador
-                )
-
-            entradas_testes.append(teste_entrada)
-
-        testes_executados = await execute_arquivo_solucao_com_testes_exemplo(
-            testes=entradas_testes,
-            arquivo_solucao=arquivo_solucao
-        )
+        testes_executados = [
+            ProblemaTesteExecutado(
+                entrada=str(teste.entrada),
+                saida=str(teste.saida)
+            ) for teste in testes_exemplo
+        ]
 
         return testes_executados
 
@@ -873,4 +993,5 @@ async def get_linguagens_problema(
         raise HTTPException(status.HTTP_401_UNAUTHORIZED)
 
     linguagens: list[str] = db_problema.linguagens
+
     return linguagens
