@@ -29,6 +29,11 @@ class ProblemaTeste(Base):
         nullable=False,
     )
 
+    saida = Column(
+        String(length=1000000),
+        nullable=False,
+    )
+
     exemplo = Column(
         Boolean(),
         nullable=False,
