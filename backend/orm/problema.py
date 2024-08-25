@@ -297,7 +297,9 @@ async def persist_saidas_testes(
                     teste, arquivo_gerador
                 )
 
-            saida_teste_executado = await execute_arquivo_solucao_com_testes_exemplo(
+                teste.entrada_gerado = teste_entrada
+
+            saida_teste_executado = await execute_arquivo_solucao_com_testes(
                 entrada=teste_entrada,
                 arquivo_solucao=arquivo_solucao
             )
@@ -823,7 +825,7 @@ async def get_integridade_problema(
     return data
 
 
-async def execute_arquivo_solucao_com_testes_exemplo(
+async def execute_arquivo_solucao_com_testes(
     arquivo_solucao: Arquivo,
     entrada: str
 ):
