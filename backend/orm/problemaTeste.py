@@ -40,6 +40,9 @@ async def create_problema_teste(
         db_problema_teste = ProblemaTeste(
             **problema_teste.model_dump(exclude=set(["problema"])))
 
+        # TEMPORÁRIO: EM BREVE DEVE-SE EXECUTAR O TESTE E ARMAZENAR A SAÍDA REAL
+        db_problema_teste.saida = ""
+
         db_problema.testes.append(db_problema_teste)
 
         db.add(db_problema_teste)
