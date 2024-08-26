@@ -22,7 +22,8 @@ import AutenticacaoService from "@/services/models/autenticacaoService";
 import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
 import { iAtivacao } from "@/interfaces/services/iAutenticacao";
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
+import Loading from "@/components/loading";
 
 const formSchema = z.object({
   username: z.string().nonempty({ message: "O nome é obrigatório." }).min(3, {
@@ -38,6 +39,7 @@ function FormLogin({ onLogin }: any) {
   const location = useLocation();
   const urlCodigo = new URLSearchParams(location.search);
   const codigo = urlCodigo.get("codigo");
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (codigo) {
@@ -74,6 +76,8 @@ function FormLogin({ onLogin }: any) {
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
+    setIsLoading(true);
+
     const data = {
       username: values.username,
       password: values.password,
@@ -95,8 +99,10 @@ function FormLogin({ onLogin }: any) {
             border: "1px solid #e74c3c",
           },
         });
-      });
+      })
+      .finally(() => setIsLoading(false));
   }
+
   return (
     <Card className="w-full">
       <CardHeader>
@@ -138,7 +144,9 @@ function FormLogin({ onLogin }: any) {
                 </FormItem>
               )}
             />
-            <Button type="submit">Entrar</Button>
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? <Loading isLoading={isLoading} /> : "Enviar"}
+            </Button>
           </form>
         </Form>
       </CardContent>
