@@ -32,7 +32,8 @@ configure_mappers()
     bind=True,
     queue=correcao_problema_queue.name,
     autoretry_for=(Exception,),
-    retry_backoff=True
+    retry_backoff=True,
+    time_limit=360
 )
 def correcao_problema(
     self,
