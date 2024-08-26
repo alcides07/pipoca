@@ -80,7 +80,7 @@ services:
       - .env
     build: .
     image: mher/flower
-    command: /bin/sh -c "mkdir -p /flower_data && celery && celery -A workers flower --basic-auth=${FLOWER_BASIC_AUTH} --state_save_interval=5000 --persistent=True --db='flower_data/flower_db' --tasks-columns='name,uuid,state,args,result,received,started,runtime,worker,retries,expires'"
+    command: /bin/sh -c "mkdir -p /flower_data && celery && celery -A workers flower --basic-auth=${FLOWER_BASIC_AUTH} --state_save_interval=10000 --persistent=True --db='flower_data/flower_db' --tasks-columns='name,uuid,state,args,result,received,started,runtime,worker,retries,expires'"
     ports:
       - "5555:5555"
     depends_on:
