@@ -104,7 +104,8 @@ function RespondeProblema() {
           variant: "destructive",
           duration: 5000,
         });
-      });
+      })
+      .finally(setIsLoading(false));
   }
 
   useEffect(() => {
