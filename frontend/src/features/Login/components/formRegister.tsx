@@ -20,6 +20,8 @@ import {
 } from "@/components/ui/form";
 import AutenticacaoService from "@/services/models/autenticacaoService";
 import { toast } from "react-toastify";
+import { useState } from "react";
+import Loading from "@/components/loading";
 
 const formSchema = z.object({
   username: z.string().nonempty({ message: "O nome é obrigatório." }).min(3, {
@@ -45,6 +47,8 @@ interface FormRegisterProps {
 }
 
 function FormRegister({ onSuccess }: FormRegisterProps) {
+  const [isLoading, setIsLoading] = useState(false);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -56,6 +60,8 @@ function FormRegister({ onSuccess }: FormRegisterProps) {
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
+    setIsLoading(true);
+
     const data = {
       username: values.username,
       email: values.email,
@@ -91,8 +97,12 @@ function FormRegister({ onSuccess }: FormRegisterProps) {
             border: "1px solid #e74c3c",
           },
         });
+      })
+      .finally(() => {
+        setIsLoading(false);
       });
   }
+
   return (
     <Card>
       <CardHeader>
@@ -156,7 +166,9 @@ function FormRegister({ onSuccess }: FormRegisterProps) {
                 </FormItem>
               )}
             />
-            <Button type="submit">Cadastrar</Button>
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? <Loading isLoading={isLoading} /> : "Cadastrar"}
+            </Button>
           </form>
         </Form>
       </CardContent>

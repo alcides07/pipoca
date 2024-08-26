@@ -83,26 +83,24 @@ function FormLogin({ onLogin }: any) {
       password: values.password,
     };
 
-    setTimeout(() => {
-      AutenticacaoService.login(data)
-        .then((response) => {
-          if (response.status === 200) {
-            localStorage.setItem("access_token", response.data.access_token);
-            navigate("/dashboard");
-            onLogin();
-            toast.dismiss();
-          }
-        })
-        .catch((error) => {
-          toast.error(error.response.data.error, {
-            autoClose: 5000,
-            style: {
-              border: "1px solid #e74c3c",
-            },
-          });
-        })
-        .finally(() => setIsLoading(false));
-    });
+    AutenticacaoService.login(data)
+      .then((response) => {
+        if (response.status === 200) {
+          localStorage.setItem("access_token", response.data.access_token);
+          navigate("/dashboard");
+          onLogin();
+          toast.dismiss();
+        }
+      })
+      .catch((error) => {
+        toast.error(error.response.data.error, {
+          autoClose: 5000,
+          style: {
+            border: "1px solid #e74c3c",
+          },
+        });
+      })
+      .finally(() => setIsLoading(false));
   }
 
   return (
