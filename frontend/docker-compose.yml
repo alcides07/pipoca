@@ -1,0 +1,12 @@
+version: "3.9"
+services:
+  frontend:
+    container_name: pipoca_frontend
+    env_file:
+      - .env
+    build: .
+    environment:
+      API_BASE_URL: ${API_BASE_URL}
+    ports:
+      - "5173:5173"
+    command: bash -c "pnpm dev --host"
