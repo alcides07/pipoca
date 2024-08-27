@@ -14,10 +14,6 @@ export const problemaColumns: ColumnDef<iDataProblema>[] = [
     header: "Criador",
   },
   {
-    accessorKey: "privado",
-    header: "privado",
-  },
-  {
     id: "actions",
     cell: ({ row }) => {
       const problema = row.original;
