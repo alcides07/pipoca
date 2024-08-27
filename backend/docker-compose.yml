@@ -1,7 +1,7 @@
 version: "3.9"
 services:
   api:
-    container_name: API
+    container_name: pipoca_api
     env_file:
       - .env
     build: .
@@ -15,7 +15,7 @@ services:
       - postgres
 
   worker1:
-    container_name: WORKER1
+    container_name: pipoca_worker_1
     env_file:
       - .env
     build: .
@@ -27,7 +27,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
 
   worker2:
-    container_name: WORKER2
+    container_name: pipoca_worker_2
     env_file:
       - .env
     build: .
@@ -39,7 +39,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
 
   worker3:
-    container_name: WORKER3
+    container_name: pipoca_worker_3
     env_file:
       - .env
     build: .
@@ -51,7 +51,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
 
   worker4:
-    container_name: WORKER4
+    container_name: pipoca_worker_4
     env_file:
       - .env
     build: .
@@ -63,7 +63,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
 
   worker5:
-    container_name: WORKER5
+    container_name: pipoca_worker_5
     env_file:
       - .env
     build: .
@@ -75,7 +75,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
 
   flower:
-    container_name: FLOWER
+    container_name: pipoca_flower
     env_file:
       - .env
     build: .
@@ -91,7 +91,7 @@ services:
       - flower-data:/API/flower_data
 
   rabbitmq:
-    container_name: RABBITMQ
+    container_name: pipoca_rabbitmq
     env_file:
       - .env
     image: rabbitmq:3-management
@@ -103,7 +103,7 @@ services:
       - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS}
 
   postgres:
-    container_name: DATABASE
+    container_name: pipoca_postgres
     image: postgres:16
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
