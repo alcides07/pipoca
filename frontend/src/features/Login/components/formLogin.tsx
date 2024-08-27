@@ -87,7 +87,7 @@ function FormLogin({ onLogin }: any) {
       .then((response) => {
         if (response.status === 200) {
           localStorage.setItem("access_token", response.data.access_token);
-          navigate("/dashboard");
+          navigate("/problemas");
           onLogin();
           toast.dismiss();
         }
