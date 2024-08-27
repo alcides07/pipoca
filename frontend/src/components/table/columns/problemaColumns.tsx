@@ -1,5 +1,5 @@
 import { ColumnDef } from "@tanstack/react-table";
-import { Edit2, ClipboardPenLine } from "lucide-react";
+import { Edit2, FileCode } from "lucide-react";
 import { iDataProblema } from "../../../interfaces/models/iProblema";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
@@ -21,11 +21,11 @@ export const problemaColumns: ColumnDef<iDataProblema>[] = [
         <div className="px-5 flex flex-row justify-end gap-3">
           <Link to={`/problema/${problema.id}/responde/`}>
             <Button variant="outline" title="Responder">
-              <ClipboardPenLine />
+              <FileCode />
             </Button>
           </Link>
           <Link to={`/problema/${problema.id}`}>
-            <Button variant="outline" title="Editar">
+            <Button variant="outline" title="Editar" disabled>
               <Edit2 />
             </Button>
           </Link>

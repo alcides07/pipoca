@@ -68,7 +68,9 @@ function ListaProblema() {
             busca
             filtro="nome"
           >
-            <Button onClick={cadastraProblema}>Cadastrar</Button>
+            <Button onClick={cadastraProblema} disabled>
+              Cadastrar
+            </Button>
             <ImportaProblema handleProblem={handleProblem} />
           </DataTable>
         </div>
@@ -79,7 +81,9 @@ function ListaProblema() {
               <h1 className="font-bold">Não há problemas cadastrados.</h1>
               <p>Você pode registrar um problema agora!</p>
               <div className="flex flex-col gap-3 m-5">
-                <Button onClick={cadastraProblema}>Cadastrar</Button>
+                <Button onClick={cadastraProblema} disabled>
+                  Cadastrar
+                </Button>
                 <ImportaProblema handleProblem={handleProblem} />
               </div>
             </div>
