@@ -109,18 +109,12 @@ function RespondeProblema() {
   }
 
   useEffect(() => {
-    if (taskId) {
-      const cleanup = respostaSubmissao(taskId);
-      return cleanup;
-    }
-  }, [taskId]);
+    if (!taskId) return;
 
-  async function respostaSubmissao(taskId: string) {
     const interval = setInterval(async () => {
       try {
         const response = await TarefaService.tarefa(taskId);
-        const status = response.status;
-        if (status === "SUCCESS") {
+        if (response.status === "SUCCESS") {
           clearInterval(interval);
           navigate(`/problema/${id}/responde/resultados`, {
             state: { taskId },
@@ -132,7 +126,7 @@ function RespondeProblema() {
     }, 5000);
 
     return () => clearInterval(interval);
-  }
+  }, [taskId]);
 
   useEffect(() => {
     obtemProblema();
