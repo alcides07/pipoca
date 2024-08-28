@@ -34,11 +34,9 @@ function ResultadoProblema() {
   const id = Number(idParam);
 
   useEffect(() => {
-    if (taskId) {
-      tarefa(taskId);
-    }
-    obtemProblema();
-  }, []);
+    tarefa(taskId);
+    obtemProblema(id);
+  }, [taskId, id]);
 
   async function tarefa(taskId: string) {
     setLoadingResultado(true);
@@ -50,7 +48,7 @@ function ResultadoProblema() {
     setLoadingResultado(false);
   }
 
-  async function obtemProblema() {
+  async function obtemProblema(id: number) {
     setLoadingResultado(true);
 
     await problemaService.getProblemaById(id).then((response) => {

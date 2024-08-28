@@ -9,10 +9,13 @@ import { useNavigate } from "react-router-dom";
 import { iDataProblema } from "@/interfaces/models/iProblema";
 import { Separator } from "@/components/ui/separator";
 import ImportaProblema from "../Importe/importaProblema";
+import Loading from "@/components/loading";
+import { toast } from "react-toastify";
 
 function ListaProblema() {
   const [problemas, setProblemas] = useState<iDataProblema[]>([]);
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     handleProblem();
@@ -20,9 +23,25 @@ function ListaProblema() {
   }, []);
 
   async function handleProblem() {
-    await problemaService.getProblemas().then((response) => {
-      setProblemas(response.data);
-    });
+    setIsLoading(true);
+    await problemaService
+      .getProblemas()
+      .then((response) => {
+        setProblemas(response.data);
+      })
+      .catch((error) => {
+        toast.error(error.response.data.error, {
+          autoClose: 5000,
+          style: {
+            border: "1px solid #e74c3c",
+          },
+        });
+      })
+      .finally(() => {
+        setTimeout(() => {
+          setIsLoading(false);
+        }, 5000);
+      });
   }
 
   function cadastraProblema(): void {
@@ -36,7 +55,12 @@ function ListaProblema() {
       </div>
       <Separator />
 
-      {problemas && problemas.length > 0 ? (
+      {isLoading ? (
+        <Loading
+          isLoading={isLoading}
+          className="text-gray-300 mt-5 w-[3rem] h-[3rem] flex justify-center items-center"
+        />
+      ) : problemas && problemas.length > 0 ? (
         <div className="mt-4">
           <DataTable
             columns={problemaColumns}
@@ -44,7 +68,9 @@ function ListaProblema() {
             busca
             filtro="nome"
           >
-            <Button onClick={cadastraProblema}>Cadastrar</Button>
+            <Button onClick={cadastraProblema} disabled>
+              Cadastrar
+            </Button>
             <ImportaProblema handleProblem={handleProblem} />
           </DataTable>
         </div>
@@ -55,7 +81,9 @@ function ListaProblema() {
               <h1 className="font-bold">Não há problemas cadastrados.</h1>
               <p>Você pode registrar um problema agora!</p>
               <div className="flex flex-col gap-3 m-5">
-                <Button onClick={cadastraProblema}>Cadastrar</Button>
+                <Button onClick={cadastraProblema} disabled>
+                  Cadastrar
+                </Button>
                 <ImportaProblema handleProblem={handleProblem} />
               </div>
             </div>

@@ -12,7 +12,7 @@ import { useState } from "react";
 import ResultadoProblema from "@/features/Problema/RespondeProblema/components/resultadoResposta";
 
 const linksHeader = [
-  { nome: "Dashboard", link: "/" },
+  { nome: "Dashboard", link: "#" },
   { nome: "Problemas", link: "/problemas" },
   { nome: "Turmas", link: "#" },
   { nome: "Torneios", link: "#" },

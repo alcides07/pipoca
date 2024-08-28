@@ -1,0 +1,12 @@
+version: "3.9"
+services:
+  react:
+    container_name: pipoca_frontend
+    env_file:
+      - .env
+    build: .
+    environment:
+      VITE_API_URL: ${VITE_API_URL}
+    ports:
+      - "5173:5173"
+    command: bash -c "pnpm dev --host"
