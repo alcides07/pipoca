@@ -125,7 +125,6 @@ export default function FormLogin({ onLogin }: any) {
                   <FormControl>
                     <Input
                       type="text"
-                      placeholder=""
                       {...field}
                       placeholder="Digite seu nome"
                     />
@@ -150,7 +149,7 @@ export default function FormLogin({ onLogin }: any) {
                       />
                       <button
                         type="button"
-                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-sm leading-5"
+                        className="absolute inset-y-0 right-0 p-3 flex items-center text-sm leading-5"
                         onClick={() => setShowPassword(!showPassword)}
                       >
                         {showPassword ? (
