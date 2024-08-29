@@ -5,7 +5,7 @@ services:
     env_file:
       - .env
     build: .
-    command: bash -c "alembic upgrade head && uvicorn main:app --host 0.0.0.0 --reload"
+    command: bash -c "alembic upgrade head && gunicorn -w 8 -k uvicorn.workers.UvicornWorker main:app --bind 0.0.0.0:8000"
     volumes:
       - static-volume:/API/static/
       - /var/run/docker.sock:/var/run/docker.sock
