@@ -23,6 +23,30 @@ import { iDataProblema } from "@/interfaces/models/iProblema";
 import problemaService from "@/services/models/problemaService";
 import { Card, CardContent } from "@/components/ui/card";
 
+const vereditoMap = {
+  ok: {
+    description: "Resposta correta!",
+    color: "bg-green-200",
+  },
+  wrong: {
+    description: "Resposta incorreta!",
+    color: "bg-red-200",
+  },
+  fail: {
+    description: "Ocorreu um erro interno crítico ao executar a sua resposta. ",
+    color: "bg-red-200",
+  },
+  presentation: {
+    description:
+      "Erro de apresentação. A saída esperada não segue a especificação do formato do problema.",
+    color: "bg-red-200",
+  },
+  partially: {
+    description: "A solução está parcialmente correta.",
+    color: "bg-yellow-200",
+  },
+};
+
 function ResultadoProblema() {
   const location = useLocation();
   const { taskId } = location.state || {};
@@ -35,6 +59,7 @@ function ResultadoProblema() {
 
   useEffect(() => {
     tarefa(taskId);
+    console.log("taskId", taskId);
     obtemProblema(id);
   }, [taskId, id]);
 
@@ -137,19 +162,31 @@ function ResultadoProblema() {
                           </TableHeader>
                           <TableBody>
                             {resultadoResposta.saida_usuario.map(
-                              (saida, index) => (
-                                <TableRow key={index}>
-                                  <TableCell className="border rounded">
-                                    {saida}
-                                  </TableCell>
-                                  <TableCell className="border rounded">
-                                    {resultadoResposta.saida_esperada[index]}
-                                  </TableCell>
-                                  <TableCell className="border rounded">
-                                    {resultadoResposta.veredito[index]}
-                                  </TableCell>
-                                </TableRow>
-                              )
+                              (saida, index) => {
+                                const veredito =
+                                  resultadoResposta.veredito[index];
+                                const { description, color } = vereditoMap[
+                                  veredito
+                                ] || {
+                                  description: "Desconhecido",
+                                  color: "bg-gray-200",
+                                };
+                                return (
+                                  <TableRow key={index}>
+                                    <TableCell className="border rounded">
+                                      {saida}
+                                    </TableCell>
+                                    <TableCell className="border rounded">
+                                      {resultadoResposta.saida_esperada[index]}
+                                    </TableCell>
+                                    <TableCell
+                                      className={`border rounded ${color} text-center font-bold`}
+                                    >
+                                      {description}
+                                    </TableCell>
+                                  </TableRow>
+                                );
+                              }
                             )}
                           </TableBody>
                         </Table>
