@@ -66,6 +66,7 @@ function RespondeProblema() {
   const [testesExemplos, setTestesExemplos] = useState<iTestesExemplos[]>();
   const [loadingProblema, setLoadingProblema] = useState(true);
   const [loadingProblemaExemplos, setLoadingProblemaExemplos] = useState(true);
+  const [languages, setLanguages] = useState<string[]>([]);
   const { id: idParam } = useParams();
   const id = Number(idParam);
   const [taskId, setTaskId] = useState<string>();
@@ -141,6 +142,7 @@ function RespondeProblema() {
 
     await problemaService.getProblemaById(id).then((response) => {
       setProblema(response.data);
+      setLanguages(response.data.linguagens);
     });
     setLoadingProblema(false);
   }
@@ -299,12 +301,12 @@ function RespondeProblema() {
                                 </SelectTrigger>
                                 <SelectContent className="h-56">
                                   <SelectGroup>
-                                    {linguagens.map((linguagem: string) => (
+                                    {languages.map((language: string) => (
                                       <SelectItem
-                                        key={linguagem}
-                                        value={linguagem}
+                                        key={language}
+                                        value={language}
                                       >
-                                        {linguagem}
+                                        {language}
                                       </SelectItem>
                                     ))}
                                   </SelectGroup>

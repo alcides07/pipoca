@@ -22,6 +22,7 @@ import AutenticacaoService from "@/services/models/autenticacaoService";
 import { toast } from "react-toastify";
 import { useState } from "react";
 import Loading from "@/components/loading";
+import { Eye, EyeOff } from "lucide-react";
 
 const formSchema = z.object({
   username: z.string().nonempty({ message: "O nome é obrigatório." }).min(3, {
@@ -48,6 +49,9 @@ interface FormRegisterProps {
 
 function FormRegister({ onSuccess }: FormRegisterProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showPasswordConfirmation, setShowPasswordConfirmation] =
+    useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -69,7 +73,7 @@ function FormRegister({ onSuccess }: FormRegisterProps) {
       passwordConfirmation: values.passwordConfirmation,
     };
 
-    const Mensagem = ({ email }) => (
+    const Message = ({ email }) => (
       <div>
         Cadastrado realizado com sucesso. Acesse o link de ativação enviado para
         o e-mail <strong>{email}</strong> para ativar sua conta.
@@ -78,7 +82,7 @@ function FormRegister({ onSuccess }: FormRegisterProps) {
 
     AutenticacaoService.register(data)
       .then(() => {
-        toast.success(<Mensagem email={values.email} />, {
+        toast.success(<Message email={values.email} />, {
           progress: undefined,
           autoClose: false,
           style: {
@@ -121,7 +125,12 @@ function FormRegister({ onSuccess }: FormRegisterProps) {
                 <FormItem>
                   <FormLabel>Nome</FormLabel>
                   <FormControl>
-                    <Input type="text" placeholder="" {...field} />
+                    <Input
+                      autoComplete="off"
+                      type="text"
+                      {...field}
+                      placeholder="Digite seu nome"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -134,7 +143,12 @@ function FormRegister({ onSuccess }: FormRegisterProps) {
                 <FormItem>
                   <FormLabel>E-mail</FormLabel>
                   <FormControl>
-                    <Input type="email" placeholder="" {...field} />
+                    <Input
+                      type="email"
+                      autoComplete="off"
+                      {...field}
+                      placeholder="Digite seu e-mail"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -147,7 +161,25 @@ function FormRegister({ onSuccess }: FormRegisterProps) {
                 <FormItem>
                   <FormLabel>Senha</FormLabel>
                   <FormControl>
-                    <Input type="password" {...field} />
+                    <div className="relative">
+                      <Input
+                        type={showPassword ? "text" : "password"}
+                        autoComplete="off"
+                        {...field}
+                        placeholder="Digite sua senha"
+                      />
+                      <button
+                        type="button"
+                        className="absolute inset-y-0 right-0 p-3 flex items-center text-sm leading-5"
+                        onClick={() => setShowPassword(!showPassword)}
+                      >
+                        {showPassword ? (
+                          <EyeOff className="h-5 w-5 text-gray-500" />
+                        ) : (
+                          <Eye className="h-5 w-5 text-gray-500" />
+                        )}
+                      </button>
+                    </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -160,7 +192,27 @@ function FormRegister({ onSuccess }: FormRegisterProps) {
                 <FormItem>
                   <FormLabel>Confirme sua senha</FormLabel>
                   <FormControl>
-                    <Input type="password" {...field} />
+                    <div className="relative">
+                      <Input
+                        type={showPasswordConfirmation ? "text" : "password"}
+                        autoComplete="off"
+                        {...field}
+                        placeholder="Confirme sua senha"
+                      />
+                      <button
+                        type="button"
+                        className="absolute inset-y-0 right-0 p-3 flex items-center text-sm leading-5"
+                        onClick={() =>
+                          setShowPasswordConfirmation(!showPasswordConfirmation)
+                        }
+                      >
+                        {showPasswordConfirmation ? (
+                          <EyeOff className="h-5 w-5 text-gray-500" />
+                        ) : (
+                          <Eye className="h-5 w-5 text-gray-500" />
+                        )}
+                      </button>
+                    </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
