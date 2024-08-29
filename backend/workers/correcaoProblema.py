@@ -41,18 +41,6 @@ def correcao_problema(
     user_id: int,
     problema_id: int
 ):
-    def get_arquivo_solucao(
-        db_problema: Problema
-    ):
-        for arquivo in db_problema.arquivos:
-            if (arquivo.secao == SecaoEnum.SOLUCAO.value and arquivo.status == "main"):
-                return arquivo
-
-        raise HTTPException(
-            status.HTTP_500_INTERNAL_SERVER_ERROR,
-            "O arquivo de solução principal do problema não foi encontrado!"
-        )
-
     def get_arquivo_gerador(db_problema: Problema):
         for arquivo in db_problema.arquivos:
             if (arquivo.secao == SecaoEnum.GERADOR.value):
@@ -184,106 +172,8 @@ def correcao_problema(
 
         return veredito
 
-    def execute_arquivo_solucao(
-        db_problema: Problema,
-        arquivo_solucao: Arquivo
-    ):
-        codigo_solucao = str(arquivo_solucao.corpo)
-        linguagem = str(arquivo_solucao.linguagem)
-        extension = commands[linguagem]["extension"]
-
-        client = docker.from_env()
-        image = commands[linguagem]["image"]
-        command = commands[linguagem]["run_test"]
-        WORKING_DIR = "/arquivo/testes/"
-
-        client.images.pull(image)
-        volume = client.volumes.create()
-
-        volumes = {
-            volume.name: {  # type: ignore
-                'bind': WORKING_DIR,
-                'mode': 'rw'
-            }
-        }
-
-        with tempfile.NamedTemporaryFile(delete=False) as temp_codigo_solucao:
-            temp_codigo_solucao.write(codigo_solucao.encode())
-            TEMP_CODIGO_SOLUCAO = temp_codigo_solucao.name
-
-        output_codigo_solucao: List[str] = []
-
-        try:
-            for i, teste in enumerate(db_problema.testes):
-                teste_entrada = teste.entrada
-
-                if (teste.tipo == TipoTesteProblemaEnum.GERADO.value):
-                    teste_entrada = teste.entrada_gerado
-
-                try:
-                    container = client.containers.create(
-                        image=image,
-                        command=command,
-                        detach=True,
-                        volumes=volumes,
-                        working_dir=WORKING_DIR
-                    )
-
-                    with tempfile.NamedTemporaryFile(delete=False) as temp_teste_problema:
-                        temp_teste_problema.write(teste_entrada.encode())
-                        TEMP_TESTE_PROBLEMA = temp_teste_problema.name
-
-                    tarstream = io.BytesIO()
-                    tar = tarfile.TarFile(fileobj=tarstream, mode='w')
-
-                    tar.add(
-                        name=TEMP_CODIGO_SOLUCAO,
-                        arcname=f'{WORKING_DIR}/{FILENAME_RUN}{extension}'
-                    )
-                    tar.add(
-                        name=TEMP_TESTE_PROBLEMA,
-                        arcname=f'{WORKING_DIR}/{INPUT_TEST_FILENAME}'
-                    )
-
-                    tar.close()
-
-                    container.put_archive(  # type: ignore
-                        '/',
-                        tarstream.getvalue()
-                    )
-
-                    container.start()  # type: ignore
-                    container.wait()  # type: ignore
-
-                    stdout_logs = container.logs(
-                        stdout=True, stderr=False).decode()  # type: ignore
-                    stderr_logs = container.logs(
-                        stdout=False, stderr=True).decode()  # type: ignore
-
-                    output_codigo_solucao.append(stdout_logs)
-
-                    if (stderr_logs != ""):
-                        raise HTTPException(
-                            status.HTTP_500_INTERNAL_SERVER_ERROR,
-                            "O arquivo de solução oficial do problema possui alguma falha!"
-                        )
-
-                except DockerException:
-                    raise HTTPException(
-                        status.HTTP_500_INTERNAL_SERVER_ERROR,
-                        "Ocorreu um erro no processamento do arquivo de solução oficial do problema!"
-                    )
-
-                finally:
-                    container.stop()  # type: ignore
-                    container.remove()  # type: ignore
-                    os.remove(TEMP_TESTE_PROBLEMA)
-
-        finally:
-            os.remove(TEMP_CODIGO_SOLUCAO)
-            volume.remove()  # type: ignore
-
-        return output_codigo_solucao
+    def get_saidas_testes(db_problema: Problema) -> list[str]:
+        return [teste.saida for teste in db_problema.testes]
 
     def execute_codigo_user(
         db_problema: Problema,
@@ -394,7 +284,6 @@ def correcao_problema(
         problema_resposta: ProblemaRespostaCreate,
         db_problema: Problema
     ):
-        arquivo_solucao = get_arquivo_solucao(db_problema)
         arquivo_gerador = get_arquivo_gerador(db_problema)
 
         output_codigo_user = execute_codigo_user(
@@ -406,9 +295,8 @@ def correcao_problema(
         if (isinstance(output_codigo_user, str)):
             return [], [], [], output_codigo_user
 
-        output_codigo_solucao = execute_arquivo_solucao(
+        output_codigo_solucao = get_saidas_testes(
             db_problema,
-            arquivo_solucao
         )
 
         veredito = execute_checker(
