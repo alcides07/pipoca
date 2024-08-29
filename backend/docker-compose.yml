@@ -1,11 +1,11 @@
 version: "3.9"
 services:
   api:
-    container_name: API
+    container_name: pipoca_api
     env_file:
       - .env
     build: .
-    command: bash -c "alembic upgrade head && uvicorn main:app --host 0.0.0.0 --reload"
+    command: bash -c "alembic upgrade head && gunicorn -w 8 -k uvicorn.workers.UvicornWorker main:app --bind 0.0.0.0:8000"
     volumes:
       - static-volume:/API/static/
       - /var/run/docker.sock:/var/run/docker.sock
@@ -14,8 +14,8 @@ services:
     depends_on:
       - postgres
 
-  worker:
-    container_name: WORKER
+  worker1:
+    container_name: pipoca_worker_1
     env_file:
       - .env
     build: .
@@ -26,22 +26,72 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
 
+  worker2:
+    container_name: pipoca_worker_2
+    env_file:
+      - .env
+    build: .
+    command: celery -A workers worker --loglevel=info -n juiz-2@%h -Q correcao-problema
+    depends_on:
+      - api
+      - rabbitmq
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  worker3:
+    container_name: pipoca_worker_3
+    env_file:
+      - .env
+    build: .
+    command: celery -A workers worker --loglevel=info -n juiz-3@%h -Q correcao-problema
+    depends_on:
+      - api
+      - rabbitmq
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  worker4:
+    container_name: pipoca_worker_4
+    env_file:
+      - .env
+    build: .
+    command: celery -A workers worker --loglevel=info -n juiz-4@%h -Q correcao-problema
+    depends_on:
+      - api
+      - rabbitmq
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  worker5:
+    container_name: pipoca_worker_5
+    env_file:
+      - .env
+    build: .
+    command: celery -A workers worker --loglevel=info -n juiz-5@%h -Q correcao-problema
+    depends_on:
+      - api
+      - rabbitmq
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
   flower:
-    container_name: FLOWER
+    container_name: pipoca_flower
     env_file:
       - .env
     build: .
     image: mher/flower
-    command: celery -A workers flower --basic-auth=${FLOWER_BASIC_AUTH}
+    command: /bin/sh -c "mkdir -p /flower_data && celery && celery -A workers flower --basic-auth=${FLOWER_BASIC_AUTH} --state_save_interval=10000 --persistent=True --db='flower_data/flower_db' --tasks-columns='name,uuid,state,args,result,received,started,runtime,worker,retries,expires'"
     ports:
       - "5555:5555"
     depends_on:
       - rabbitmq
     environment:
       - FLOWER_BASIC_AUTH=${FLOWER_BASIC_AUTH}
+    volumes:
+      - flower-data:/API/flower_data
 
   rabbitmq:
-    container_name: RABBITMQ
+    container_name: pipoca_rabbitmq
     env_file:
       - .env
     image: rabbitmq:3-management
@@ -53,7 +103,7 @@ services:
       - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS}
 
   postgres:
-    container_name: DATABASE
+    container_name: pipoca_postgres
     image: postgres:16
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
@@ -67,3 +117,4 @@ services:
 volumes:
   static-volume:
   postgres-data:
+  flower-data:

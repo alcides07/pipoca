@@ -38,9 +38,7 @@ function ListaProblema() {
         });
       })
       .finally(() => {
-        setTimeout(() => {
-          setIsLoading(false);
-        }, 5000);
+        setIsLoading(false);
       });
   }
 

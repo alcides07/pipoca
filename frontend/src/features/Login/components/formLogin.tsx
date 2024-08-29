@@ -24,6 +24,7 @@ import { toast } from "react-toastify";
 import { iAtivacao } from "@/interfaces/services/iAutenticacao";
 import { useState, useEffect } from "react";
 import Loading from "@/components/loading";
+import { Eye, EyeOff } from "lucide-react";
 
 const formSchema = z.object({
   username: z.string().nonempty({ message: "O nome é obrigatório." }).min(3, {
@@ -34,12 +35,13 @@ const formSchema = z.object({
   }),
 });
 
-function FormLogin({ onLogin }: any) {
+export default function FormLogin({ onLogin }: any) {
   const navigate = useNavigate();
   const location = useLocation();
   const urlCodigo = new URLSearchParams(location.search);
   const codigo = urlCodigo.get("codigo");
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     if (codigo) {
@@ -121,7 +123,12 @@ function FormLogin({ onLogin }: any) {
                 <FormItem>
                   <FormLabel>Nome</FormLabel>
                   <FormControl>
-                    <Input type="text" placeholder="" {...field} />
+                    <Input
+                      type="text"
+                      placeholder=""
+                      {...field}
+                      placeholder="Digite seu nome"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -134,11 +141,25 @@ function FormLogin({ onLogin }: any) {
                 <FormItem>
                   <FormLabel>Senha</FormLabel>
                   <FormControl>
-                    <Input
-                      type="password"
-                      {...field}
-                      autoComplete="current-password"
-                    />
+                    <div className="relative">
+                      <Input
+                        type={showPassword ? "text" : "password"}
+                        {...field}
+                        autoComplete="current-password"
+                        placeholder="Digite sua senha"
+                      />
+                      <button
+                        type="button"
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-sm leading-5"
+                        onClick={() => setShowPassword(!showPassword)}
+                      >
+                        {showPassword ? (
+                          <EyeOff className="h-5 w-5 text-gray-500" />
+                        ) : (
+                          <Eye className="h-5 w-5 text-gray-500" />
+                        )}
+                      </button>
+                    </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -153,5 +174,3 @@ function FormLogin({ onLogin }: any) {
     </Card>
   );
 }
-
-export default FormLogin;

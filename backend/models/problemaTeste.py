@@ -29,6 +29,15 @@ class ProblemaTeste(Base):
         nullable=False,
     )
 
+    entrada_gerado = Column(
+        String
+    )
+
+    saida = Column(
+        String(length=1000000),
+        nullable=False,
+    )
+
     exemplo = Column(
         Boolean(),
         nullable=False,
