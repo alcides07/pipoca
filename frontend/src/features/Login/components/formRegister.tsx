@@ -128,7 +128,6 @@ function FormRegister({ onSuccess }: FormRegisterProps) {
                     <Input
                       autoComplete="off"
                       type="text"
-                      placeholder=""
                       {...field}
                       placeholder="Digite seu nome"
                     />
@@ -147,7 +146,6 @@ function FormRegister({ onSuccess }: FormRegisterProps) {
                     <Input
                       type="email"
                       autoComplete="off"
-                      placeholder=""
                       {...field}
                       placeholder="Digite seu e-mail"
                     />
@@ -168,12 +166,11 @@ function FormRegister({ onSuccess }: FormRegisterProps) {
                         type={showPassword ? "text" : "password"}
                         autoComplete="off"
                         {...field}
-                        autoComplete="current-password"
                         placeholder="Digite sua senha"
                       />
                       <button
                         type="button"
-                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-sm leading-5"
+                        className="absolute inset-y-0 right-0 p-3 flex items-center text-sm leading-5"
                         onClick={() => setShowPassword(!showPassword)}
                       >
                         {showPassword ? (
@@ -200,12 +197,11 @@ function FormRegister({ onSuccess }: FormRegisterProps) {
                         type={showPasswordConfirmation ? "text" : "password"}
                         autoComplete="off"
                         {...field}
-                        autoComplete="current-password"
                         placeholder="Confirme sua senha"
                       />
                       <button
                         type="button"
-                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-sm leading-5"
+                        className="absolute inset-y-0 right-0 p-3 flex items-center text-sm leading-5"
                         onClick={() =>
                           setShowPasswordConfirmation(!showPasswordConfirmation)
                         }
