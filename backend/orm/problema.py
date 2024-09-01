@@ -11,7 +11,7 @@ from sqlalchemy import Column
 from constants import FILENAME_RUN, INPUT_TEST_FILENAME
 from dependencies.authenticated_user import get_authenticated_user
 from dependencies.authorization_user import is_admin, is_user
-from fastapi import HTTPException, status
+from fastapi import HTTPException, UploadFile, status
 from filters.arquivo import ArquivoFilter
 from filters.problema import OrderByFieldsProblemaEnum, ProblemaFilter, search_fields_problema
 from filters.problemaTeste import ProblemaTesteFilter
@@ -24,7 +24,6 @@ from models.validadorTeste import ValidadorTeste
 from models.verificador import Verificador
 from models.verificadorTeste import VerificadorTeste
 from orm.common.index import filter_collection
-from orm.problemaResposta import get_arquivo_gerador, get_arquivo_solucao
 from schemas.common.direction_order_by import DirectionOrderByEnum
 from schemas.common.pagination import PaginationSchema
 from sqlalchemy.orm import Session
@@ -35,11 +34,14 @@ from models.problema import Problema
 from schemas.declaracao import DeclaracaoCreate
 from schemas.problema import ProblemaCreate, ProblemaCreateUpload, ProblemaIntegridade, ProblemaUpdatePartial, ProblemaUpdateTotal
 from models.relationships.problema_tag import problema_tag_relationship
-from schemas.problemaTeste import ProblemaTesteExecutado, TipoTesteProblemaEnum
+from schemas.problemaTeste import ProblemaTesteExecutado
+from utils.create_temporary_file import create_temporary_file
 from utils.get_testlib import get_test_lib
+from workers.importacao_problema import importacao_problema
+from enviroments import ENV
 
 
-async def execute_teste_gerado(
+def execute_teste_gerado(
     teste: ProblemaTeste,
     arquivo_gerador: Arquivo
 ):
@@ -275,99 +277,30 @@ def process_imagens_declaracoes(
         )
 
 
-async def persist_saidas_testes(
-    db: Session,
-    db_problema: Problema
-):
-    try:
-        arquivo_solucao = get_arquivo_solucao(db_problema)
-        arquivo_gerador: Arquivo | None = get_arquivo_gerador(db_problema)
-
-        for teste in db_problema.testes:
-            teste_entrada = str(teste.entrada)
-
-            if (bool(teste.tipo == TipoTesteProblemaEnum.GERADO.value)):
-                if (arquivo_gerador is None):
-                    raise HTTPException(
-                        status.HTTP_500_INTERNAL_SERVER_ERROR,
-                        "O arquivo gerador de testes não foi encontrado!"
-                    )
-
-                teste_entrada = await execute_teste_gerado(
-                    teste, arquivo_gerador
-                )
-
-                teste.entrada_gerado = teste_entrada
-
-            saida_teste_executado = await execute_arquivo_solucao_com_testes(
-                entrada=teste_entrada,
-                arquivo_solucao=arquivo_solucao
-            )
-
-            teste.saida = saida_teste_executado
-
-        db.commit()
-        db.refresh(db_problema)
-
-    except SQLAlchemyError:
-        raise HTTPException(
-            status.HTTP_500_INTERNAL_SERVER_ERROR,
-            "Ocorreu um erro na persistência das saídas dos testes do problema!"
-        )
-
-
 async def create_problema_upload(
     db: Session,
     problema: ProblemaCreateUpload,
+    pacote: UploadFile,
     token: str
 ):
     user = await get_authenticated_user(token, db)
 
     try:
-        db_problema = Problema(
-            **problema.model_dump(exclude=set(["tags", "declaracoes", "arquivos", "verificador", "validador", "usuario", "testes"])))
-        db.add(db_problema)
+        problema_dict = problema.model_dump()
+        pacote_file_path = await create_temporary_file(pacote)
 
-        new_name_problema = get_unique_nome_problema(
-            db=db, nome_problema=problema.nome)
-        if (bool(new_name_problema)):
-            db_problema.nome = new_name_problema
-
-        for declaracao in problema.declaracoes:
-            create_declaracoes(db, declaracao, db_problema)
-
-        for arquivo in problema.arquivos:
-            create_arquivos(db, arquivo, db_problema)
-
-        for tag in problema.tags:
-            create_tags(db, tag, db_problema)
-
-        for teste in problema.testes:
-            create_testes(db, teste, db_problema)
-
-        create_verificador(db, problema, db_problema)
-        create_verificador_testes(db, problema, db_problema)
-
-        create_validador(db, problema, db_problema)
-        create_validador_testes(db, problema, db_problema)
-
-        db_problema.usuario = user
-
-        if (is_admin(user)):
-            db_problema.usuario = None
-
-        await persist_saidas_testes(db, db_problema)
-
-        db.commit()
-        db.refresh(db_problema)
-
-        process_imagens_declaracoes(
-            declaracoes=db_problema.declaracoes,
-            declaracoes_create=problema.declaracoes,
-            db=db
+        task = importacao_problema.apply_async(
+            args=[
+                problema_dict,
+                user.id,
+                pacote_file_path
+            ]
         )
 
-        return db_problema
+        if (ENV == "test"):
+            return task.result
+
+        return task.id
 
     except SQLAlchemyError:
         db.rollback()
@@ -825,7 +758,7 @@ async def get_integridade_problema(
     return data
 
 
-async def execute_arquivo_solucao_com_testes(
+def execute_arquivo_solucao_com_testes(
     arquivo_solucao: Arquivo,
     entrada: str
 ):
