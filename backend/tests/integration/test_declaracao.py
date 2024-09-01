@@ -181,8 +181,18 @@ def test_read_declaracao_imagens():
 
     assert response_problema.status_code == 201
 
-    response_json = response_problema.json().get("data")
-    id_declaracao = response_json.get("declaracoes")[0].get("id")
+    id_problema = response_problema.json().get("data").get("id")
+
+    response_declaracoes = client.get(
+        f"{URL_PROBLEMA}/{id_problema}/declaracoes/",
+        headers={
+            "Authorization": f"Bearer {token}",
+        },
+    )
+
+    assert response_declaracoes.status_code == 200
+
+    id_declaracao = response_declaracoes.json().get("data")[0].get("id")
 
     response = client.get(
         f"{URL_DECLARACAO}/{id_declaracao}/imagens/",
