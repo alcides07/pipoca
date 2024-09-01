@@ -1,9 +1,3 @@
-import os
-import tempfile
-import io
-import tarfile
-import docker
-import os
 from dependencies.authenticated_user import get_authenticated_user
 from dependencies.authorization_user import is_user
 from fastapi import HTTPException, status
@@ -12,41 +6,14 @@ from filters.problemaResposta import OrderByFieldsProblemaRespostaEnum, search_f
 from models.problemaResposta import ProblemaResposta
 from models.user import User
 from orm.common.index import filter_collection
-from schemas.arquivo import SecaoEnum
 from schemas.common.direction_order_by import DirectionOrderByEnum
 from schemas.common.pagination import PaginationSchema
 from schemas.problemaResposta import ProblemaRespostaCreate
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 from models.problema import Problema
-from utils.get_testlib import get_test_lib
 from workers.correcaoProblema import correcao_problema
-from docker.errors import DockerException
-from models.arquivo import Arquivo
 from models.problemaResposta import ProblemaResposta
-from models.problemaTeste import ProblemaTeste
-from constants import FILENAME_RUN, INPUT_TEST_FILENAME, OUTPUT_JUDGE_FILENAME, OUTPUT_USER_FILENAME
-from compilers import commands
-
-
-def get_arquivo_solucao(
-        db_problema: Problema
-):
-    for arquivo in db_problema.arquivos:
-        if (arquivo.secao == SecaoEnum.SOLUCAO.value and arquivo.status == "main"):
-            return arquivo
-
-    raise HTTPException(
-        status.HTTP_500_INTERNAL_SERVER_ERROR,
-        "O arquivo de solução principal do problema não foi encontrado!"
-    )
-
-
-def get_arquivo_gerador(db_problema: Problema):
-    for arquivo in db_problema.arquivos:
-        if (arquivo.secao == SecaoEnum.GERADOR.value):
-            return arquivo
-    return None
 
 
 async def create_problema_resposta(

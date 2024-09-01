@@ -1,20 +1,36 @@
 import os
 import json
+import shutil
+import tarfile
+import tempfile
+from typing import Optional
 import zipfile
 import re
+import io
 import xml.etree.ElementTree as ET
+import docker
 from fastapi import HTTPException
 from fastapi.encoders import jsonable_encoder
+from sqlalchemy import Column
 from database import SessionLocal
 from dependencies.authorization_user import is_admin
 from models.arquivo import Arquivo
+from constants import FILENAME_RUN, INPUT_TEST_FILENAME
+from models.declaracao import Declaracao
 from models.problema import Problema
+from models.problemaTeste import ProblemaTeste
+from models.tag import Tag
 from models.user import User
+from models.validador import Validador
+from models.validadorTeste import ValidadorTeste
+from models.verificador import Verificador
+from models.verificadorTeste import VerificadorTeste
 from schemas.arquivo import ArquivoCreate, SecaoEnum
 from schemas.declaracao import DeclaracaoCreate, DeclaracaoImagem
 from schemas.problema import ProblemaCreateUpload
 from schemas.problemaTeste import TipoTesteProblemaEnum
 from fastapi import status
+from utils.get_testlib import get_test_lib
 from workers.celery import app
 from sqlalchemy.orm import configure_mappers
 from workers.celeryconfig import importacao_problema_queue
@@ -33,7 +49,8 @@ from utils.language_parser import languages_parser
 from schemas.problema import ProblemaCreateUpload
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
-
+from docker.errors import DockerException
+from compilers import commands
 
 configure_mappers()
 
@@ -53,13 +70,347 @@ def importacao_problema(
 
     problema = ProblemaCreateUpload(**problema_dict)
 
+    def get_arquivo_solucao(
+            db_problema: Problema
+    ):
+        for arquivo in db_problema.arquivos:
+            if (arquivo.secao == SecaoEnum.SOLUCAO.value and arquivo.status == "main"):
+                return arquivo
+
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            "O arquivo de solução principal do problema não foi encontrado!"
+        )
+
+    def get_arquivo_gerador(db_problema: Problema):
+        for arquivo in db_problema.arquivos:
+            if (arquivo.secao == SecaoEnum.GERADOR.value):
+                return arquivo
+        return None
+
+    def get_unique_nome_problema(
+        db: Session,
+        nome_problema: str,
+        problema_id: Optional[Column[int]] = None
+    ):
+        db_problema = db.query(Problema).filter(
+            Problema.nome == nome_problema).first()
+
+        if (db_problema and bool(db_problema.id != problema_id)):
+            i = 1
+            while (True):
+                new_name = db_problema.nome + f"-copy-{i}"
+
+                db_new_problema = db.query(Problema).filter(
+                    Problema.nome == new_name).first()
+
+                if (not db_new_problema):
+                    return new_name
+
+                i += 1
+
+        return None
+
+    def execute_teste_gerado(
+        teste: ProblemaTeste,
+        arquivo_gerador: Arquivo
+    ):
+        linguagem_gerador: str = arquivo_gerador.linguagem  # type: ignore
+        extensao_gerador: str = commands[linguagem_gerador]["extension"]
+
+        client = docker.from_env()
+        image = commands[linguagem_gerador]["image"]
+        WORKING_DIR = "/problema/gerador/"
+
+        teste_entrada = " ".join(teste.entrada.split()[1:])
+        client.images.pull(image)
+        volume = client.volumes.create()
+        command = commands[linguagem_gerador]["run_gerador"]
+
+        volumes = {
+            volume.name: {  # type: ignore
+                'bind': WORKING_DIR,
+                'mode': 'rw'
+            }
+        }
+
+        with tempfile.NamedTemporaryFile(delete=False) as temp_testlib:
+            response = get_test_lib()
+            temp_testlib.write(response.encode())
+            TEMP_TESTLIB = temp_testlib.name
+
+        with tempfile.NamedTemporaryFile(delete=False) as temp_codigo_gerador:
+            temp_codigo_gerador.write(arquivo_gerador.corpo.encode())
+            TEMP_CODIGO_GERADOR = temp_codigo_gerador.name
+
+        with tempfile.NamedTemporaryFile(delete=False) as temp_teste_problema:
+            temp_teste_problema.write(teste_entrada.encode())
+            TEMP_TESTE_PROBLEMA = temp_teste_problema.name
+
+        try:
+            container = client.containers.create(
+                image,
+                command,
+                detach=True,
+                volumes=volumes,
+                working_dir=WORKING_DIR
+            )
+
+            tarstream = io.BytesIO()
+            tar = tarfile.TarFile(fileobj=tarstream, mode='w')
+
+            tar.add(
+                name=TEMP_TESTLIB,
+                arcname=f'{WORKING_DIR}/testlib.h'
+            )
+            tar.add(
+                name=TEMP_TESTE_PROBLEMA,
+                arcname=f'{WORKING_DIR}/{INPUT_TEST_FILENAME}'
+            )
+            tar.add(
+                name=TEMP_CODIGO_GERADOR,
+                arcname=f'{WORKING_DIR}/{FILENAME_RUN}{extensao_gerador}'
+            )
+
+            tar.close()
+
+            container.put_archive(  # type: ignore
+                '/',
+                tarstream.getvalue()
+            )
+
+            container.start()  # type: ignore
+
+            container.wait()  # type: ignore
+
+            stdout_logs = container.logs(  # type: ignore
+                stdout=True, stderr=False).decode()
+            stderr_logs = container.logs(  # type: ignore
+                stdout=False, stderr=True).decode()
+
+            if (stderr_logs != ""):
+                raise HTTPException(
+                    status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    "O arquivo gerador de testes do problema possui alguma falha!"
+                )
+
+        except DockerException:
+            raise HTTPException(
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+                "Ocorreu um erro na execução dos testes gerados!"
+            )
+
+        finally:
+            container.stop()  # type: ignore
+            container.remove()  # type: ignore
+            os.remove(TEMP_TESTLIB)
+            os.remove(TEMP_CODIGO_GERADOR)
+            os.remove(TEMP_TESTE_PROBLEMA)
+            volume.remove()  # type: ignore
+
+        return stdout_logs
+
+    def execute_arquivo_solucao_com_testes(
+        arquivo_solucao: Arquivo,
+        entrada: str
+    ):
+        codigo_solucao = str(arquivo_solucao.corpo)
+        linguagem = str(arquivo_solucao.linguagem.value)
+        extension = commands[linguagem]["extension"]
+
+        client = docker.from_env()
+        image = commands[linguagem]["image"]
+        command = commands[linguagem]["run_test"]
+        WORKING_DIR = "/arquivo/testes/"
+
+        client.images.pull(image)
+        volume = client.volumes.create()
+
+        volumes = {
+            volume.name: {  # type: ignore
+                'bind': WORKING_DIR,
+                'mode': 'rw'
+            }
+        }
+
+        try:
+            container = client.containers.create(
+                image=image,
+                command=command,
+                detach=True,
+                volumes=volumes,
+                working_dir=WORKING_DIR
+            )
+
+            with tempfile.NamedTemporaryFile(delete=False) as temp_codigo_solucao:
+                temp_codigo_solucao.write(codigo_solucao.encode())
+                TEMP_CODIGO_SOLUCAO = temp_codigo_solucao.name
+
+            with tempfile.NamedTemporaryFile(delete=False) as temp_teste_problema:
+                temp_teste_problema.write(entrada.encode())
+                TEMP_TESTE_PROBLEMA = temp_teste_problema.name
+
+            tarstream = io.BytesIO()
+            tar = tarfile.TarFile(fileobj=tarstream, mode='w')
+
+            tar.add(
+                name=TEMP_CODIGO_SOLUCAO,
+                arcname=f'{WORKING_DIR}/{FILENAME_RUN}{extension}'
+            )
+            tar.add(
+                name=TEMP_TESTE_PROBLEMA,
+                arcname=f'{WORKING_DIR}/{INPUT_TEST_FILENAME}'
+            )
+
+            tar.close()
+
+            container.put_archive(  # type: ignore
+                '/',
+                tarstream.getvalue()
+            )
+
+            container.start()  # type: ignore
+            container.wait()  # type: ignore
+
+            stdout_logs = container.logs(  # type: ignore
+                stdout=True, stderr=False
+            ).decode()
+
+            stderr_logs = container.logs(  # type: ignore
+                stdout=False, stderr=True
+            ).decode()
+
+            if (stderr_logs != ""):
+                raise HTTPException(
+                    status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    "O arquivo de solução oficial do problema possui alguma falha!"
+                )
+
+            saida_teste_executado = stdout_logs
+
+        except DockerException:
+            raise HTTPException(
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+                "Ocorreu um erro no processamento do arquivo de solução oficial do problema!"
+            )
+
+        finally:
+            container.stop()  # type: ignore
+            container.remove()  # type: ignore
+            os.remove(TEMP_CODIGO_SOLUCAO)
+            os.remove(TEMP_TESTE_PROBLEMA)
+            volume.remove()  # type: ignore
+
+        return saida_teste_executado
+
+    def process_imagens_declaracoes(
+        declaracoes: list[Declaracao],
+        declaracoes_create: list[DeclaracaoCreate],
+        db: Session
+    ):
+        try:
+            for i, db_declaracao in enumerate(declaracoes):
+                caminho_diretorio = f"static/problema-{db_declaracao.problema_id}/declaracao-{db_declaracao.id}"
+
+                if not os.path.exists(caminho_diretorio):
+                    os.makedirs(caminho_diretorio)
+
+                for j, _ in enumerate(declaracoes_create[i].imagens):
+                    caminho_imagem = os.path.join(
+                        caminho_diretorio,
+                        declaracoes_create[i].imagens[j].nome
+                    )
+
+                    with open(caminho_imagem, "wb") as buffer:
+                        buffer.write(declaracoes_create[i].imagens[j].conteudo)
+
+                    db_declaracao.imagens = db_declaracao.imagens + \
+                        [caminho_imagem]  # type: ignore
+
+                    db.commit()
+                    db.refresh(db_declaracao)
+
+        except SQLAlchemyError:
+            db.rollback()
+
+            if os.path.exists(caminho_diretorio):
+                shutil.rmtree(caminho_diretorio)
+
+            raise HTTPException(
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+                "Ocorreu um erro no armazenamento das imagens da declaração!"
+            )
+
+    def create_verificador_testes(db, problema, db_problema):
+        for verificador_teste in problema.verificador.testes:
+            verificador_teste.veredito = str(
+                verificador_teste.veredito.value)
+
+            db_verificador_teste = VerificadorTeste(
+                **verificador_teste.model_dump())
+            db.add(db_verificador_teste)
+            db_problema.verificador.testes.append(
+                db_verificador_teste)
+
+    def create_validador_testes(db, problema, db_problema):
+        for validador_teste in problema.validador.testes:
+            validador_teste.veredito = str(
+                validador_teste.veredito.value)
+
+            db_validador_teste = ValidadorTeste(
+                **validador_teste.model_dump())
+            db.add(db_validador_teste)
+            db_problema.validador.testes.append(db_validador_teste)
+
+    def create_validador(db, problema, db_problema):
+        db_validador = Validador(
+            **problema.validador.model_dump(exclude=set(["testes"])))
+        db.add(db_validador)
+        db_problema.validador = db_validador
+        db_validador.problema = db_problema
+
+    def create_verificador(db, problema, db_problema):
+        db_verificador = Verificador(
+            **problema.verificador.model_dump(exclude=set(["testes"])))
+        db.add(db_verificador)
+        db_problema.verificador = db_verificador
+        db_verificador.problema = db_problema
+
+    def create_arquivos(db, arquivo, db_problema):
+        arquivo.secao = str(arquivo.secao.value)
+
+        db_arquivo = Arquivo(
+            **arquivo.model_dump())
+        db.add(db_arquivo)
+        db_problema.arquivos.append(db_arquivo)
+
+    def create_declaracoes(db, declaracao, db_problema):
+        declaracao.idioma = str(declaracao.idioma.value)
+
+        db_declaracao = Declaracao(
+            **declaracao.model_dump(exclude=set(["imagens"])))
+        db.add(db_declaracao)
+        db_problema.declaracoes.append(db_declaracao)
+
+    def create_tags(db, tag, db_problema):
+        db_tag = db.query(Tag).filter(Tag.nome == tag).first()
+        if db_tag is None:
+            db_tag = Tag(nome=tag)
+            db.add(db_tag)
+        db_problema.tags.append(db_tag)
+
+    def create_testes(db, teste, db_problema):
+        teste.tipo = str(teste.tipo.value)
+
+        db_teste = ProblemaTeste(**teste.model_dump())
+        db.add(db_teste)
+        db_problema.testes.append(db_teste)
+
     def persist_saidas_testes(
         db: Session,
         db_problema: Problema
     ):
         try:
-            from orm.problemaResposta import get_arquivo_gerador, get_arquivo_solucao
-
             arquivo_solucao = get_arquivo_solucao(db_problema)
             arquivo_gerador: Arquivo | None = get_arquivo_gerador(db_problema)
 
@@ -522,8 +873,6 @@ def importacao_problema(
 
     with zipfile.ZipFile(pacote_file_path, 'r') as zip:
         try:
-            from orm.problema import create_arquivos, create_declaracoes, create_tags, create_testes, create_validador, create_validador_testes, create_verificador, create_verificador_testes, execute_arquivo_solucao_com_testes, execute_teste_gerado, get_unique_nome_problema, process_imagens_declaracoes
-
             for filename in zip.namelist():
 
                 if filename.lower() == "problem.xml":
@@ -552,7 +901,10 @@ def importacao_problema(
             db.add(db_problema)
 
             new_name_problema = get_unique_nome_problema(
-                db=db, nome_problema=problema.nome)
+                db=db,
+                nome_problema=problema.nome
+            )
+
             if (bool(new_name_problema)):
                 db_problema.nome = new_name_problema
 
