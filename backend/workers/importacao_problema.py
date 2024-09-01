@@ -601,4 +601,4 @@ def importacao_problema(
             if os.path.exists(pacote_file_path):
                 os.remove(pacote_file_path)
 
-        return jsonable_encoder(db_problema)
+        return jsonable_encoder(db_problema.id)

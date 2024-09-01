@@ -22,7 +22,7 @@ from schemas.common.pagination import PaginationSchema
 from dependencies.database import get_db
 from sqlalchemy.orm import Session
 from orm.problema import create_problema, create_problema_upload, get_all_problemas, get_arquivos_problema, get_declaracoes_problema, get_linguagens_problema, get_meus_problemas, get_problema_by_id, get_respostas_problema, get_integridade_problema, get_tags_problema, get_testes_exemplo_de_problema_executados, get_testes_problema, get_validador_problema, get_verificador_problema, update_problema
-from schemas.common.response import ResponseListSchema, ResponsePaginationSchema, ResponseUnitRequiredSchema, ResponseUnitSchema
+from schemas.common.response import IdSchema, ResponseListSchema, ResponsePaginationSchema, ResponseUnitRequiredSchema, ResponseUnitSchema
 from enviroments import ENV
 
 
@@ -397,8 +397,7 @@ async def create(
 
 @router.post("/pacotes/",
              response_model=ResponseUnitRequiredSchema[
-                 TarefaIdSchema |
-                 ProblemaReadFull
+                 TarefaIdSchema | IdSchema
              ],
              status_code=201,
              summary="Cadastra um problema via pacote da plataforma Polygon",
@@ -447,7 +446,7 @@ async def upload(
         linguagens=linguagens
     )
 
-    problema_or_uuid = await create_problema_upload(
+    id_or_uuid = await create_problema_upload(
         db=db,
         problema=problema,
         pacote=pacote,
@@ -456,11 +455,11 @@ async def upload(
 
     if (ENV != "test"):
         return ResponseUnitRequiredSchema(
-            data=TarefaIdSchema(task_uuid=problema_or_uuid)
+            data=TarefaIdSchema(task_uuid=id_or_uuid)
         )
 
     return ResponseUnitRequiredSchema(
-        data=problema_or_uuid
+        data=IdSchema(id=id_or_uuid)
     )
 
 
