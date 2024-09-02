@@ -7,7 +7,7 @@ def create_file_timestamp(upload_file: UploadFile):
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
     directory = "./temp"
     file_path = os.path.join(
-        directory, f"arquivo_{timestamp}_{upload_file.filename}")
+        directory, f"arquivo_{timestamp}")
 
     os.makedirs(directory, exist_ok=True)
 
