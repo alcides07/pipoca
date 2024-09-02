@@ -29,7 +29,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import linguagens from "../../../utils/linguagem";
 import { Toaster } from "@/components/ui/toaster";
 import { iDataProblema } from "@/interfaces/models/iProblema";
 import { Badge } from "@/components/ui/badge";
@@ -62,9 +61,9 @@ const FormSchema = z.object({
 function RespondeProblema() {
   const [problema, setProblema] = useState<iDataProblema>();
   const [rows, setRows] = useState(1);
-  const [isLoading, setIsLoading] = useState(false);
   const [testesExemplos, setTestesExemplos] = useState<iTestesExemplos[]>();
   const [loadingProblema, setLoadingProblema] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [loadingProblemaExemplos, setLoadingProblemaExemplos] = useState(true);
   const [languages, setLanguages] = useState<string[]>([]);
   const { id: idParam } = useParams();
@@ -86,7 +85,7 @@ function RespondeProblema() {
   });
 
   async function onSubmit(values: z.infer<typeof FormSchema>) {
-    setIsLoading(true);
+    setLoading(true);
 
     const data: iProblemaResposta = {
       resposta: values.resposta,
@@ -105,8 +104,7 @@ function RespondeProblema() {
           variant: "destructive",
           duration: 5000,
         });
-      })
-      .finally(setIsLoading(false));
+      });
   }
 
   useEffect(() => {
@@ -340,13 +338,9 @@ function RespondeProblema() {
                       <Button
                         type="submit"
                         className="w-full text-white"
-                        disabled={isLoading}
+                        disabled={loading}
                       >
-                        {isLoading ? (
-                          <Loading isLoading={isLoading} />
-                        ) : (
-                          "Enviar"
-                        )}
+                        {loading ? <Loading isLoading={loading} /> : "Enviar"}
                       </Button>
                     </form>
                   </Form>
