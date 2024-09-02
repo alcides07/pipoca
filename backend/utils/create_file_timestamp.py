@@ -5,7 +5,7 @@ from fastapi import UploadFile
 
 def create_file_timestamp(upload_file: UploadFile):
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-    directory = "/API/temp"
+    directory = "./temp"
     file_path = os.path.join(
         directory, f"arquivo_{timestamp}_{upload_file.filename}")
 
