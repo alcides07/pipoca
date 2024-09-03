@@ -59,3 +59,7 @@ class ResponseValidationSchema(BaseModel):
 class ResponseValidationListSchema(BaseModel):
     errors: List[ResponseValidationSchema] = Field(
         description="Lista de erros")
+
+
+class IdSchema(BaseModel):
+    id: int = Field(description="Identificador do objeto")

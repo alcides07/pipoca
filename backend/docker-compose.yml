@@ -9,6 +9,7 @@ services:
     volumes:
       - static-volume:/API/static/
       - /var/run/docker.sock:/var/run/docker.sock
+      - temp:/API/temp/
     ports:
       - "8000:8000"
     depends_on:
@@ -19,60 +20,65 @@ services:
     env_file:
       - .env
     build: .
-    command: celery -A workers worker --loglevel=info -n juiz-1@%h -Q correcao-problema
+    command: celery -A workers worker --loglevel=info -n juiz-1@%h -Q correcao-problema,importacao-problema
     depends_on:
       - api
       - rabbitmq
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      - temp:/API/temp/
 
   worker2:
     container_name: pipoca_worker_2
     env_file:
       - .env
     build: .
-    command: celery -A workers worker --loglevel=info -n juiz-2@%h -Q correcao-problema
+    command: celery -A workers worker --loglevel=info -n juiz-2@%h -Q correcao-problema,importacao-problema
     depends_on:
       - api
       - rabbitmq
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      - temp:/API/temp/
 
   worker3:
     container_name: pipoca_worker_3
     env_file:
       - .env
     build: .
-    command: celery -A workers worker --loglevel=info -n juiz-3@%h -Q correcao-problema
+    command: celery -A workers worker --loglevel=info -n juiz-3@%h -Q correcao-problema,importacao-problema
     depends_on:
       - api
       - rabbitmq
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      - temp:/API/temp/
 
   worker4:
     container_name: pipoca_worker_4
     env_file:
       - .env
     build: .
-    command: celery -A workers worker --loglevel=info -n juiz-4@%h -Q correcao-problema
+    command: celery -A workers worker --loglevel=info -n juiz-4@%h -Q correcao-problema,importacao-problema
     depends_on:
       - api
       - rabbitmq
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      - temp:/API/temp/
 
   worker5:
     container_name: pipoca_worker_5
     env_file:
       - .env
     build: .
-    command: celery -A workers worker --loglevel=info -n juiz-5@%h -Q correcao-problema
+    command: celery -A workers worker --loglevel=info -n juiz-5@%h -Q correcao-problema,importacao-problema
     depends_on:
       - api
       - rabbitmq
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      - temp:/API/temp/
 
   flower:
     container_name: pipoca_flower
@@ -118,3 +124,4 @@ volumes:
   static-volume:
   postgres-data:
   flower-data:
+  temp:
