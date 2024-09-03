@@ -24,11 +24,11 @@ export const problemaColumns: ColumnDef<iDataProblema>[] = [
               <FileCode />
             </Button>
           </Link>
-          <Link to={`/problema/${problema.id}`}>
+          {/* <Link to={`/problema/${problema.id}`}>
             <Button variant="outline" title="Editar" disabled>
               <Edit2 />
             </Button>
-          </Link>
+          </Link> */}
         </div>
       );
     },
