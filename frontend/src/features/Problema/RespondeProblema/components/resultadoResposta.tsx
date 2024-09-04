@@ -54,20 +54,38 @@ function ResultadoProblema() {
   const [resultadoResposta, setResultadoResposta] = useState<any>();
   const [loadingResultado, setLoadingResultado] = useState(true);
   const [problema, setProblema] = useState<iDataProblema>();
+  const [mensagemErro, setMensagemErro] = useState<iDataProblema>();
   const { id: idParam } = useParams();
   const id = Number(idParam);
 
   useEffect(() => {
-    tarefa(taskId);
-    console.log("taskId", taskId);
     obtemProblema(id);
-  }, [taskId, id]);
+    if (taskId) {
+      tarefa(taskId);
+    } else {
+      obtemResultados(id);
+    }
+  }, []);
 
   async function tarefa(taskId: string) {
     setLoadingResultado(true);
 
     await TarefaService.tarefa(taskId).then((response) => {
-      const { saida_usuario, saida_esperada, veredito } = response.resultado;
+      if (response.resultado.erro) {
+        setMensagemErro(response.resultado.erro);
+      } else {
+        const { saida_usuario, saida_esperada, veredito } = response.resultado;
+        setResultadoResposta({ saida_usuario, saida_esperada, veredito });
+      }
+    });
+    setLoadingResultado(false);
+  }
+
+  async function obtemResultados(id: number) {
+    setLoadingResultado(true);
+
+    await problemaService.respostasProblema(id).then((response) => {
+      const { saida_usuario, saida_esperada, veredito } = response.data[0];
       setResultadoResposta({ saida_usuario, saida_esperada, veredito });
     });
     setLoadingResultado(false);
