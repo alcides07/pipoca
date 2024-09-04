@@ -54,20 +54,40 @@ function ResultadoProblema() {
   const [resultadoResposta, setResultadoResposta] = useState<any>();
   const [loadingResultado, setLoadingResultado] = useState(true);
   const [problema, setProblema] = useState<iDataProblema>();
+  const [mensagemErro, setMensagemErro] = useState<iDataProblema>();
   const { id: idParam } = useParams();
   const id = Number(idParam);
 
   useEffect(() => {
-    tarefa(taskId);
-    console.log("taskId", taskId);
     obtemProblema(id);
-  }, [taskId, id]);
+    if (taskId) {
+      tarefa(taskId);
+    } else {
+      obtemResultados(id);
+    }
+  }, []);
 
   async function tarefa(taskId: string) {
     setLoadingResultado(true);
 
     await TarefaService.tarefa(taskId).then((response) => {
+      if (response.resultado.erro) {
+        setMensagemErro(response.resultado.erro);
+      }
       const { saida_usuario, saida_esperada, veredito } = response.resultado;
+      setResultadoResposta({ saida_usuario, saida_esperada, veredito });
+    });
+    setLoadingResultado(false);
+  }
+
+  async function obtemResultados(id: number) {
+    setLoadingResultado(true);
+
+    await problemaService.respostasProblema(id).then((response) => {
+      if (response.data[0].erro) {
+        setMensagemErro(response.data[0].erro);
+      }
+      const { saida_usuario, saida_esperada, veredito } = response.data[0];
       setResultadoResposta({ saida_usuario, saida_esperada, veredito });
     });
     setLoadingResultado(false);
@@ -194,9 +214,7 @@ function ResultadoProblema() {
                         <Card className="h-[50vh] flex justify-center items-center">
                           <CardContent className="flex flex-col justify-center items-center text-center">
                             <div>
-                              <p className="font-bold">
-                                Seu código não passou nos testes do problema!
-                              </p>
+                              <p className="font-bold">{mensagemErro}</p>
                             </div>
                           </CardContent>
                         </Card>
