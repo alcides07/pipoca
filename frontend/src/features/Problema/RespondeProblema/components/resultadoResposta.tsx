@@ -73,10 +73,9 @@ function ResultadoProblema() {
     await TarefaService.tarefa(taskId).then((response) => {
       if (response.resultado.erro) {
         setMensagemErro(response.resultado.erro);
-      } else {
-        const { saida_usuario, saida_esperada, veredito } = response.resultado;
-        setResultadoResposta({ saida_usuario, saida_esperada, veredito });
       }
+      const { saida_usuario, saida_esperada, veredito } = response.resultado;
+      setResultadoResposta({ saida_usuario, saida_esperada, veredito });
     });
     setLoadingResultado(false);
   }
@@ -85,6 +84,9 @@ function ResultadoProblema() {
     setLoadingResultado(true);
 
     await problemaService.respostasProblema(id).then((response) => {
+      if (response.data[0].erro) {
+        setMensagemErro(response.data[0].erro);
+      }
       const { saida_usuario, saida_esperada, veredito } = response.data[0];
       setResultadoResposta({ saida_usuario, saida_esperada, veredito });
     });
@@ -212,9 +214,7 @@ function ResultadoProblema() {
                         <Card className="h-[50vh] flex justify-center items-center">
                           <CardContent className="flex flex-col justify-center items-center text-center">
                             <div>
-                              <p className="font-bold">
-                                Seu código não passou nos testes do problema!
-                              </p>
+                              <p className="font-bold">{mensagemErro}</p>
                             </div>
                           </CardContent>
                         </Card>
